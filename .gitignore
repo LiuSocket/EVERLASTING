@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+/.vs/EVERLASTING
+/3RD
+/Bin
+/Everlasting/x64
+/Everlasting/Everlasting.aps
+/Lib
+/OSG
+/Out/Everlasting

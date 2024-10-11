@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="GMEngine">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Everlasting">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts</Extensions>
+    </Filter>
+    <Filter Include="Everlasting\Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Everlasting\UI">
+      <UniqueIdentifier>{2956e4cc-23f8-4496-b580-d27428d51d8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GMEngine\Assist">
+      <UniqueIdentifier>{14e962ae-9187-4767-9faf-85500838810d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GMEngine\Core">
+      <UniqueIdentifier>{c582906d-3a18-42c1-898d-f573af52d992}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GMEngine\Core\Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="GMEngine\Core\Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Engine\Assist\tinystr.cpp">
+      <Filter>GMEngine\Assist</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Assist\tinyxml.cpp">
+      <Filter>GMEngine\Assist</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Assist\tinyxmlerror.cpp">
+      <Filter>GMEngine\Assist</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\Assist\tinyxmlparser.cpp">
+      <Filter>GMEngine\Assist</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMCommonUniform.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMEngine.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMKit.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMPost.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMStructs.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMViewWidget.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMXml.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GMSystemManager.cpp">
+      <Filter>Everlasting</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Everlasting</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\GMMainWindow.cpp">
+      <Filter>Everlasting\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\GMUIManager.cpp">
+      <Filter>Everlasting\UI</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Engine\Assist\tinystr.h">
+      <Filter>GMEngine\Assist</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\Assist\tinyxml.h">
+      <Filter>GMEngine\Assist</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMCommon.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMCommonUniform.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMEngine.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMEnums.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMKernel.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMKit.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMPost.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMPrerequisites.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMStructs.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMXml.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Everlasting\Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\Engine\GMViewWidget.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="GMSystemManager.h">
+      <Filter>Everlasting</Filter>
+    </QtMoc>
+    <QtMoc Include="UI\GMMainWindow.h">
+      <Filter>Everlasting\UI</Filter>
+    </QtMoc>
+    <QtMoc Include="UI\GMUIManager.h">
+      <Filter>Everlasting\UI</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="UI\GMMainWindow.ui">
+      <Filter>Everlasting\UI</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Everlasting.rc">
+      <Filter>Everlasting\Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="Everlasting.qrc">
+      <Filter>Everlasting\Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+</Project>

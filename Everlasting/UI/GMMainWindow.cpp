@@ -222,8 +222,6 @@ void CGMMainWindow::keyPressEvent(QKeyEvent* event)
 	if ((event->modifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_S))
 	{
 		GM_ENGINE.Save();
-		// 记录太阳系此刻的信息，保证重启时太阳系行星的同步
-		GM_ENGINE.SaveSolarData();
 	}
 
 	switch (event->key())

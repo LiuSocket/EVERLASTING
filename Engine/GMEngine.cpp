@@ -220,11 +220,6 @@ bool CGMEngine::Save()
 	return false;
 }
 
-bool CGMEngine::SaveSolarData()
-{
-	return true;
-}
-
 void CGMEngine::ResizeScreen(const int iW, const int iH)
 {
 	osg::ref_ptr<osg::Camera> pMainCam = GM_View->getCamera();

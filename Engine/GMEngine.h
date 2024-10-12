@@ -70,8 +70,6 @@ namespace GM
 		bool Load();
 		/** @brief 保存 */
 		bool Save();
-		/** @brief 保存太阳系此刻的信息 */
-		bool SaveSolarData();
 		/**
 		* 修改屏幕尺寸时调用此函数
 		* @param iW: 屏幕宽度

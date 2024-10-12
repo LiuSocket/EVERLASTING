@@ -12,6 +12,7 @@
 #pragma once
 
 #include "GMPrerequisites.h"
+#include "GMEnums.h"
 
 namespace GM
 {
@@ -905,116 +906,23 @@ namespace GM
 		float					fZMax;
 	};
 
-	/**
-	* 银河坐标结构体
-	* @author LiuTao
-	* @since 2021.06.20
-	* @param fX, fY, fZ			银河空间坐标[-1.0, 1.0]^3,银心位置为(0,0,0)
+	/*!
+	 *  @struct SGMModelData
+	 *  @brief VrEarth Model Data
 	 */
-	struct SGMGalaxyCoord
+	struct SGMModelData
 	{
-		SGMGalaxyCoord() : x(0.0f), y(0.0f), z(0.0f) {}
-		SGMGalaxyCoord(const float fX, const float fY, const float fZ = 0.0f) : x(fX), y(fY), z(fZ) {}
-		friend bool operator == (const SGMGalaxyCoord &A, const SGMGalaxyCoord &B);
-		friend bool operator != (const SGMGalaxyCoord &A, const SGMGalaxyCoord &B);
-		friend bool operator < (const SGMGalaxyCoord &A, const SGMGalaxyCoord &B);
-
-		float x;
-		float y;
-		float z;
-	};
-
-	inline bool operator == (const SGMGalaxyCoord& A, const SGMGalaxyCoord& B)
-	{
-		return A.x == B.x && A.y == B.y && A.z == B.z;
-	}
-
-	inline bool operator != (const SGMGalaxyCoord& A, const SGMGalaxyCoord& B)
-	{
-		return A.x != B.x || A.y != B.y || A.z != B.z;
-	}
-
-	inline bool operator < (const SGMGalaxyCoord& A, const SGMGalaxyCoord& B)
-	{
-		return A.x < B.x || (A.x == B.x && A.y < B.y) || (A.x == B.x && A.y == B.y && A.z < B.z);
-	}
-
-	/**
-	* 音频空间坐标结构体
-	* @author LiuTao
-	* @since 2021.07.04
-	* @param BPM:		音频的BPM，Beat Per Minute，每分钟节拍数
-						没有节奏的音频BPM == 0.0
-	* @param angle:		情绪角度 == 音频的类型 [0.0,2*PI)
-	* @param rank:		在上述坐标完全相同的情况下设置的音频编号，默认0
-	*	angle == 0 或 (2*PI)		兴奋，怒, 红
-	*	angle == 0.5*PI				快乐，喜，黄
-	*	angle == PI					放松，乐，绿
-	*	angle == 1.5*PI				悲伤，哀，蓝
-	*/
-	struct SGMAudioCoord
-	{
-		SGMAudioCoord() : BPM(0.0), angle(0.0), rank(0){}
-		SGMAudioCoord(const double fBPM, const double fAngle, const int iID = 0) :
-			BPM(fBPM), angle(fAngle), rank(iID)
+		/** @brief 构造 */
+		SGMModelData()
+			: strName(""), vPos(0, 0, 0), vOri(0, 0, 0), vScale(1, 1, 1), iEntRenderBin(1), eBlend(EGM_MODB_Opaque)
 		{}
-		friend bool operator == (const SGMAudioCoord &A, const SGMAudioCoord &B);
-		friend bool operator != (const SGMAudioCoord &A, const SGMAudioCoord &B);
-		friend bool operator < (const SGMAudioCoord &A, const SGMAudioCoord &B);
 
-		double BPM;
-		double angle;
-		int rank;
+		// 变量
+		std::string			strName;				//!< 名称
+		SGMVector3			vPos;					//!< 模型位
+		SGMVector3			vOri;					//!< 模型方向
+		SGMVector3			vScale;					//!< 模型缩放
+		int					iEntRenderBin;			//!< 模型渲染顺序Renderbin
+		EGMModelBlend		eBlend;					//!< 半透明混合模式
 	};
-
-	inline bool operator == (const SGMAudioCoord& A, const SGMAudioCoord& B)
-	{
-		return A.BPM == B.BPM && A.angle == B.angle && A.rank == B.rank;
-	}
-
-	inline bool operator != (const SGMAudioCoord& A, const SGMAudioCoord& B)
-	{
-		return A.BPM != B.BPM || A.angle != B.angle || A.rank != B.rank;
-	}
-
-	inline bool operator < (const SGMAudioCoord& A, const SGMAudioCoord& B)
-	{
-		return A.BPM < B.BPM
-			|| (A.BPM == B.BPM && A.angle < B.angle)
-			|| (A.BPM == B.BPM && A.angle == B.angle && A.rank < B.rank);
-	}
-
-	/**
-	* 音频数据结构体
-	* @author LiuTao
-	* @since 2021.07.04
-	* @param iUID:				音频UID，0为非法，范围[1,16777216]
-	* @param name:				音频文件名称
-	* @param audioCoord:		音频空间坐标
-	* @param galaxyCoord:		银河坐标，[-1,1]
-	*/
-	struct SGMAudioData
-	{
-		SGMAudioData() :
-			UID(0),
-			name(L""),
-			audioCoord(SGMAudioCoord()),
-			galaxyCoord(SGMGalaxyCoord()) {}
-
-		SGMAudioData(
-			unsigned int iUID,
-			const std::wstring& wstrName,
-			const SGMAudioCoord& sAudioCoord,
-			const SGMGalaxyCoord& sGalaxyCoord) :
-			UID(iUID),
-			name(wstrName),
-			audioCoord(sAudioCoord),
-			galaxyCoord(sGalaxyCoord) {}
-
-		unsigned int UID;
-		std::wstring name;
-		SGMAudioCoord audioCoord;
-		SGMGalaxyCoord galaxyCoord;
-	};
-
 }	// GM

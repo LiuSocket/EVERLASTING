@@ -1,0 +1,227 @@
+//////////////////////////////////////////////////////////////////////////
+/// COPYRIGHT NOTICE
+/// Copyright (c) 2020~2040, LT
+/// All rights reserved.
+///
+/// @file		GMMaterial.cpp
+/// @brief		GMEngine - Material manager
+/// @version	1.0
+/// @author		LiuTao
+/// @date		2024.02.04
+//////////////////////////////////////////////////////////////////////////
+
+#include "GMMaterial.h"
+#include "GMKit.h"
+#include "GMCommon.h"
+
+#include <osgDB/ReadFile>
+#include <osgDB/WriteFile>
+#include <osgDB/FileUtils>
+
+using namespace GM;
+
+/*************************************************************************
+Global Constants
+*************************************************************************/
+
+/*************************************************************************
+Class
+*************************************************************************/
+
+namespace GM
+{
+	/*
+	* @brief 模型材质的drawable访问器，用于自动补齐末尾的未添加的纹理单元
+	* 简化模型制作流程，这样模型可以只添加需要的贴图，但不能跳过某一个纹理单元添加后面的纹理单元
+	* 正确纹理单元组合：0，0+1，0+1+2, 0+1+2+3，0+1+2+3+4
+	* 错误纹理单元组合：0+2+3，2+4...
+	*/
+	class AutoTexVisitor : public osg::NodeVisitor
+	{
+	public:
+		AutoTexVisitor(std::vector<osg::ref_ptr<osg::Texture2D>> vTex) : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN),
+			_vTex(vTex)
+		{}
+
+		void apply(osg::Node& node)
+		{
+			traverse(node);
+		}
+		void apply(osg::Geode& node)
+		{
+			for (unsigned int n = 0; n < node.getNumDrawables(); n++)
+			{
+				osg::Drawable* draw = node.getDrawable(n);
+				if (draw)
+				{
+					osg::StateSet* pStateSet = draw->getOrCreateStateSet();
+					// 获取所有需要的纹理单元
+					std::vector<osg::StateAttribute*> vAttr;
+					for (int i = 0; i < _vTex.size(); i++)
+					{
+						osg::StateAttribute* pAttr = pStateSet->getTextureAttribute(i, osg::StateAttribute::TEXTURE);
+						vAttr.push_back(pAttr);
+					}
+					// 补齐空缺的纹理单元
+					for (int i = 1; i < _vTex.size(); i++)
+					{
+						if (vAttr.at(i) || !_vTex.at(i).valid()) continue;
+						pStateSet->setTextureAttributeAndModes(i, _vTex.at(i).get(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+					}
+
+					draw->dirtyDisplayList();
+				}
+			}
+			traverse(node);
+		}
+
+	private:
+		std::vector<osg::ref_ptr<osg::Texture2D>> _vTex;
+	};
+}
+
+/*************************************************************************
+CGMMaterial Methods
+*************************************************************************/
+
+CGMMaterial::CGMMaterial(): m_pConfigData(nullptr), 
+	m_strModelShaderPath("/modelShader/"), m_strDefTexPath("Resources/modelDefaultTexture/")
+{
+}
+
+CGMMaterial::~CGMMaterial()
+{
+}
+
+bool CGMMaterial::Init(SGMConfigData* pConfigData)
+{
+	m_pConfigData = pConfigData;
+
+	// 初始化默认的各个材质的贴图，用于补齐纹理单元
+	// 白色贴图
+	osg::ref_ptr<osg::Texture2D> pWhiteTex = new osg::Texture2D;
+	pWhiteTex->setImage(osgDB::readImageFile(m_strDefTexPath + "white.tga"));
+	pWhiteTex->setFilter(osg::Texture::MIN_FILTER, osg::Texture2D::NEAREST);
+	pWhiteTex->setFilter(osg::Texture::MAG_FILTER, osg::Texture2D::NEAREST);
+	pWhiteTex->setWrap(osg::Texture::WRAP_S, osg::Texture2D::REPEAT);
+	pWhiteTex->setWrap(osg::Texture::WRAP_T, osg::Texture2D::REPEAT);
+	pWhiteTex->setInternalFormat(GL_RGBA8);
+	pWhiteTex->setSourceFormat(GL_RGBA);
+	pWhiteTex->setSourceType(GL_UNSIGNED_BYTE);
+	// 黑色贴图
+	osg::ref_ptr<osg::Texture2D> pBlackTex = new osg::Texture2D;
+	pBlackTex->setImage(osgDB::readImageFile(m_strDefTexPath + "black.tga"));
+	pBlackTex->setFilter(osg::Texture::MIN_FILTER, osg::Texture2D::NEAREST);
+	pBlackTex->setFilter(osg::Texture::MAG_FILTER, osg::Texture2D::NEAREST);
+	pBlackTex->setWrap(osg::Texture::WRAP_S, osg::Texture2D::REPEAT);
+	pBlackTex->setWrap(osg::Texture::WRAP_T, osg::Texture2D::REPEAT);
+	pBlackTex->setInternalFormat(GL_RGBA8);
+	pBlackTex->setSourceFormat(GL_RGBA);
+	pBlackTex->setSourceType(GL_UNSIGNED_BYTE);
+	// 默认MRA贴图
+	osg::ref_ptr<osg::Texture2D> pMRATex = new osg::Texture2D;
+	pMRATex->setImage(osgDB::readImageFile(m_strDefTexPath + "default_MRA.tga"));
+	pMRATex->setFilter(osg::Texture::MIN_FILTER, osg::Texture2D::NEAREST);
+	pMRATex->setFilter(osg::Texture::MAG_FILTER, osg::Texture2D::NEAREST);
+	pMRATex->setWrap(osg::Texture::WRAP_S, osg::Texture2D::REPEAT);
+	pMRATex->setWrap(osg::Texture::WRAP_T, osg::Texture2D::REPEAT);
+	pMRATex->setInternalFormat(GL_RGBA8);
+	pMRATex->setSourceFormat(GL_RGBA);
+	pMRATex->setSourceType(GL_UNSIGNED_BYTE);
+	// 默认法线贴图
+	osg::ref_ptr<osg::Texture2D> pNormalTex = new osg::Texture2D;
+	pNormalTex->setImage(osgDB::readImageFile(m_strDefTexPath + "default_n.tga"));
+	pNormalTex->setFilter(osg::Texture::MIN_FILTER, osg::Texture2D::NEAREST);
+	pNormalTex->setFilter(osg::Texture::MAG_FILTER, osg::Texture2D::NEAREST);
+	pNormalTex->setWrap(osg::Texture::WRAP_S, osg::Texture2D::REPEAT);
+	pNormalTex->setWrap(osg::Texture::WRAP_T, osg::Texture2D::REPEAT);
+	pNormalTex->setInternalFormat(GL_RGBA8);
+	pNormalTex->setSourceFormat(GL_RGBA);
+	pNormalTex->setSourceType(GL_UNSIGNED_BYTE);
+	
+	//!< PBR模型的纹理单元默认贴图
+	m_pPBRTexVector.push_back(pWhiteTex); // 0 基础颜色
+	m_pPBRTexVector.push_back(pMRATex); // 1 金属度、粗糙度、AO
+	m_pPBRTexVector.push_back(pBlackTex); // 2 自发光贴图
+	m_pPBRTexVector.push_back(pNormalTex); // 3 法线贴图
+
+	// 初始化所有公用图片资源
+	// 水面涟漪
+	m_pRainRippleTex = new osg::Texture2D;
+	m_pRainRippleTex->setImage(osgDB::readImageFile(m_strDefTexPath + "ripple.tga"));
+	m_pRainRippleTex->setFilter(osg::Texture::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pRainRippleTex->setFilter(osg::Texture::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pRainRippleTex->setWrap(osg::Texture::WRAP_S, osg::Texture2D::REPEAT);
+	m_pRainRippleTex->setWrap(osg::Texture::WRAP_T, osg::Texture2D::REPEAT);
+	m_pRainRippleTex->setInternalFormat(GL_RGBA8);
+	m_pRainRippleTex->setSourceFormat(GL_RGBA);
+	m_pRainRippleTex->setSourceType(GL_UNSIGNED_BYTE);
+	// 潮湿表面法线贴图
+	m_pWetNormalTex = new osg::Texture2D;
+	m_pWetNormalTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pWetNormalTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pWetNormalTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+	m_pWetNormalTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+	m_pWetNormalTex->setImage(osgDB::readImageFile(m_strDefTexPath + "custom_n.dds"));
+	// 噪声贴图
+	m_pNoiseTex = new osg::Texture2D;
+	m_pNoiseTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pNoiseTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pNoiseTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+	m_pNoiseTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+	m_pNoiseTex->setImage(osgDB::readImageFile(m_strDefTexPath + "custom_noise.dds"));
+	// 雪和霜的贴图
+	m_pSnowTex = new osg::Texture2D;
+	m_pSnowTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pSnowTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pSnowTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+	m_pSnowTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+	m_pSnowTex->setImage(osgDB::readImageFile(m_strDefTexPath + "snow.dds"));
+	// 黄沙贴图
+	m_pSandTex = new osg::Texture2D;
+	m_pSandTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pSandTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pSandTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+	m_pSandTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+	m_pSandTex->setImage(osgDB::readImageFile(m_strDefTexPath + "sand.dds"));
+
+	return true;
+}
+
+void CGMMaterial::SetModelShader(osg::Node* pNode)
+{
+	//!< 自动补齐地面模型的纹理单元
+	AutoTexVisitor cAutoTexVisitor(m_pPBRTexVector);
+	pNode->accept(cAutoTexVisitor);
+
+	osg::StateSet* pStateSet = new osg::StateSet();
+	// 添加shader
+	std::string strShaderPath = m_pConfigData->strCorePath + m_strModelShaderPath;
+	CGMKit::LoadShaderWithCommonFrag(pStateSet,
+		strShaderPath + "GMModel.vert",
+		strShaderPath + "GMModel.frag",
+		strShaderPath + "GMCommon.frag",
+		"Model");
+
+	// Uniform
+	int iChannel = 0;
+	// 漫反射贴图（RGB通道存放颜色，A通道存放不透明度）
+	osg::ref_ptr<osg::Uniform> pTexBaseColorUniform = new osg::Uniform("texBaseColor", iChannel++);//纹理单元不要乱分配！
+	pStateSet->addUniform(pTexBaseColorUniform.get());
+
+	// 自发光强弱 [0.0,1.0]
+	osg::ref_ptr<osg::Uniform> pIllumUniform = new osg::Uniform("illumIntense", 1.0f);
+	pStateSet->addUniform(pIllumUniform.get());
+
+	// PBR贴图（R通道存放金属度，G通道存放粗糙度，B通道存放AO贴图，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexPbrUniform = new osg::Uniform("texPbr", iChannel++);
+	pStateSet->addUniform(pTexPbrUniform.get());
+	// 自发光贴图（RGB通道存放颜色，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexIlluminationUniform = new osg::Uniform("texIllumination", iChannel++);
+	pStateSet->addUniform(pTexIlluminationUniform.get());
+	// 法线贴图（RGB通道存放法线，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
+	pStateSet->addUniform(pTexNormalUniform.get());
+
+	pNode->setStateSet(pStateSet);
+}

@@ -87,7 +87,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\$(Configuration)\;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>osgViewerd.lib;osgGAd.lib;osgDBd.lib;osgUtild.lib;osgQtd.lib;osgd.lib;qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5OpenGLd.lib;opengl32.lib;Qt5Widgetsd.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>osgViewerd.lib;osgAnimationd.lib;osgGAd.lib;osgDBd.lib;osgUtild.lib;osgQtd.lib;osgd.lib;qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5OpenGLd.lib;opengl32.lib;Qt5Widgetsd.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -106,7 +106,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\$(Configuration)\;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>osgViewer.lib;osgGA.lib;osgDB.lib;osgUtil.lib;osgQt.lib;osg.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5OpenGL.lib;opengl32.lib;Qt5Widgets.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>osgqt.lib;osg.lib;osgAnimation.lib;osgDB.lib;osgFX.lib;osgGA.lib;osgUtil.lib;osgShadow.lib;osgViewer.lib;osgWidget.lib;osgManipulator.lib;OpenThreads.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;Qt5Qml.lib;Qt5UiTools.lib;Qt5OpenGL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -140,11 +140,15 @@
     <ClCompile Include="..\Engine\Assist\tinyxml.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlerror.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlparser.cpp" />
+    <ClCompile Include="..\Engine\GMAnimation.cpp" />
     <ClCompile Include="..\Engine\GMCommonUniform.cpp" />
     <ClCompile Include="..\Engine\GMEngine.cpp" />
     <ClCompile Include="..\Engine\GMKit.cpp" />
+    <ClCompile Include="..\Engine\GMMaterial.cpp" />
+    <ClCompile Include="..\Engine\GMModel.cpp" />
     <ClCompile Include="..\Engine\GMPost.cpp" />
     <ClCompile Include="..\Engine\GMStructs.cpp" />
+    <ClCompile Include="..\Engine\GMTangentSpaceGenerator.cpp" />
     <ClCompile Include="..\Engine\GMViewWidget.cpp" />
     <ClCompile Include="..\Engine\GMXml.cpp" />
     <ClCompile Include="GMSystemManager.cpp" />
@@ -155,15 +159,20 @@
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h" />
     <ClInclude Include="..\Engine\Assist\tinyxml.h" />
+    <ClInclude Include="..\Engine\GMAnimation.h" />
     <ClInclude Include="..\Engine\GMCommon.h" />
     <ClInclude Include="..\Engine\GMCommonUniform.h" />
     <ClInclude Include="..\Engine\GMEngine.h" />
     <ClInclude Include="..\Engine\GMEnums.h" />
     <ClInclude Include="..\Engine\GMKernel.h" />
     <ClInclude Include="..\Engine\GMKit.h" />
+    <ClInclude Include="..\Engine\GMMaterial.h" />
+    <ClInclude Include="..\Engine\GMModel.h" />
+    <ClInclude Include="..\Engine\GMNodeVisitor.h" />
     <ClInclude Include="..\Engine\GMPost.h" />
     <ClInclude Include="..\Engine\GMPrerequisites.h" />
     <ClInclude Include="..\Engine\GMStructs.h" />
+    <ClInclude Include="..\Engine\GMTangentSpaceGenerator.h" />
     <ClInclude Include="..\Engine\GMXml.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="UI\GMUIManager.h" />

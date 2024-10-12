@@ -20,7 +20,6 @@
         <file>Resources/btn_volume_hover.png</file>
         <file>Resources/slider_handle.png</file>
         <file>Resources/slider_handle_hover.png</file>
-        <file>Resources/GM_title.png</file>
         <file>Resources/btn_full.png</file>
         <file>Resources/btn_full_hover.png</file>
         <file>Resources/GM_logo.png</file>
@@ -35,5 +34,6 @@
         <file>Resources/SpinUp_Disable.png</file>
         <file>Resources/SpinUp_Hover.png</file>
         <file>Resources/Empty.qss</file>
+        <file>Resources/Everlasting_title.png</file>
     </qresource>
 </RCC>

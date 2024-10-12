@@ -77,6 +77,18 @@
     <ClCompile Include="UI\GMUIManager.cpp">
       <Filter>Everlasting\UI</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\GMModel.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMTangentSpaceGenerator.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMMaterial.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\GMAnimation.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -117,6 +129,21 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Everlasting\Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMModel.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMNodeVisitor.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMTangentSpaceGenerator.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMMaterial.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMAnimation.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

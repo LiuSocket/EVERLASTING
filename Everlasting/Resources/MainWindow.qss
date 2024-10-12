@@ -244,7 +244,7 @@ QSlider::handle:horizontal:hover{
 }
 
 #titleBtn {
-	background-image: url(:/Resources/GM_title.png);
+	background-image: url(:/Resources/Everlasting_title.png);
 }
 
 /* 底部工具栏 */

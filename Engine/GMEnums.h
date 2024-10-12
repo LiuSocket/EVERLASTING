@@ -252,4 +252,26 @@ namespace GM
 		/** 高画质 */
 		EGMRENDER_HIGH,
 	};
+
+	/*!
+	*  @enum EGMModelBlend
+	*  @brief 模型半透明混合类型
+	*/
+	enum EGMModelBlend
+	{
+		EGM_MODB_Opaque = 0,		//!< 不透明
+		EGM_MODB_Transparency = 1,	//!< 半透明
+		EGM_MODB_Cutoff = 2			//!< 截断
+	};
+
+	/*!
+	 *  @enum EGMPlayMode
+	 *  @brief 播放模式
+	 */
+	enum EGMPlayMode {
+		EGM_PLAY_ONCE, // 播放一次
+		EGM_PLAY_STAY, // 停留在最后一帧
+		EGM_PLAY_LOOP, // 循环播放
+		EGM_PLAY_PPONG // 来回播放
+	};
 }	// GM

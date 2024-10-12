@@ -78,8 +78,6 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 			ui.titleEdgeLab->hide();
 			ui.toolWidget->hide();
 			ui.toolEdgeLab->hide();
-
-			ui.listBtn->setChecked(false);
 		}
 		else
 		{
@@ -196,12 +194,6 @@ void CGMMainWindow::mouseReleaseEvent(QMouseEvent * event)
 
 void CGMMainWindow::mouseMoveEvent(QMouseEvent* event)
 {
-	// 设置音量控件显隐
-	int iVolumeMinX = ui.volumeBtn->pos().x();
-	int iVolumeMaxX = iVolumeMinX + ui.volumeBtn->width();
-	int iVolumeMinY = ui.toolEdgeLab->pos().y();
-	int iVolumeMaxY = iVolumeMinY + ui.volumeBtn->height();
-
 	// 鼠标拖动标题栏以移动窗口
 	if (m_bPressed && (event->pos().y() < ui.titleWidget->height()))
 	{

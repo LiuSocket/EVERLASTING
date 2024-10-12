@@ -14,10 +14,6 @@
         <file>Resources/btn_min_hover.png</file>
         <file>Resources/btn_next.png</file>
         <file>Resources/btn_next_hover.png</file>
-        <file>Resources/btn_pause.png</file>
-        <file>Resources/btn_pause_hover.png</file>
-        <file>Resources/btn_play.png</file>
-        <file>Resources/btn_play_hover.png</file>
         <file>Resources/btn_mute.png</file>
         <file>Resources/btn_mute_hover.png</file>
         <file>Resources/btn_volume.png</file>
@@ -29,7 +25,6 @@
         <file>Resources/btn_full_hover.png</file>
         <file>Resources/GM_logo.png</file>
         <file>Resources/GM_logo.ico</file>
-        <file>Resources/volumeLab.png</file>
         <file>Resources/default_Image.png</file>
         <file>Resources/btn_list.png</file>
         <file>Resources/btn_list_hover.png</file>
@@ -40,6 +35,5 @@
         <file>Resources/SpinUp_Disable.png</file>
         <file>Resources/SpinUp_Hover.png</file>
         <file>Resources/Empty.qss</file>
-        <file>Resources/WELab.png</file>
     </qresource>
 </RCC>

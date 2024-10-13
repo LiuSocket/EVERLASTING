@@ -29,7 +29,7 @@ namespace GM
 
 	/*!
 	*  @Class CGMMaterial
-	*  @brief DOF manager for VrEarth
+	*  @brief DOF manager for GM
 	*/
 	class CGMMaterial
 	{

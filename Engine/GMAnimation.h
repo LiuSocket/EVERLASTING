@@ -25,7 +25,7 @@ namespace GM
 
 	/*!
 	*  @Class CGMAnimation
-	*  @brief Animation manager for VrEarth
+	*  @brief Animation manager for GM
 	*/
 	class CGMAnimation
 	{

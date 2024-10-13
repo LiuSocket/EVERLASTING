@@ -19,7 +19,7 @@ namespace GM
 	*************************************************************************/
 	/*!
 	 *  @class CGMNodeVisitor
-	 *  @brief VrEarth Node Visitor
+	 *  @brief GM Node Visitor
 	 */
 	template<class T>
 	class CGMNodeVisitor : public osg::NodeVisitor

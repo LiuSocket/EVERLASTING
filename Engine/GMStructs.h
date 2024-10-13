@@ -47,7 +47,7 @@ namespace GM
 
 	/*!
 	*  @struct SGMVector2f
-	*  @brief VrEarth Vector2f
+	*  @brief GM Vector2f
 	*/
 	struct SGMVector2f
 	{
@@ -139,7 +139,7 @@ namespace GM
 
 	/*!
 	 *  @struct SGMVector2
-	 *  @brief VrEarth Vector2
+	 *  @brief GM Vector2
 	 */
 	struct SGMVector2
 	{
@@ -235,7 +235,7 @@ namespace GM
 
 	/*!
 	*  @struct SGMVector2i
-	*  @brief VrEarth Vector2i
+	*  @brief GM Vector2i
 	*/
 	struct SGMVector2i
 	{
@@ -320,7 +320,7 @@ namespace GM
 
 	/*!
 	*  @struct SGMVector3f
-	*  @brief VrEarth Vector3f
+	*  @brief GM Vector3f
 	*/
 	struct SGMVector3f
 	{
@@ -413,7 +413,7 @@ namespace GM
 
 	/*!
 	 *  @struct SGMVector3
-	 *  @brief VrEarth Vector3
+	 *  @brief GM Vector3
 	 */
 	struct SGMVector3
 	{
@@ -510,7 +510,7 @@ namespace GM
 
 	/*!
 	*  @struct SGMVector3i
-	*  @brief VrEarth Vector3i
+	*  @brief GM Vector3i
 	*/
 	struct SGMVector3i
 	{
@@ -601,7 +601,7 @@ namespace GM
 
 	/*!
 	*  @struct SGMVector4f
-	*  @brief VrEarth Vector4
+	*  @brief GM Vector4
 	*/
 	struct SGMVector4f
 	{
@@ -792,7 +792,7 @@ namespace GM
 
 	/*!
 	*  @struct SGMVector4i
-	*  @brief VrEarth Vector4
+	*  @brief GM Vector4
 	*/
 	struct SGMVector4i
 	{
@@ -908,7 +908,7 @@ namespace GM
 
 	/*!
 	 *  @struct SGMModelData
-	 *  @brief VrEarth Model Data
+	 *  @brief GM Model Data
 	 */
 	struct SGMModelData
 	{

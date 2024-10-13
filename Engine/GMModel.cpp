@@ -23,6 +23,7 @@
 #include <osg/PolygonOffset>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>
+#include <osgDB/ReadFile>
 
 using namespace GM;
 
@@ -63,7 +64,9 @@ namespace GM
 CGMModel Methods
 *************************************************************************/
 /** @brief 构造 */
-CGMModel::CGMModel(): m_pRootNode(nullptr), 
+CGMModel::CGMModel() :
+	m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
+	m_pRootNode(nullptr), 
 	m_pAnimationManager(nullptr), m_pMaterial(nullptr)
 {
 	// 创建动画管理器
@@ -80,9 +83,14 @@ CGMModel::~CGMModel()
 }
 
 /** @brief 初始化 */
-bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
+bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform)
 {
+	m_pKernelData = pKernelData;
+	m_pConfigData = pConfigData;
+	m_pCommonUniform = pCommonUniform;
+
 	m_pRootNode = new osg::Group;
+	GM_Root->addChild(m_pRootNode.get());
 	osg::StateSet* pStateset = m_pRootNode->getOrCreateStateSet();
 	// 强制单面显示
 	pStateset->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
@@ -92,6 +100,13 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 		osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
 	m_pMaterial->Init(pConfigData);
+
+	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
+	// 加载背景模型
+	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "Background.FBX"));
+	// 加载角色模型
+	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "MIGI.FBX"));
+
 
 	return true;
 }
@@ -107,7 +122,6 @@ bool CGMModel::Save()
 {
 	return true;
 }
-
 
 /** @brief 重置 */
 bool CGMModel::Reset()

@@ -29,7 +29,7 @@ CGMGalaxy Methods
 
 /** @brief ¹¹Ôì */
 CGMPost::CGMPost() :
-	m_pKernelData(nullptr), m_pConfigData(nullptr),
+	m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
 	m_strShaderPath("Shaders/PostShader/"),
 	m_pVolumeTex(nullptr),
 	m_iPostUnit(0), m_bVolume(false)
@@ -105,7 +105,7 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	osg::Viewport* vp = pMainCam->getViewport();
 	vp->setViewport(0, 0, width, height);
 	pMainCam->setRenderOrder(osg::Camera::PRE_RENDER, 20);
-	pMainCam->attach(osg::Camera::COLOR_BUFFER0, pSceneTex);
+	pMainCam->attach(osg::Camera::COLOR_BUFFER0, pSceneTex, 0, 0, false, 8, 0);
 
 	// Create post triangle
 	m_pPostGeode = new osg::Geode();

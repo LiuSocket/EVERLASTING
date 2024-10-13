@@ -15,6 +15,7 @@
 #include "GMCommonUniform.h"
 #include "GMXml.h"
 #include "GMPost.h"
+#include "GMModel.h"
 #include <osgViewer/ViewerEventHandlers>
 #include <osgQt/GraphicsWindowQt>
 #include <QtCore/QTimer>
@@ -74,10 +75,8 @@ CGMEngine* CGMEngine::getSingletonPtr(void)
 
 /** @brief 构造 */
 CGMEngine::CGMEngine():
-	m_pKernelData(nullptr), m_pConfigData(nullptr),
-	m_bInit(false), m_bRendering(true),
-	m_dTimeLastFrame(0.0), m_fDeltaStep(0.0f), m_fConstantStep(0.1f),
-	m_pPost(nullptr),
+	m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
+	m_pPost(nullptr), m_pModel(nullptr),
 	m_pSceneTex(nullptr), m_pBackgroundTex(nullptr), m_pForegroundTex(nullptr)
 {
 	Init();
@@ -126,9 +125,11 @@ bool CGMEngine::Init()
 
 	m_pCommonUniform = new CGMCommonUniform();
 	m_pPost = new CGMPost();
+	m_pModel = new CGMModel();
 
 	m_pCommonUniform->Init(m_pKernelData, m_pConfigData);
 	m_pPost->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
+	m_pModel->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
 
 	//GM_View->setCameraManipulator(m_pManipulator);
 	//状态信息
@@ -190,10 +191,9 @@ bool CGMEngine::Update()
 		if (m_bRendering)
 		{
 			m_pCommonUniform->Update(deltaTime);
-		}
+			m_pPost->Update(deltaTime);
+			m_pModel->Update(deltaTime);
 
-		if (m_bRendering)
-		{
 			GM_Viewer->advance(deltaTime);
 			GM_Viewer->eventTraversal();
 			GM_Viewer->updateTraversal();
@@ -211,6 +211,7 @@ bool CGMEngine::Update()
 bool CGMEngine::Load()
 {
 	m_pPost->Load();
+	m_pModel->Load();
 	return true;
 }
 
@@ -250,7 +251,7 @@ CGMViewWidget* CGMEngine::CreateViewWidget(QWidget* parent)
 	GM_View->getCamera()->setProjectionMatrixAsPerspective(
 		m_pConfigData->fFovy,
 		static_cast<double>(m_pConfigData->iScreenWidth) / static_cast<double>(m_pConfigData->iScreenHeight),
-		0.0003, 30.0);
+		2.0, 2e4); // 单位：厘米
 
 	m_pPost->CreatePost(m_pSceneTex.get(), m_pBackgroundTex.get(), m_pForegroundTex.get());
 	if (EGMRENDER_LOW != m_pConfigData->eRenderQuality)
@@ -306,7 +307,7 @@ void CGMEngine::_InitBackground()
 	m_pKernelData->pBackgroundCam->setProjectionMatrixAsPerspective(
 		m_pConfigData->fFovy,
 		double(m_pConfigData->iScreenWidth) / double(m_pConfigData->iScreenHeight),
-		1.0, 1e5);
+		2.0, 2e4);
 	m_pKernelData->pBackgroundCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	GM_Root->addChild(m_pKernelData->pBackgroundCam.get());
 }
@@ -339,7 +340,7 @@ void CGMEngine::_InitForeground()
 	m_pKernelData->pForegroundCam->setProjectionMatrixAsPerspective(
 		m_pConfigData->fFovy,
 		double(m_pConfigData->iScreenWidth) / double(m_pConfigData->iScreenHeight),
-		1.0, 1e5);
+		2.0, 2e4);
 	m_pKernelData->pForegroundCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	GM_Root->addChild(m_pKernelData->pForegroundCam.get());
 }
@@ -365,5 +366,7 @@ bool CGMEngine::_UpdateLater(const double dDeltaTime)
 	m_pKernelData->pForegroundCam->setProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
 
 	m_pCommonUniform->UpdateLater(dDeltaTime);
+	m_pPost->UpdateLater(dDeltaTime);
+	m_pModel->UpdatePost(dDeltaTime);
 	return true;
 }

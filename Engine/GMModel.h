@@ -35,7 +35,7 @@ namespace GM
 	class CGMMaterial;
 
 	/*!
-	 *  @class CGMModel
+	 *  @class CGMModel，系统单位：厘米
 	 *  @brief GM Model Module
 	 */
 	class CGMModel
@@ -48,7 +48,7 @@ namespace GM
 		~CGMModel();
 
 		/** @brief 初始化 */
-		bool Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData);
+		bool Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform);
 		/** @brief 加载 */
 		bool Load();
 		/** @brief 保存 */
@@ -149,9 +149,15 @@ namespace GM
 
 	// 变量
 	private:
+		SGMKernelData* m_pKernelData;					//!< 内核数据
+		SGMConfigData* m_pConfigData;					//!< 配置数据
+		CGMCommonUniform* m_pCommonUniform;				//!< 公共Uniform
+
 		osg::ref_ptr<osg::Group>	m_pRootNode;
-		// 模型添加贴图的默认路径
-		std::string							m_strDefTexPath;
+		// 添加贴图的默认路径
+		std::string							m_strDefTexPath = "Textures/";
+		// 模型文件默认路径
+		std::string							m_strDefModelPath = "Models/";
 
 		//!< 动画管理器
 		CGMAnimation*						m_pAnimationManager;

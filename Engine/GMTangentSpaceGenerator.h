@@ -11,6 +11,8 @@
  */
 #pragma once
 
+#include "./Assist/mikktspace.h"
+
 #include <osg/ref_ptr>
 #include <osg/Referenced>
 #include <osg/Array>

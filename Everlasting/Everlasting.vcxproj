@@ -136,6 +136,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Engine\Assist\mikktspace.cpp" />
     <ClCompile Include="..\Engine\Assist\tinystr.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxml.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlerror.cpp" />
@@ -157,6 +158,7 @@
     <ClCompile Include="UI\GMUIManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Engine\Assist\mikktspace.h" />
     <ClInclude Include="..\Engine\Assist\tinystr.h" />
     <ClInclude Include="..\Engine\Assist\tinyxml.h" />
     <ClInclude Include="..\Engine\GMAnimation.h" />

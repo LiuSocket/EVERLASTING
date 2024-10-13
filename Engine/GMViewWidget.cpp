@@ -40,7 +40,11 @@ CGMViewWidget::CGMViewWidget(osgViewer::View* pView,QWidget* parent, Qt::WindowF
 
 	camera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 0.0));
 	camera->setViewport(new osg::Viewport(0, 0, traits->width, traits->height));
-	camera->setProjectionMatrixAsPerspective(40.0, static_cast<double>(traits->width) / static_cast<double>(traits->height), 0.0003, 30.0);
+	osg::Vec3d vEye = osg::Vec3d(0.0, -80.0, 9.0); // 单位：厘米
+	osg::Vec3d vCenter = osg::Vec3d(0.0, 0.0, 9.0); // 单位：厘米
+	osg::Vec3d vUp = osg::Vec3d(0.0, 0.0, 1.0); // 单位：厘米
+	camera->setViewMatrixAsLookAt(vEye, vCenter, vUp);
+	camera->setProjectionMatrixAsPerspective(15.0, static_cast<double>(traits->width) / static_cast<double>(traits->height), 2.0, 2e4); // 单位：厘米
 	camera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	camera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
 }

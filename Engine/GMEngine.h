@@ -41,6 +41,7 @@ namespace GM
 	*************************************************************************/
 	class CGMCommonUniform;
 	class CGMPost;
+	class CGMModel;
 
 	/*!
 	*  @class CGMEngine
@@ -135,13 +136,14 @@ namespace GM
 		SGMConfigData*						m_pConfigData;				//!< 配置数据
 		CGMCommonUniform*					m_pCommonUniform;			//!< 公用Uniform
 
-		bool								m_bInit;					//!< 初始化标志
-		bool								m_bRendering;				//!< 是否渲染
-		double								m_dTimeLastFrame;			//!< 上一帧时间
-		float								m_fDeltaStep;				//!< 单位s
-		float								m_fConstantStep;			//!< 等间隔更新的时间,单位s
+		bool								m_bInit = false;			//!< 初始化标志
+		bool								m_bRendering = true;		//!< 是否渲染
+		double								m_dTimeLastFrame = 0.0;		//!< 上一帧时间
+		float								m_fDeltaStep = 0.0f;		//!< 单位s
+		float								m_fConstantStep = 0.1f;		//!< 等间隔更新的时间,单位s
 
 		CGMPost*							m_pPost;					//!< 后期模块
+		CGMModel*							m_pModel;					//!< 模型模块
 
 		std::default_random_engine			m_iRandom;
 

@@ -12,6 +12,7 @@
 #pragma once
 
 #include "GMCommon.h"
+#include "GMCommonUniform.h"
 #include <osg/Texture2D>
 #include <osg/Texture2DArray>
 #include <osg/BufferIndexBinding>
@@ -41,7 +42,7 @@ namespace GM
 		~CGMMaterial();
 
 		/** @brief 初始化 */
-		bool Init(SGMConfigData* pConfigData);
+		bool Init(SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform);
 
 		/** @brief 实体模型加载shader
 		* @param pNode 需要修改材质的节点指针
@@ -65,6 +66,8 @@ namespace GM
 	// 变量
 	private:
 		SGMConfigData*							m_pConfigData;							//!< 配置数据
+		CGMCommonUniform*						m_pCommonUniform;						//!< 公共Uniform
+
 		std::string								m_strModelShaderPath;					//!< 模型shader路径
 		std::string								m_strDefTexPath;						//!< 模型添加贴图的默认路径
 

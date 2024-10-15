@@ -84,8 +84,8 @@ namespace GM
 CGMMaterial Methods
 *************************************************************************/
 
-CGMMaterial::CGMMaterial(): m_pConfigData(nullptr), 
-	m_strModelShaderPath("/modelShader/"), m_strDefTexPath("Resources/modelDefaultTexture/")
+CGMMaterial::CGMMaterial(): m_pConfigData(nullptr), m_pCommonUniform(nullptr),
+	m_strModelShaderPath("Shaders/ModelShader/"), m_strDefTexPath("Textures/ModelDefaultTexture/")
 {
 }
 
@@ -93,9 +93,10 @@ CGMMaterial::~CGMMaterial()
 {
 }
 
-bool CGMMaterial::Init(SGMConfigData* pConfigData)
+bool CGMMaterial::Init(SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform)
 {
 	m_pConfigData = pConfigData;
+	m_pCommonUniform = pCommonUniform;
 
 	// 初始化默认的各个材质的贴图，用于补齐纹理单元
 	// 白色贴图
@@ -195,6 +196,7 @@ void CGMMaterial::SetModelShader(osg::Node* pNode)
 	pNode->accept(cAutoTexVisitor);
 
 	osg::StateSet* pStateSet = new osg::StateSet();
+	pStateSet->addUniform(m_pCommonUniform->GetViewLight());
 	// 添加shader
 	std::string strShaderPath = m_pConfigData->strCorePath + m_strModelShaderPath;
 	CGMKit::LoadShaderWithCommonFrag(pStateSet,
@@ -213,8 +215,8 @@ void CGMMaterial::SetModelShader(osg::Node* pNode)
 	osg::ref_ptr<osg::Uniform> pIllumUniform = new osg::Uniform("illumIntense", 1.0f);
 	pStateSet->addUniform(pIllumUniform.get());
 
-	// PBR贴图（R通道存放金属度，G通道存放粗糙度，B通道存放AO贴图，A通道待定）
-	osg::ref_ptr<osg::Uniform> pTexPbrUniform = new osg::Uniform("texPbr", iChannel++);
+	// MRA贴图（R通道存放金属度，G通道存放粗糙度，B通道存放AO贴图，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexPbrUniform = new osg::Uniform("texMRA", iChannel++);
 	pStateSet->addUniform(pTexPbrUniform.get());
 	// 自发光贴图（RGB通道存放颜色，A通道待定）
 	osg::ref_ptr<osg::Uniform> pTexIlluminationUniform = new osg::Uniform("texIllumination", iChannel++);

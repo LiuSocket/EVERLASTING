@@ -99,14 +99,18 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 		new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),
 		osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
-	m_pMaterial->Init(pConfigData);
+	m_pMaterial->Init(pConfigData, pCommonUniform);
 
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
 	// 加载背景模型
 	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "Background.FBX"));
 	// 加载角色模型
-	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "MIGI.FBX"));
-
+	osg::Node* pAvatarNode = osgDB::readNodeFile(strModelPath + "MIGI.FBX");
+	m_pRootNode->addChild(pAvatarNode);
+	SGMModelData sData = SGMModelData();
+	sData.strName = "MIGI";
+	// 设置材质
+	_SetMaterial(pAvatarNode, sData);
 
 	return true;
 }
@@ -161,7 +165,6 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 	if (!pNode) return false;
 
 	ComputeTangentVisitor ctv;
-	ctv.setTraversalMode(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN);
 	pNode->accept(ctv);
 
 	// 设置材质

@@ -92,6 +92,9 @@
     <ClCompile Include="..\Engine\Assist\mikktspace.cpp">
       <Filter>GMEngine\Assist</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\GMBaseManipulator.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -150,6 +153,9 @@
     </ClInclude>
     <ClInclude Include="..\Engine\Assist\mikktspace.h">
       <Filter>GMEngine\Assist</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMBaseManipulator.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

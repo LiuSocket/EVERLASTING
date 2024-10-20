@@ -66,7 +66,7 @@ CGMModel Methods
 /** @brief 构造 */
 CGMModel::CGMModel() :
 	m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
-	m_pRootNode(nullptr), 
+	m_pRootNode(nullptr), m_pAvatarNode(nullptr),
 	m_pAnimationManager(nullptr), m_pMaterial(nullptr)
 {
 	// 创建动画管理器
@@ -105,12 +105,15 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	// 加载背景模型
 	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "Background.FBX"));
 	// 加载角色模型
-	osg::Node* pAvatarNode = osgDB::readNodeFile(strModelPath + "MIGI.FBX");
-	m_pRootNode->addChild(pAvatarNode);
-	SGMModelData sData = SGMModelData();
-	sData.strName = "MIGI";
-	// 设置材质
-	_SetMaterial(pAvatarNode, sData);
+	m_pAvatarNode = osgDB::readNodeFile(strModelPath + "MIGI.FBX");
+	if (m_pAvatarNode.valid())
+	{
+		m_pRootNode->addChild(m_pAvatarNode.get());
+		SGMModelData sData = SGMModelData();
+		sData.strName = "MIGI";
+		// 设置材质
+		_SetMaterial(m_pAvatarNode.get(), sData);
+	}
 
 	return true;
 }
@@ -118,6 +121,16 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 /** @brief 加载 */
 bool CGMModel::Load()
 {
+	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
+	// 加载角色模型
+	if (m_pAvatarNode.valid())
+	{
+		SGMModelData sData = SGMModelData();
+		sData.strName = "MIGI";
+		// 设置材质
+		_SetMaterial(m_pAvatarNode.get(), sData);
+	}
+
 	return true;
 }
 

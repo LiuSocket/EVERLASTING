@@ -153,7 +153,9 @@ namespace GM
 		SGMConfigData* m_pConfigData;					//!< 配置数据
 		CGMCommonUniform* m_pCommonUniform;				//!< 公共Uniform
 
-		osg::ref_ptr<osg::Group>	m_pRootNode;
+		osg::ref_ptr<osg::Group>			m_pRootNode;
+		osg::ref_ptr<osg::Node>				m_pAvatarNode;
+
 		// 添加贴图的默认路径
 		std::string							m_strDefTexPath = "Textures/";
 		// 模型文件默认路径

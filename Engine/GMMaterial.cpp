@@ -85,7 +85,7 @@ CGMMaterial Methods
 *************************************************************************/
 
 CGMMaterial::CGMMaterial(): m_pConfigData(nullptr), m_pCommonUniform(nullptr),
-	m_strModelShaderPath("Shaders/ModelShader/"), m_strDefTexPath("Textures/ModelDefaultTexture/")
+	m_strModelShaderPath("Shaders/ModelShader/"), m_strDefTexPath("Textures/DefaultTexture/")
 {
 }
 

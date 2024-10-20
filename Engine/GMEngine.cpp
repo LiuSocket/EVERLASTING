@@ -13,6 +13,7 @@
 #include "GMEngine.h"
 #include "GMViewWidget.h"
 #include "GMCommonUniform.h"
+#include "GMBaseManipulator.h"
 #include "GMXml.h"
 #include "GMPost.h"
 #include "GMModel.h"
@@ -124,6 +125,7 @@ bool CGMEngine::Init()
 	_InitForeground();
 
 	m_pCommonUniform = new CGMCommonUniform();
+	m_pManipulator = new CGMBaseManipulator();
 	m_pPost = new CGMPost();
 	m_pModel = new CGMModel();
 
@@ -131,7 +133,7 @@ bool CGMEngine::Init()
 	m_pPost->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
 	m_pModel->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
 
-	//GM_View->setCameraManipulator(m_pManipulator);
+	GM_View->setCameraManipulator(m_pManipulator);
 	//状态信息
 	osgViewer::StatsHandler* pStatsHandler = new osgViewer::StatsHandler;
 	pStatsHandler->setKeyEventTogglesOnScreenStats(osgGA::GUIEventAdapter::KEY_F1);

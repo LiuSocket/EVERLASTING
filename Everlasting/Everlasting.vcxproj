@@ -142,6 +142,7 @@
     <ClCompile Include="..\Engine\Assist\tinyxmlerror.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlparser.cpp" />
     <ClCompile Include="..\Engine\GMAnimation.cpp" />
+    <ClCompile Include="..\Engine\GMBaseManipulator.cpp" />
     <ClCompile Include="..\Engine\GMCommonUniform.cpp" />
     <ClCompile Include="..\Engine\GMEngine.cpp" />
     <ClCompile Include="..\Engine\GMKit.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="..\Engine\Assist\tinystr.h" />
     <ClInclude Include="..\Engine\Assist\tinyxml.h" />
     <ClInclude Include="..\Engine\GMAnimation.h" />
+    <ClInclude Include="..\Engine\GMBaseManipulator.h" />
     <ClInclude Include="..\Engine\GMCommon.h" />
     <ClInclude Include="..\Engine\GMCommonUniform.h" />
     <ClInclude Include="..\Engine\GMEngine.h" />

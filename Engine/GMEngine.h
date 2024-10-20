@@ -42,6 +42,7 @@ namespace GM
 	class CGMCommonUniform;
 	class CGMPost;
 	class CGMModel;
+	class CGMBaseManipulator;
 
 	/*!
 	*  @class CGMEngine
@@ -135,6 +136,7 @@ namespace GM
 		SGMKernelData*						m_pKernelData;				//!< 内核数据
 		SGMConfigData*						m_pConfigData;				//!< 配置数据
 		CGMCommonUniform*					m_pCommonUniform;			//!< 公用Uniform
+		CGMBaseManipulator*					m_pManipulator;				//!< 基础操作器
 
 		bool								m_bInit = false;			//!< 初始化标志
 		bool								m_bRendering = true;		//!< 是否渲染

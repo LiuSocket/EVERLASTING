@@ -160,7 +160,8 @@ namespace GM
 		std::string							m_strDefTexPath = "Textures/";
 		// 模型文件默认路径
 		std::string							m_strDefModelPath = "Models/";
-
+		//!< dds的纹理操作
+		osg::ref_ptr<osgDB::Options>		m_pDDSOptions;
 		//!< 动画管理器
 		CGMAnimation*						m_pAnimationManager;
 		//!< 材质管理器

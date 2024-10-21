@@ -71,6 +71,7 @@ namespace GM
 		std::string								m_strModelShaderPath;					//!< 模型shader路径
 		std::string								m_strDefTexPath;						//!< 模型添加贴图的默认路径
 
+		osg::ref_ptr<osgDB::Options>			m_pDDSOptions;							//!< dds的纹理操作
 		// 默认的各个材质的贴图，用于补齐纹理单元
 		std::vector<osg::ref_ptr<osg::Texture2D>> m_pPBRTexVector;						//!< PBR模型的纹理单元默认贴图
 

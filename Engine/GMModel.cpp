@@ -101,11 +101,12 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 
 	m_pMaterial->Init(pConfigData, pCommonUniform);
 
+	m_pDDSOptions = new osgDB::Options("dds_flip");
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
 	// 加载背景模型
-	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "Background.FBX"));
+	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "Background.FBX", m_pDDSOptions));
 	// 加载角色模型
-	m_pAvatarNode = osgDB::readNodeFile(strModelPath + "MIGI.FBX");
+	m_pAvatarNode = osgDB::readNodeFile(strModelPath + "MIGI.FBX", m_pDDSOptions);
 	if (m_pAvatarNode.valid())
 	{
 		m_pRootNode->addChild(m_pAvatarNode.get());

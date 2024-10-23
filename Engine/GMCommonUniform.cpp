@@ -35,7 +35,6 @@ CGMCommonUniform::CGMCommonUniform(): m_pKernelData(nullptr),
 	m_vEyeRightDirUniform(new osg::Uniform("eyeRightDir", osg::Vec3f(1.0f, 0.0f, 0.0f))),
 	m_vEyeUpDirUniform(new osg::Uniform("eyeUpDir", osg::Vec3f(0.0f, 1.0f, 0.0f))),
 	m_vViewUpUniform(new osg::Uniform("viewUp", osg::Vec3f(0.0f, 1.0f, 0.0f))),
-	m_vViewLightUniform(new osg::Uniform("viewLight", osg::Vec3f(1.0f, 0.0f, 0.0f))),
 	m_fRenderingTime(0.0)
 {
 }
@@ -73,12 +72,6 @@ void CGMCommonUniform::UpdateLater(double dDeltaTime)
 	osg::Vec3d vViewUp = osg::Vec3d(v4ViewUp.x(), v4ViewUp.y(), v4ViewUp.z());
 	vViewUp.normalize();
 	m_vViewUpUniform->set(osg::Vec3f(vViewUp));
-
-	// 更新指向光源方向的单位向量
-	osg::Vec3d vLightPos = osg::Vec3d(500.0, -100.0, 500.0);
-	osg::Vec3f vViewLight = mViewMatrix.preMult(vLightPos);
-	vViewLight.normalize();
-	m_vViewLightUniform->set(vViewLight);
 }
 
 void CGMCommonUniform::ResizeScreen(const int width, const int height)

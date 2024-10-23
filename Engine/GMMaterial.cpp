@@ -188,6 +188,13 @@ bool CGMMaterial::Init(SGMConfigData* pConfigData, CGMCommonUniform* pCommonUnif
 	m_pSandTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
 	m_pSandTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pSandTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+	// 环境探针贴图
+	m_pEnvProbeTex = new osg::Texture2D;
+	m_pEnvProbeTex->setImage(osgDB::readImageFile(strTexPath + "env_probe.dds", m_pDDSOptions));
+	m_pEnvProbeTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pEnvProbeTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 
 	return true;
 }
@@ -222,12 +229,11 @@ void CGMMaterial::SetModelShader(osg::Node* pNode)
 	// 法线贴图（RGB通道存放法线，A通道待定）
 	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
 	pStateSet->addUniform(pTexNormalUniform.get());
-
-	// 自发光强弱 [0.0,1.0]
-	osg::ref_ptr<osg::Uniform> pIllumUniform = new osg::Uniform("illumIntense", 1.0f);
-	pStateSet->addUniform(pIllumUniform.get());
-
-	pStateSet->addUniform(m_pCommonUniform->GetViewLight());
+	// 环境探针贴图
+	osg::ref_ptr<osg::Uniform> pEnvProbeUniform = new osg::Uniform("texEnvProbe", iChannel);
+	pStateSet->addUniform(pEnvProbeUniform.get());
+	pStateSet->setTextureAttributeAndModes(iChannel, m_pEnvProbeTex.get(), osg::StateAttribute::ON);
+	iChannel++;
 
 	pNode->setStateSet(pStateSet);
 }

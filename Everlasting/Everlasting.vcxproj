@@ -146,6 +146,7 @@
     <ClCompile Include="..\Engine\GMCommonUniform.cpp" />
     <ClCompile Include="..\Engine\GMEngine.cpp" />
     <ClCompile Include="..\Engine\GMKit.cpp" />
+    <ClCompile Include="..\Engine\GMLight.cpp" />
     <ClCompile Include="..\Engine\GMMaterial.cpp" />
     <ClCompile Include="..\Engine\GMModel.cpp" />
     <ClCompile Include="..\Engine\GMPost.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="..\Engine\GMEnums.h" />
     <ClInclude Include="..\Engine\GMKernel.h" />
     <ClInclude Include="..\Engine\GMKit.h" />
+    <ClInclude Include="..\Engine\GMLight.h" />
     <ClInclude Include="..\Engine\GMMaterial.h" />
     <ClInclude Include="..\Engine\GMModel.h" />
     <ClInclude Include="..\Engine\GMNodeVisitor.h" />

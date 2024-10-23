@@ -17,6 +17,7 @@
 #include "GMXml.h"
 #include "GMPost.h"
 #include "GMModel.h"
+#include "GMLight.h"
 #include <osgViewer/ViewerEventHandlers>
 #include <osgQt/GraphicsWindowQt>
 #include <QtCore/QTimer>
@@ -128,10 +129,12 @@ bool CGMEngine::Init()
 	m_pManipulator = new CGMBaseManipulator();
 	m_pPost = new CGMPost();
 	m_pModel = new CGMModel();
+	m_pLight = new CGMLight();
 
 	m_pCommonUniform->Init(m_pKernelData, m_pConfigData);
 	m_pPost->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
 	m_pModel->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
+	m_pLight->Init(m_pKernelData, m_pConfigData);
 
 	GM_View->setCameraManipulator(m_pManipulator);
 	//状态信息
@@ -195,6 +198,7 @@ bool CGMEngine::Update()
 			m_pCommonUniform->Update(deltaTime);
 			m_pPost->Update(deltaTime);
 			m_pModel->Update(deltaTime);
+			m_pLight->Update(deltaTime);
 
 			GM_Viewer->advance(deltaTime);
 			GM_Viewer->eventTraversal();
@@ -214,6 +218,7 @@ bool CGMEngine::Load()
 {
 	m_pPost->Load();
 	m_pModel->Load();
+	m_pLight->Load();
 	return true;
 }
 
@@ -370,5 +375,6 @@ bool CGMEngine::_UpdateLater(const double dDeltaTime)
 	m_pCommonUniform->UpdateLater(dDeltaTime);
 	m_pPost->UpdateLater(dDeltaTime);
 	m_pModel->UpdatePost(dDeltaTime);
+	m_pLight->UpdatePost(dDeltaTime);
 	return true;
 }

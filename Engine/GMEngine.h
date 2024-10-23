@@ -42,6 +42,7 @@ namespace GM
 	class CGMCommonUniform;
 	class CGMPost;
 	class CGMModel;
+	class CGMLight;
 	class CGMBaseManipulator;
 
 	/*!
@@ -146,6 +147,7 @@ namespace GM
 
 		CGMPost*							m_pPost;					//!< 后期模块
 		CGMModel*							m_pModel;					//!< 模型模块
+		CGMLight*							m_pLight;					//!< 光照模块
 
 		std::default_random_engine			m_iRandom;
 

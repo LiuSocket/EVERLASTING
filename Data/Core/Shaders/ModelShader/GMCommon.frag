@@ -3,10 +3,6 @@
 
 #define M_PI 3.14159265358979
 
-uniform vec3			viewLight;
-uniform mat4			view2ENUMatrix;
-uniform mat4			osg_ViewMatrixInverse;
-
 vec3 ToneMapping(vec3 x)
 {
 	const float A = 2.51;

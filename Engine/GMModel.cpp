@@ -98,6 +98,8 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	pStateset->setAttributeAndModes(
 		new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),
 		osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+	pStateset->setMode(GL_LIGHTING, osg::StateAttribute::ON);
+	pStateset->setMode(GL_LIGHT0, osg::StateAttribute::ON);
 
 	m_pMaterial->Init(pConfigData, pCommonUniform);
 

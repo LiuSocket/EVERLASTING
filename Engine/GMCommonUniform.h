@@ -70,9 +70,6 @@ namespace GM
 		inline osg::Uniform* const GetViewUp() const { return m_vViewUpUniform.get(); }
 		inline void SetViewUp(const osg::Vec3f v) { m_vViewUpUniform->set(v); }
 
-		inline osg::Uniform* const GetViewLight() const { return m_vViewLightUniform.get(); }
-		inline void SetViewLight(const osg::Vec3f v) { m_vViewLightUniform->set(v); }
-
 		// 变量
 	private:
 		SGMKernelData* m_pKernelData;				//!< 内核数据
@@ -85,7 +82,6 @@ namespace GM
 		osg::ref_ptr<osg::Uniform> m_vEyeRightDirUniform;			//!< 主相机右方单位向量，在世界空间
 		osg::ref_ptr<osg::Uniform> m_vEyeUpDirUniform;				//!< 主相机上方单位向量，在世界空间
 		osg::ref_ptr<osg::Uniform> m_vViewUpUniform;				//!< 眼点view空间Up向量，指向天空
-		osg::ref_ptr<osg::Uniform> m_vViewLightUniform;				//!< view空间的光源方向
 
 		double m_fRenderingTime;									//!< 三维渲染的持续时间，不是程序运行时长
 	};

@@ -95,6 +95,9 @@
     <ClCompile Include="..\Engine\GMBaseManipulator.cpp">
       <Filter>GMEngine\Core\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\GMLight.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -155,6 +158,9 @@
       <Filter>GMEngine\Assist</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\GMBaseManipulator.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMLight.h">
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

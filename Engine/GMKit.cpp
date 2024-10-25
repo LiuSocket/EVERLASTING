@@ -160,21 +160,19 @@ bool CGMKit::AddTexture(osg::StateSet* pStateSet, osg::Texture* pTex, const char
 	if (!pStateSet || !pTex || ("" == texName) || (iUnit < 0)) 	return false;
 
 	pStateSet->setTextureAttributeAndModes(iUnit, pTex);
-	osg::ref_ptr<osg::Uniform> pUniform = new osg::Uniform(texName, iUnit);
-	pStateSet->addUniform(pUniform.get());
+	pStateSet->addUniform(new osg::Uniform(texName, iUnit));
 
 	return true;
 }
 
 bool CGMKit::AddImage(osg::StateSet* pStateSet, osg::Texture* pTex, const char* texName,
-	unsigned int unit, GLenum access, GLenum format, int level, bool layered, int layer)
+	const int unit, GLenum access, GLenum format, int level, bool layered, int layer)
 {
 	if (!pStateSet || !pTex || ("" == texName) || (unit < 0)) return false;
 
-	osg::ref_ptr<osg::Uniform> pVoxelUniform = new osg::Uniform(texName, unit);
-	pStateSet->addUniform(pVoxelUniform.get());
-	pTex->bindToImageUnit(unit, access, format, level, layered, layer);
-	pStateSet->setTextureAttribute(unit, pTex, osg::StateAttribute::ON);
+	pTex->bindToImageUnit(unit, access , format, level, layered, layer);
+	pStateSet->setTextureAttribute(unit, pTex);
+	pStateSet->addUniform(new osg::Uniform(texName, unit));
 
 	// add a callback to reset the textures after the draw.
 	osg::StateSet::Callback* callback = pStateSet->getUpdateCallback();
@@ -221,8 +219,8 @@ osg::Vec4f CGMKit::GetImageColor(const osg::Image* pImg, const float fX, const f
 	}
 	else // ÁÙ½üÖµ
 	{
-		unsigned int uS1 = osg::minimum(iW - 1, uS + unsigned int((fDeltaS > 0.5f) ? 1 : 0));
-		unsigned int uT1 = osg::minimum(iH - 1, uT + unsigned int((fDeltaT > 0.5f) ? 1 : 0));
+		unsigned int uS1 = osg::minimum(iW - 1, uS + unsigned int((fDeltaS>0.5f) ? 1 : 0));
+		unsigned int uT1 = osg::minimum(iH - 1, uT + unsigned int((fDeltaT>0.5f) ? 1 : 0));
 		return pImg->getColor(uS1, uT1);
 	}
 }

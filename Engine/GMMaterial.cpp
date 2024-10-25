@@ -192,7 +192,7 @@ bool CGMMaterial::Init(SGMConfigData* pConfigData, CGMCommonUniform* pCommonUnif
 	m_pEnvProbeTex = new osg::Texture2D;
 	m_pEnvProbeTex->setImage(osgDB::readImageFile(strTexPath + "env_probe.dds", m_pDDSOptions));
 	m_pEnvProbeTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-	m_pEnvProbeTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+	m_pEnvProbeTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);// 改成LINEAR_MIPMAP_LINEAR会报错
 	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 

@@ -154,6 +154,7 @@ namespace GM
 		CGMCommonUniform* m_pCommonUniform;				//!< 公共Uniform
 
 		osg::ref_ptr<osg::Group>			m_pRootNode;
+		osg::ref_ptr<osg::Node>				m_pBackgroundNode;
 		osg::ref_ptr<osg::Node>				m_pAvatarNode;
 
 		// 添加贴图的默认路径

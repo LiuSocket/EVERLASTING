@@ -167,6 +167,7 @@
     <ClInclude Include="..\Engine\GMBaseManipulator.h" />
     <ClInclude Include="..\Engine\GMCommon.h" />
     <ClInclude Include="..\Engine\GMCommonUniform.h" />
+    <ClInclude Include="..\Engine\GMDispatchCompute.h" />
     <ClInclude Include="..\Engine\GMEngine.h" />
     <ClInclude Include="..\Engine\GMEnums.h" />
     <ClInclude Include="..\Engine\GMKernel.h" />

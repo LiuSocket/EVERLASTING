@@ -1,4 +1,4 @@
-#define CUT_ALPHA 0.001
+const float CUT_ALPHA = 0.001;
 
 uniform mat4			osg_ViewMatrixInverse;
 uniform sampler2D		texBaseColor;
@@ -16,17 +16,15 @@ in vData
 	vec3	viewBinormal;
 } vertOut;
 
-out vec4 fragColor;
-
 /* Reflect Environment BRDF */
 vec4 ReflectEnvironment(vec3 localReflect, float roughness)
 {
-	float scaleXY = sqrt((1-abs(localReflect.z))/max(1e-9,1-localReflect.z*localReflect.z));
-	vec2 texCoord_r = vec2(0.25+0.5*step(0.0,localReflect.z),0.5)+vec2(0.25,0.5)*localReflect.xy*scaleXY;
-	float mipmapLevel = log2(roughness*80+1);
-	vec4 texel = textureLod(texEnvProbe, texCoord_r, mipmapLevel);
+	float scaleXY = sqrt((1.0-abs(localReflect.z))/max(1e-9,1.0-localReflect.z*localReflect.z));
+	vec2 texCoord = vec2(0.25+0.5*step(0.0,localReflect.z),0.5)+vec2(0.25,0.5)*localReflect.xy*scaleXY;
+	float mipmapLevel = log2(roughness*80.0+1.0);
+	vec4 texel = textureLod(texEnvProbe, texCoord, mipmapLevel);
 	vec3 color = texel.rgb*texel.a*texel.a;
-	return vec4(color*16, 1.0);
+	return vec4(color*16.0, 1.0);
 }
 
 void main()
@@ -66,7 +64,7 @@ void main()
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
 
 	/* Reflect Environment BRDF */
-	vec4 reflectEnv = ReflectEnvironment(localReflect,roughness);
+	vec4 reflectEnv = ReflectEnvironment(localReflect, roughness);
 	reflectEnv.rgb *= gl_LightSource[0].ambient.rgb + gl_LightSource[0].diffuse.rgb;
 	
 	/* ambient BRDF */
@@ -93,5 +91,5 @@ void main()
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-	fragColor = outColor;
+	gl_FragColor = outColor;
 }

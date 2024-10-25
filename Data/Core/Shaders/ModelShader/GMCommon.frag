@@ -1,5 +1,4 @@
 #version 450 compatibility
-#extension GL_ARB_gpu_shader5 : enable
 
 #define M_PI 3.14159265358979
 

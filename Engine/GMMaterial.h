@@ -44,10 +44,15 @@ namespace GM
 		/** @brief 初始化 */
 		bool Init(SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform);
 
-		/** @brief 实体模型加载shader
+		/** @brief 加载 PBR shader
 		* @param pNode 需要修改材质的节点指针
 		*/
-		void SetModelShader(osg::Node* pNode);
+		void SetPBRShader(osg::Node* pNode);
+
+		/** @brief 加载 背景 shader
+		* @param pNode 需要修改材质的节点指针
+		*/
+		void SetBackgroundShader(osg::Node* pNode);
 
 	private:
 		

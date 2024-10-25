@@ -66,7 +66,7 @@ namespace GM
 					{
 						if (vAttr.at(i) || !_vTex.at(i).valid())
 							continue;
-						pStateSet->setTextureAttributeAndModes(i, _vTex.at(i).get(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+						pStateSet->setTextureAttributeAndModes(i, _vTex.at(i).get(), osg::StateAttribute::ON);
 					}
 
 					draw->dirtyDisplayList();
@@ -154,7 +154,7 @@ bool CGMMaterial::Init(SGMConfigData* pConfigData, CGMCommonUniform* pCommonUnif
 	m_pRainRippleTex = new osg::Texture2D;
 	m_pRainRippleTex->setImage(osgDB::readImageFile(strTexPath + "ripple.tga"));
 	m_pRainRippleTex->setFilter(osg::Texture::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-	m_pRainRippleTex->setFilter(osg::Texture::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pRainRippleTex->setFilter(osg::Texture::MAG_FILTER, osg::Texture2D::LINEAR);
 	m_pRainRippleTex->setWrap(osg::Texture::WRAP_S, osg::Texture2D::REPEAT);
 	m_pRainRippleTex->setWrap(osg::Texture::WRAP_T, osg::Texture2D::REPEAT);
 	m_pRainRippleTex->setInternalFormat(GL_RGBA8);
@@ -164,42 +164,42 @@ bool CGMMaterial::Init(SGMConfigData* pConfigData, CGMCommonUniform* pCommonUnif
 	m_pWetNormalTex = new osg::Texture2D;
 	m_pWetNormalTex->setImage(osgDB::readImageFile(strTexPath + "custom_n.dds", m_pDDSOptions));
 	m_pWetNormalTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-	m_pWetNormalTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pWetNormalTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 	m_pWetNormalTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pWetNormalTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 	// 噪声贴图
 	m_pNoiseTex = new osg::Texture2D;
 	m_pNoiseTex->setImage(osgDB::readImageFile(strTexPath + "custom_noise.dds", m_pDDSOptions));
 	m_pNoiseTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-	m_pNoiseTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pNoiseTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 	m_pNoiseTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pNoiseTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 	// 雪和霜的贴图
 	m_pSnowTex = new osg::Texture2D;
 	m_pSnowTex->setImage(osgDB::readImageFile(strTexPath + "snow.dds", m_pDDSOptions));
 	m_pSnowTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-	m_pSnowTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pSnowTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 	m_pSnowTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pSnowTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 	// 黄沙贴图
 	m_pSandTex = new osg::Texture2D;
 	m_pSandTex->setImage(osgDB::readImageFile(strTexPath + "sand.dds", m_pDDSOptions));
 	m_pSandTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-	m_pSandTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pSandTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 	m_pSandTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pSandTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 	// 环境探针贴图
 	m_pEnvProbeTex = new osg::Texture2D;
 	m_pEnvProbeTex->setImage(osgDB::readImageFile(strTexPath + "env_probe.dds", m_pDDSOptions));
 	m_pEnvProbeTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
-	m_pEnvProbeTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pEnvProbeTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 
 	return true;
 }
 
-void CGMMaterial::SetModelShader(osg::Node* pNode)
+void CGMMaterial::SetPBRShader(osg::Node* pNode)
 {
 	//!< 自动补齐地面模型的纹理单元
 	AutoTexVisitor cAutoTexVisitor(m_pPBRTexVector);
@@ -230,10 +230,23 @@ void CGMMaterial::SetModelShader(osg::Node* pNode)
 	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
 	pStateSet->addUniform(pTexNormalUniform.get());
 	// 环境探针贴图
-	osg::ref_ptr<osg::Uniform> pEnvProbeUniform = new osg::Uniform("texEnvProbe", iChannel);
-	pStateSet->addUniform(pEnvProbeUniform.get());
-	pStateSet->setTextureAttributeAndModes(iChannel, m_pEnvProbeTex.get(), osg::StateAttribute::ON);
-	iChannel++;
+	CGMKit::AddTexture(pStateSet, m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);
+
+	pNode->setStateSet(pStateSet);
+}
+
+void CGMMaterial::SetBackgroundShader(osg::Node* pNode)
+{
+	osg::StateSet* pStateSet = new osg::StateSet();
+
+	pStateSet->addUniform(m_pCommonUniform->GetScreenSize());
+
+	// 添加shader
+	std::string strShaderPath = m_pConfigData->strCorePath + m_strModelShaderPath;
+	CGMKit::LoadShader(pStateSet,
+		strShaderPath + "GMBackground.vert",
+		strShaderPath + "GMBackground.frag",
+		"Background");
 
 	pNode->setStateSet(pStateSet);
 }

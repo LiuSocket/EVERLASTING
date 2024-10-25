@@ -163,6 +163,9 @@
     <ClInclude Include="..\Engine\GMLight.h">
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\GMDispatchCompute.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="..\Engine\GMViewWidget.h">

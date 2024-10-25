@@ -1,5 +1,4 @@
 #version 450 compatibility
-#extension GL_ARB_gpu_shader5 : enable
 
 attribute vec3		tangent;
 attribute vec3		binormal;

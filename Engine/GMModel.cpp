@@ -106,7 +106,18 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	m_pDDSOptions = new osgDB::Options("dds_flip");
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
 	// 加载背景模型
-	m_pRootNode->addChild(osgDB::readNodeFile(strModelPath + "Background.FBX", m_pDDSOptions));
+	m_pBackgroundNode = osgDB::readNodeFile(strModelPath + "Background.FBX", m_pDDSOptions);
+	if (m_pBackgroundNode.valid())
+	{
+		m_pRootNode->addChild(m_pBackgroundNode.get());
+		SGMModelData sData = SGMModelData();
+		sData.strName = "Bacdground";
+		sData.iEntRenderBin = 0;
+		sData.eMaterial = EGM_MATERIAL_Background;
+		// 设置材质
+		_SetMaterial(m_pBackgroundNode.get(), sData);
+	}
+
 	// 加载角色模型
 	m_pAvatarNode = osgDB::readNodeFile(strModelPath + "MIGI.FBX", m_pDDSOptions);
 	if (m_pAvatarNode.valid())
@@ -114,6 +125,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 		m_pRootNode->addChild(m_pAvatarNode.get());
 		SGMModelData sData = SGMModelData();
 		sData.strName = "MIGI";
+		sData.eMaterial = EGM_MATERIAL_PBR;
 		// 设置材质
 		_SetMaterial(m_pAvatarNode.get(), sData);
 	}
@@ -125,11 +137,23 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 bool CGMModel::Load()
 {
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
+	// 加载背景模型
+	if (m_pBackgroundNode.valid())
+	{
+		SGMModelData sData = SGMModelData();
+		sData.strName = "Bacdground";
+		sData.iEntRenderBin = 0;
+		sData.eMaterial = EGM_MATERIAL_Background;
+		// 设置材质
+		_SetMaterial(m_pBackgroundNode.get(), sData);
+	}
+	
 	// 加载角色模型
 	if (m_pAvatarNode.valid())
 	{
 		SGMModelData sData = SGMModelData();
 		sData.strName = "MIGI";
+		sData.eMaterial = EGM_MATERIAL_PBR;
 		// 设置材质
 		_SetMaterial(m_pAvatarNode.get(), sData);
 	}
@@ -183,27 +207,40 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 	ComputeTangentVisitor ctv;
 	pNode->accept(ctv);
 
-	// 设置材质
-	m_pMaterial->SetModelShader(pNode);
+	// 设置材质、
+	switch (sData.eMaterial)
+	{
+	case EGM_MATERIAL_PBR:
+	{
+		m_pMaterial->SetPBRShader(pNode);
+	}
+	break;
+	case EGM_MATERIAL_Background:
+	{
+		m_pMaterial->SetBackgroundShader(pNode);
+	}
+	break;
+	default:
+		break;
+	}
 
 	osg::StateSet* pStateSet = pNode->getOrCreateStateSet();
-
 	// Blend
 	switch (sData.eBlend)
 	{
-	case EGM_MODB_Opaque:
+	case EGM_BLEND_Opaque:
 	{
 		pStateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
 		pStateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
 	}
 	break;
-	case EGM_MODB_Transparency:
+	case EGM_BLEND_Transparent:
 	{
 		pStateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
 		pStateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
 	}
 	break;
-	case EGM_MODB_Cutoff:
+	case EGM_BLEND_Cutoff:
 	{
 		pStateSet->setMode(GL_BLEND, osg::StateAttribute::OFF);
 		pStateSet->setMode(GL_ALPHA_TEST, osg::StateAttribute::ON);

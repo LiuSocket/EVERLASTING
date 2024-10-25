@@ -254,14 +254,24 @@ namespace GM
 	};
 
 	/*!
-	*  @enum EGMModelBlend
+	*  @enum EGMMaterial
+	*  @brief 材质枚举
+	*/
+	enum EGMMaterial
+	{
+		EGM_MATERIAL_PBR = 0,			//!< 默认PBR材质
+		EGM_MATERIAL_Background = 1		//!< 背景材质
+	};
+
+	/*!
+	*  @enum EGMBlend
 	*  @brief 模型半透明混合类型
 	*/
-	enum EGMModelBlend
+	enum EGMBlend
 	{
-		EGM_MODB_Opaque = 0,		//!< 不透明
-		EGM_MODB_Transparency = 1,	//!< 半透明
-		EGM_MODB_Cutoff = 2			//!< 截断
+		EGM_BLEND_Opaque = 0,			//!< 不透明
+		EGM_BLEND_Transparent = 1,		//!< 半透明
+		EGM_BLEND_Cutoff = 2			//!< 截断
 	};
 
 	/*!

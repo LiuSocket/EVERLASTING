@@ -42,7 +42,7 @@ bool CGMLight::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	m_pConfigData = pConfigData;
 
 	osg::ref_ptr<osg::Light> pLight = new osg::Light(0);
-	pLight->setPosition(osg::Vec4(1, -2, 1, 0));
+	pLight->setPosition(osg::Vec4(1, -2, 1.5, 0));
 	pLight->setAmbient(osg::Vec4(0.1, 0.12, 0.15, 1.0));
 	pLight->setDiffuse(osg::Vec4(0.9, 0.88, 0.85, 1.0));
 	pLight->setSpecular(osg::Vec4(1.0, 1.0, 1.0, 1.0));

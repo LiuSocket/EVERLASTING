@@ -101,7 +101,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	pStateset->setMode(GL_LIGHTING, osg::StateAttribute::ON);
 	pStateset->setMode(GL_LIGHT0, osg::StateAttribute::ON);
 
-	m_pMaterial->Init(pConfigData, pCommonUniform);
+	m_pMaterial->Init(pKernelData, pConfigData, pCommonUniform);
 
 	m_pDDSOptions = new osgDB::Options("dds_flip");
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;

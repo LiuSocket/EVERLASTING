@@ -149,9 +149,9 @@ namespace GM
 
 	// 变量
 	private:
-		SGMKernelData* m_pKernelData;					//!< 内核数据
-		SGMConfigData* m_pConfigData;					//!< 配置数据
-		CGMCommonUniform* m_pCommonUniform;				//!< 公共Uniform
+		SGMKernelData* m_pKernelData = nullptr;					//!< 内核数据
+		SGMConfigData* m_pConfigData = nullptr;					//!< 配置数据
+		CGMCommonUniform* m_pCommonUniform = nullptr;			//!< 公共Uniform
 
 		osg::ref_ptr<osg::Group>			m_pRootNode;
 		osg::ref_ptr<osg::Node>				m_pBackgroundNode;

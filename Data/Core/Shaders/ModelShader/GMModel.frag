@@ -42,7 +42,7 @@ void main()
 	vec4 texel_n = texture2D(texNormal, gl_TexCoord[0].st);
 
 	vec3 normalTangent = normalize(texel_n.xyz-vec3(0.5));
-	vec3 viewNormTex = normalize(
+	vec3 viewTexNorm = normalize(
 		mat3(normalize(vertOut.viewTang)
 			,normalize(vertOut.viewBinormal)
 			,viewNorm)
@@ -50,17 +50,17 @@ void main()
 
 	vec3 viewHalf = normalize(viewLight-viewVertDir);
 	const float minFact = 1e-8;
-	float dotNL = dot(viewNormTex, viewLight);
+	float dotNL = dot(viewTexNorm, viewLight);
 	float dotNL_1 = max(dotNL,minFact);
-	float dotNH = max(dot(viewNormTex, viewHalf),minFact);
-	float dotVN = max(dot(-viewVertDir, viewNormTex),minFact);
+	float dotNH = max(dot(viewTexNorm, viewHalf),minFact);
+	float dotVN = max(dot(-viewVertDir, viewTexNorm),minFact);
 	float dotVH = max(dot(-viewVertDir, viewHalf),minFact);
 
 	float metallic = texel_p.r;
 	float roughness = texel_p.g;
 	float ambientOcc = texel_p.b;
-	float noiseFact = noiseV1(viewNormTex);
-	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewNormTex),0.0)).xyz);
+	float noiseFact = noiseV1(viewTexNorm);
+	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
 
 	/* Reflect Environment BRDF */

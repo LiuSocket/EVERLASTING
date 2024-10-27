@@ -14,6 +14,6 @@ float Random(vec2 coords)
 void main()
 {
 	float fragmentNoise = mix(-NOISE_GRANULARITY, NOISE_GRANULARITY, Random(gl_FragCoord.xy / screenSize.xy));
-	vec3 backColor = vec3(mix(0.6, 0.3, exp2(-length(objPos.xyz)*0.02)) + fragmentNoise);
+	vec3 backColor = mix(vec3(0.4,0.45,0.5), vec3(0.2,0.22,0.25), exp2(-length(objPos.xyz)*0.03)) + fragmentNoise;
 	gl_FragColor = vec4(backColor, 1.0);
 }

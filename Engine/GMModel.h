@@ -67,6 +67,12 @@ namespace GM
 		* @return bool 成功OK，失败Fail，模型不存在返回NotExist
 		*/
 		bool SetAnimationEnable(const std::string& strName, const bool bEnable);
+		/**
+		* @brief 获取指定模型的动画功能（骨骼动画、变形动画）是否开启
+		* @param strName: 模型在场景中的名称
+		* @return bool: 是否启用动画
+		*/
+		bool GetAnimationEnable(const std::string& strName);
 
 		/**
 		* @brief 设置动画播放时长

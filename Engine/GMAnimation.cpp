@@ -92,19 +92,17 @@ namespace GM
 	};
 
 	/*
-	*  @brief 动画播放器，同类模型共享一个播放器，播放器可以同时播放多个动画
+	*  @brief 动画播放器，同一个模型文件可以共享一个播放器（但目前还没有实现共用），播放器可以同时播放多个动画
 	*/
 	class CAnimationPlayer : public osg::Referenced
 	{
 	public:
 		CAnimationPlayer() : _manager(nullptr), _focus(0) {}
 
-		typedef std::vector<double> AnimationPauseTimeVector;
-		typedef std::vector<int> AnimationPriorityVector;
-		typedef std::vector<std::string> AnimationMapVector;
+
 		typedef std::vector<std::string> ModelNameVector;
 
-		// 添加模型名称
+		// 添加模型名称（目前只能添加一个）
 		bool addModel(const std::string& strModelName)
 		{
 			auto itr = find(_modelNameVec.begin(), _modelNameVec.end(), strModelName);
@@ -143,7 +141,7 @@ namespace GM
 			return true;
 		}
 
-		// 播放动画
+		/* @brief 播放当前聚焦的动画，如果只有一个动画在播放，则修改权重无效 */
 		bool play()
 		{
 			if (_focus < _animNameVec.size())
@@ -154,6 +152,7 @@ namespace GM
 			}
 			return false;
 		}
+		/* @brief 播放指定的动画，如果只有一个动画在播放，则修改权重无效 */
 		bool play(const std::string& name, float weight)
 		{
 			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
@@ -163,21 +162,20 @@ namespace GM
 			return true;
 		}
 
-		// 停止动画
+		/* @brief 停止所有动画，停在当前位置 */
 		void stop()
 		{
 			_manager->stopAll();
 		}
+		/* @brief 停止指定的动画 */
 		bool stop(const std::string& name)
 		{
 			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
-
 			_manager->stopAnimation(_map[name].get());
-
 			return true;
 		}
 
-		// 暂停动画
+		/* @brief 暂停所有动画 */
 		bool pause()
 		{
 			for (unsigned int i = 0; i < _animNameVec.size(); i++)
@@ -188,6 +186,7 @@ namespace GM
 			}
 			return false;
 		}
+		/* @brief 暂停指定的动画 */
 		bool pause(const std::string& name)
 		{
 			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
@@ -198,7 +197,7 @@ namespace GM
 			return true;
 		}
 
-		// 继续播放动画
+		/* @brief 继续播放当前聚焦的动画 */
 		bool resume()
 		{
 			if (_focus < _animNameVec.size())
@@ -208,6 +207,7 @@ namespace GM
 			}
 			return false;
 		}
+		/* @brief 继续播放指定的动画 */
 		bool resume(const std::string& name)
 		{
 			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
@@ -217,6 +217,7 @@ namespace GM
 			return true;
 		}
 
+		/* @brief 设置当前聚焦的动画的播放优先级 */
 		bool setPriority(const int iPriority)
 		{
 			if (_focus < _animNameVec.size())
@@ -226,6 +227,7 @@ namespace GM
 			}
 			return false;
 		}
+		/* @brief 设置指定动画的播放优先级 */
 		bool setPriority(const std::string& name, const int iPriority)
 		{
 			for (unsigned int i = 0; i < _animNameVec.size(); i++)
@@ -251,6 +253,7 @@ namespace GM
 			return false;
 		}
 
+		/* @brief 设置当前聚焦的动画的播放时长, 单位：秒 */
 		bool setDuration(const double fDuration)
 		{
 			if (_focus < _animNameVec.size())
@@ -260,6 +263,8 @@ namespace GM
 			}
 			return false;
 		}
+
+		/* @brief 设置指定动画的播放时长, 单位：秒 */
 		bool setDuration(const std::string& name, const double fDuration)
 		{
 			if (!(_map[name].get()))
@@ -281,6 +286,7 @@ namespace GM
 			return true;
 		}
 
+		/* @brief 设置当前聚焦的动画的播放模式 */
 		bool setPlayMode(osgAnimation::Animation::PlayMode ePlayMode)
 		{
 			if (_focus < _animNameVec.size())
@@ -290,6 +296,7 @@ namespace GM
 			}
 			return false;
 		}
+		/* @brief 设置指定动画的播放模式 */
 		bool setPlayMode(const std::string& name, osgAnimation::Animation::PlayMode ePlayMode)
 		{
 			if (!(_map[name].get()))
@@ -298,6 +305,7 @@ namespace GM
 			_map[name].get()->setPlayMode(ePlayMode);
 			return true;
 		}
+		/* @brief 获取指定动画的播放模式 */
 		bool getPlayMode(const std::string& name, osgAnimation::Animation::PlayMode& ePlayMode)
 		{
 			if (!(_map[name].get()))
@@ -312,7 +320,7 @@ namespace GM
 			return _animNameVec[_focus];
 		}
 
-		const AnimationMapVector& getAnimationList() const
+		const std::vector<std::string>& getAnimationList() const
 		{
 			return _animNameVec;
 		}
@@ -320,9 +328,9 @@ namespace GM
 	private:
 		osg::ref_ptr<CGMBasicAnimationManager>	_manager; // 动画管理器
 		osgAnimation::AnimationMap				_map; // 动画映射
-		AnimationMapVector						_animNameVec; // 动画名称
-		AnimationPauseTimeVector				_animPauseTimeVec; // 动画暂停、继续时间
-		AnimationPriorityVector					_animPriorityVec; // 动画优先级
+		std::vector<std::string>				_animNameVec; // 动画名称
+		std::vector<double>						_animPauseTimeVec; // 动画暂停、继续时间
+		std::vector<int>						_animPriorityVec; // 动画优先级
 		ModelNameVector							_modelNameVec; // 模型名称
 		unsigned int							_focus; // 当前动画焦点
 	};
@@ -348,6 +356,9 @@ bool CGMAnimation::Reset()
 
 bool CGMAnimation::AddAnimation(const std::string& strName, osg::Node* pNode)
 {
+	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strName);
+	if (pAniPlayer) return false;
+
 	AnimationManagerFinder finder;
 	pNode->accept(finder);
 	if (finder._am.valid())
@@ -371,6 +382,12 @@ bool CGMAnimation::RemoveAnimation(const std::string& strName)
 	_RemovePlayer(strPlayerName);
 
 	return true;
+}
+
+bool CGMAnimation::GetAnimationEnable(const std::string& strName)
+{
+	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strName);
+	return pAniPlayer ? true : false;
 }
 
 bool CGMAnimation::SetAnimationDuration(const std::string& strModelName, const float fDuration, const std::string& strAnimationName)

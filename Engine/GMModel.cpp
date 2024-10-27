@@ -269,6 +269,14 @@ bool CGMModel::SetAnimationEnable(const std::string& strName, const bool bEnable
 		return m_pAnimationManager->RemoveAnimation(strName);
 }
 
+bool CGMModel::GetAnimationEnable(const std::string& strName)
+{
+	osg::Node* pNode = nullptr;// strName; to do
+	if (!pNode) return false;
+
+	return m_pAnimationManager->GetAnimationEnable(strName);
+}
+
 bool CGMModel::SetAnimationDuration(const std::string& strModelName, const float fDuration, const std::string& strAnimationName)
 {
 	return m_pAnimationManager->SetAnimationDuration(strModelName, fDuration, strAnimationName);

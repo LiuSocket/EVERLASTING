@@ -54,6 +54,13 @@ namespace GM
 		bool RemoveAnimation(const std::string& strName);
 
 		/**
+		* @brief 获取指定模型的动画功能（骨骼动画、变形动画）是否开启
+		* @param strName: 模型在场景中的名称
+		* @return bool: 是否启用动画
+		*/
+		bool GetAnimationEnable(const std::string& strName);
+
+		/**
 		* @brief 设置动画播放时长
 		* @param strModelName 模型名称
 		* @param fDuration 动画时长，单位：秒

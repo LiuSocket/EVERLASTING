@@ -65,7 +65,7 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param fDuration 动画时长，单位：秒
 		* @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationDuration(const std::string& strModelName, const float fDuration, const std::string& strAnimationName = "");
 		/**
@@ -80,7 +80,7 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param ePlayMode 播放模式
 		* @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationMode(const std::string& strModelName, EGMPlayMode ePlayMode, const std::string& strAnimationName = "");
 		/**
@@ -95,7 +95,7 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param iPriority 动画优先级，[0,100]，数值越大优先级越高
 		* @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationPriority(const std::string& strModelName, const int iPriority, const std::string& strAnimationName = "");
 		/**
@@ -111,21 +111,21 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param fWeight 动画混合权重，[0.0,1.0]，0.0表示停止，1.0表示播放，动画可根据权重混合
 		* @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationPlay(const std::string& strModelName, const float fWeight, const std::string& strAnimationName = "");
 		/**
 		* @brief 暂停动画
 		* @param strModelName 模型名称
 		* @param strAnimationName 动画名称，动画名称为空时，播放所有动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationPause(const std::string& strModelName, const std::string& strAnimationName);
 		/**
 		* @brief 继续播放动画
 		* @param strModelName 模型名称
 		* @param strAnimationName 动画名称
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName);
 

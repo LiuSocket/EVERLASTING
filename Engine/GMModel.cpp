@@ -66,7 +66,7 @@ CGMModel Methods
 /** @brief 构造 */
 CGMModel::CGMModel() :
 	m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
-	m_pRootNode(nullptr), m_pAvatarNode(nullptr),
+	m_pRootNode(nullptr),
 	m_pAnimationManager(nullptr), m_pMaterial(nullptr)
 {
 	// 创建动画管理器
@@ -104,31 +104,20 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	m_pMaterial->Init(pKernelData, pConfigData, pCommonUniform);
 
 	m_pDDSOptions = new osgDB::Options("dds_flip");
-	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
+
 	// 加载背景模型
-	m_pBackgroundNode = osgDB::readNodeFile(strModelPath + "Background.FBX", m_pDDSOptions);
-	if (m_pBackgroundNode.valid())
-	{
-		m_pRootNode->addChild(m_pBackgroundNode.get());
-		SGMModelData sData = SGMModelData();
-		sData.strName = "Bacdground";
-		sData.iEntRenderBin = 0;
-		sData.eMaterial = EGM_MATERIAL_Background;
-		// 设置材质
-		_SetMaterial(m_pBackgroundNode.get(), sData);
-	}
+	SGMModelData sData = SGMModelData();
+	sData.strName = "Bacdground";
+	sData.strFilePath = "Background.FBX";
+	sData.iEntRenderBin = 0;
+	sData.eMaterial = EGM_MATERIAL_Background;
+	Add(sData);
 
 	// 加载角色模型
-	m_pAvatarNode = osgDB::readNodeFile(strModelPath + "MIGI.FBX", m_pDDSOptions);
-	if (m_pAvatarNode.valid())
-	{
-		m_pRootNode->addChild(m_pAvatarNode.get());
-		SGMModelData sData = SGMModelData();
-		sData.strName = "MIGI";
-		sData.eMaterial = EGM_MATERIAL_PBR;
-		// 设置材质
-		_SetMaterial(m_pAvatarNode.get(), sData);
-	}
+	sData.strName = "MIGI";
+	sData.strFilePath = "MIGI.FBX";
+	sData.eMaterial = EGM_MATERIAL_PBR;
+	Add(sData);
 
 	return true;
 }
@@ -137,26 +126,23 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 bool CGMModel::Load()
 {
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
-	// 加载背景模型
-	if (m_pBackgroundNode.valid())
-	{
-		SGMModelData sData = SGMModelData();
-		sData.strName = "Bacdground";
-		sData.iEntRenderBin = 0;
-		sData.eMaterial = EGM_MATERIAL_Background;
-		// 设置材质
-		_SetMaterial(m_pBackgroundNode.get(), sData);
-	}
-	
-	// 加载角色模型
-	if (m_pAvatarNode.valid())
-	{
-		SGMModelData sData = SGMModelData();
-		sData.strName = "MIGI";
-		sData.eMaterial = EGM_MATERIAL_PBR;
-		// 设置材质
-		_SetMaterial(m_pAvatarNode.get(), sData);
-	}
+	//// 加载背景模型
+	//osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
+	//if (pNode.valid())
+	//{
+	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
+	//}	
+	//// 加载角色模型
+	//pNode = _GetNode("MIGI");
+	//if (pNode.valid())
+	//{
+	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
+	//}
+
+	SetAnimationEnable("MIGI", true);
+	SetAnimationMode("MIGI", EGM_PLAY_PPONG);
+	SetAnimationDuration("MIGI", 4.0f);
+	SetAnimationPlay("MIGI", 1.0f);
 
 	return true;
 }
@@ -174,7 +160,6 @@ bool CGMModel::Reset()
 	return true;
 }
 
-/** @brief 更新 */
 bool CGMModel::Update(double dDeltaTime)
 {
 	static double fConstantStep = 0.1;
@@ -189,10 +174,36 @@ bool CGMModel::Update(double dDeltaTime)
 	return true;
 }
 
-/** @brief 更新(在主相机更新之后) */
 bool CGMModel::UpdatePost(double dDeltaTime)
 {
 	return true;
+}
+
+bool CGMModel::Add(const SGMModelData& sData)
+{
+	// 加载背景模型
+	osg::ref_ptr<osg::Node> pNode = osgDB::readNodeFile(
+		m_pConfigData->strCorePath + m_strDefModelPath + sData.strFilePath,
+		m_pDDSOptions);
+	if (pNode.valid())
+	{
+		m_pRootNode->addChild(pNode.get());
+		m_pModelDataMap[sData.strName] = sData;
+		m_pNodeMap[sData.strName] = pNode;
+		// 设置材质
+		_SetMaterial(pNode.get(), sData);
+		return true;
+	}
+	return false;
+}
+
+osg::Node* CGMModel::_GetNode(const std::string& strModelName)
+{
+	if (m_pNodeMap.end() != m_pNodeMap.find(strModelName))
+	{
+		return m_pNodeMap.at(strModelName).get();
+	}
+	return nullptr;
 }
 
 void CGMModel::_InnerUpdate(const double dDeltaTime)
@@ -260,7 +271,7 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 
 bool CGMModel::SetAnimationEnable(const std::string& strName, const bool bEnable)
 {
-	osg::Node* pNode = nullptr;// strName; to do
+	osg::Node* pNode = _GetNode(strName);
 	if (!pNode) return false;
 
 	if(bEnable)
@@ -271,7 +282,7 @@ bool CGMModel::SetAnimationEnable(const std::string& strName, const bool bEnable
 
 bool CGMModel::GetAnimationEnable(const std::string& strName)
 {
-	osg::Node* pNode = nullptr;// strName; to do
+	osg::Node* pNode = _GetNode(strName);
 	if (!pNode) return false;
 
 	return m_pAnimationManager->GetAnimationEnable(strName);

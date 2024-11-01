@@ -95,8 +95,6 @@ bool CGMEngine::Init()
 {
 	if (m_bInit) return true;
 
-	m_iRandom.seed(time(0));
-
 	//!< 配置数据
 	_LoadConfig();
 
@@ -225,6 +223,7 @@ bool CGMEngine::Load()
 /** @brief 保存 */
 bool CGMEngine::Save()
 {
+	m_pModel->Save();
 	return false;
 }
 

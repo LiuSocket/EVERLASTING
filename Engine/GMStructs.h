@@ -914,12 +914,13 @@ namespace GM
 	{
 		/** @brief 构造 */
 		SGMModelData()
-			: strName(""), vPos(0, 0, 0), vOri(0, 0, 0), vScale(1, 1, 1), iEntRenderBin(1),
+			: strName(""), strFilePath(""), vPos(0, 0, 0), vOri(0, 0, 0), vScale(1, 1, 1), iEntRenderBin(1),
 			eMaterial(EGM_MATERIAL_PBR), eBlend(EGM_BLEND_Opaque)
 		{}
 
 		// 变量
 		std::string			strName;				//!< 名称
+		std::string			strFilePath;			//!< 文件路径
 		SGMVector3			vPos;					//!< 模型位
 		SGMVector3			vOri;					//!< 模型方向
 		SGMVector3			vScale;					//!< 模型缩放

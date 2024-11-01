@@ -59,7 +59,8 @@ namespace GM
 		bool Update(double dDeltaTime);
 		/** @brief 更新(在主相机更新姿态之后) */
 		bool UpdatePost(double dDeltaTime);
-
+		/** @brief 添加模型 */
+		bool Add(const SGMModelData& sData);
 		/**
 		* @brief 激活或者禁用模型的动画功能（骨骼动画、变形动画）
 		* @param strName: 模型在场景中的名称
@@ -79,7 +80,7 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param fDuration 动画时长，单位：秒
 		* @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationDuration(const std::string& strModelName, const float fDuration, const std::string& strAnimationName = "");
 		/**
@@ -94,7 +95,7 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param ePlayMode 播放模式
 		* @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationMode(const std::string& strModelName, EGMPlayMode ePlayMode, const std::string& strAnimationName = "");
 		/**
@@ -109,7 +110,7 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param iPriority 动画优先级，[0,100]，数值越大优先级越高
 		* @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationPriority(const std::string& strModelName, const int iPriority, const std::string& strAnimationName = "");
 		/**
@@ -124,33 +125,40 @@ namespace GM
 		* @param strModelName 模型名称
 		* @param fWeight 动画混合权重，[0.0,1.0]，0.0表示停止，1.0表示播放，动画可根据权重混合
 		* @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationPlay(const std::string& strModelName, const float fWeight, const std::string& strAnimationName = "");
 		/**
 		* @brief 暂停动画
 		* @param strModelName 模型名称
 		* @param strAnimationName 动画名称，不输入动画名称就暂停所有动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationPause(const std::string& strModelName, const std::string& strAnimationName = "");
 		/**
 		* @brief 继续播放动画
 		* @param strModelName 模型名称
 		* @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_Fail
+		* @return bool 成功返回 true，失败返回 false
 		*/
 		bool SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName = "");
 
 	private:
 		/**
-		* @brief 加载材质（内部使用）
+		* @brief 加载材质
 		* @param pNode 需要修改材质的节点指针
 		* @param sData 需要修改的模型信息
-		* @return bool 成功返回 EGM_EC_OK，失败返回 EGM_EC_OK
+		* @return bool 成功返回 true，失败返回 true
 		*/
 		bool _SetMaterial(osg::Node* pNode, const SGMModelData& sData);
 	
+		/**
+		* @brief 根据名称获取模型
+		* @param strModelName 模型名称
+		* @return osg::Node* 模型节点指针
+		*/
+		osg::Node* _GetNode(const std::string& strModelName);
+
 		void _InnerUpdate(const double dDeltaTime);
 
 	// 变量
@@ -160,8 +168,8 @@ namespace GM
 		CGMCommonUniform* m_pCommonUniform = nullptr;			//!< 公共Uniform
 
 		osg::ref_ptr<osg::Group>			m_pRootNode;
-		osg::ref_ptr<osg::Node>				m_pBackgroundNode;
-		osg::ref_ptr<osg::Node>				m_pAvatarNode;
+		std::map<std::string, SGMModelData>	m_pModelDataMap;	//!< 模型数据map
+		std::map<std::string, osg::ref_ptr<osg::Node>> m_pNodeMap;	//!< 模型节点map
 
 		// 添加贴图的默认路径
 		std::string							m_strDefTexPath = "Textures/";

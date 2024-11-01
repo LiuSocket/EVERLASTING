@@ -149,8 +149,6 @@ namespace GM
 		CGMModel*							m_pModel;					//!< 模型模块
 		CGMLight*							m_pLight;					//!< 光照模块
 
-		std::default_random_engine			m_iRandom;
-
 		osg::ref_ptr<osg::Texture2D>		m_pSceneTex;				//!< 主场景颜色图
 		osg::ref_ptr<osg::Texture2D>		m_pBackgroundTex;			//!< 背景颜色图
 		osg::ref_ptr<osg::Texture2D>		m_pForegroundTex;			//!< 前景颜色图

@@ -126,21 +126,21 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 bool CGMModel::Load()
 {
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
-	//// 加载背景模型
-	//osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
-	//if (pNode.valid())
-	//{
-	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
-	//}	
-	//// 加载角色模型
-	//pNode = _GetNode("MIGI");
-	//if (pNode.valid())
-	//{
-	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
-	//}
+	// 加载背景模型
+	osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
+	if (pNode.valid())
+	{
+		_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
+	}	
+	// 加载角色模型
+	pNode = _GetNode("MIGI");
+	if (pNode.valid())
+	{
+		_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
+	}
 
 	SetAnimationEnable("MIGI", true);
-	SetAnimationMode("MIGI", EGM_PLAY_PPONG);
+	SetAnimationMode("MIGI", EGM_PLAY_LOOP);
 	SetAnimationDuration("MIGI", 4.0f);
 	SetAnimationPlay("MIGI", 1.0f);
 

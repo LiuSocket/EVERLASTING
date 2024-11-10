@@ -16,6 +16,11 @@
 
 using namespace GM;
 
+/*************************************************************************
+ Macro Defines
+*************************************************************************/
+#define  ANIM_LIST				_manager->getAnimationList()		// 获取动画
+
 namespace GM
 {
 	/*
@@ -33,10 +38,12 @@ namespace GM
 		virtual ~CGMBasicAnimationManager() {}
 
 		// add pauseTime to resume animation
-		void resumeAnimation(osgAnimation::Animation* pAnimation, int priority = 0, float weight = 1.0, double pauseTime = 0.0)
+		void resumeAnimation(osgAnimation::Animation* pAnimation, int priority = 0, float weight = 1.0)
 		{
 			if (!findAnimation(pAnimation))
 				return;
+
+			if (fPauseTimeMap.end() == fPauseTimeMap.find(pAnimation->getName())) return;
 
 			if (isPlaying(pAnimation))
 				stopAnimation(pAnimation);
@@ -44,30 +51,32 @@ namespace GM
 			_animationsPlaying[priority].push_back(pAnimation);
 			// for debug
 			//std::cout << "player Animation " << pAnimation->getName() << " at " << _lastUpdate << std::endl;
-			// GM changed by LiuTao: to resume animation
-			pAnimation->setStartTime(_lastUpdate - pauseTime);
+			pAnimation->setStartTime(_lastUpdate - fPauseTimeMap.at(pAnimation->getName()));
 			pAnimation->setWeight(weight);
 		}
 
 		// add pauseTime to resume animation
-		bool pauseAnimation(osgAnimation::Animation* pAnimation, double& pauseTime)
+		bool pauseAnimation(osgAnimation::Animation* pAnimation)
 		{
 			// search though the layer and remove animation
-			for (AnimationLayers::iterator iterAnim = _animationsPlaying.begin(); iterAnim != _animationsPlaying.end(); ++iterAnim)
+			for (auto& iterAnim : _animationsPlaying)
 			{
-				osgAnimation::AnimationList& list = iterAnim->second;
-				for (osgAnimation::AnimationList::iterator it = list.begin(); it != list.end(); ++it)
+				osgAnimation::AnimationList& list = iterAnim.second;
+				for (auto it = list.begin(); it != list.end(); ++it)
 					if ((*it) == pAnimation)
 					{
 						(*it)->resetTargets();
 						list.erase(it);
-						// GM changed by LiuTao: to resume animation, the unit of pauseTime is "ms"
-						pauseTime = fmod(_lastUpdate - pAnimation->getStartTime(), pAnimation->getDuration());
+						double fPauseTime = fmod(_lastUpdate - pAnimation->getStartTime(), pAnimation->getDuration());
+						fPauseTimeMap.insert(std::pair< std::string, double>(pAnimation->getName(), fPauseTime));
 						return true;
 					}
 			}
 			return false;
 		}
+
+	protected:
+		std::map<std::string, double>	fPauseTimeMap; // 动画暂停、继续时间的映射表
 	};
 
 	/*
@@ -99,43 +108,27 @@ namespace GM
 	public:
 		CAnimationPlayer() : _manager(nullptr), _focus(0) {}
 
-
-		typedef std::vector<std::string> ModelNameVector;
-
 		// 添加模型名称（目前只能添加一个）
 		bool addModel(const std::string& strModelName)
 		{
-			auto itr = find(_modelNameVec.begin(), _modelNameVec.end(), strModelName);
+			if (_modelNameVec.end() != find(_modelNameVec.begin(), _modelNameVec.end(), strModelName)) return false;
 
-			if (itr != _modelNameVec.end())
-				return false;
-			else
-				_modelNameVec.push_back(strModelName);
+			_modelNameVec.push_back(strModelName);
 			return true;
 		}
 
 		// 判断_modelNameVec中是否已经添加了该模型名称
 		bool hasModel(const std::string& strModelName)
 		{
-			auto itr = find(_modelNameVec.begin(), _modelNameVec.end(), strModelName);
-
-			if (itr == _modelNameVec.end())
-				return false;
-			else
-				return true;
+			return _modelNameVec.end() != find(_modelNameVec.begin(), _modelNameVec.end(), strModelName);
 		}
 
 		// 添加动画管理器
 		bool addManager(CGMBasicAnimationManager* manager)
 		{
 			_manager = manager;
-			for (osgAnimation::AnimationList::const_iterator it = _manager->getAnimationList().begin(); it != _manager->getAnimationList().end(); it++)
-				_map[(*it)->getName()] = *it;
-
-			for (osgAnimation::AnimationMap::iterator it = _map.begin(); it != _map.end(); it++)
+			for (auto& it : ANIM_LIST)
 			{
-				_animNameVec.push_back(it->first);
-				_animPauseTimeVec.push_back(0.0);
 				_animPriorityVec.push_back(0);
 			}
 			return true;
@@ -144,10 +137,9 @@ namespace GM
 		/* @brief 播放当前聚焦的动画，如果只有一个动画在播放，则修改权重无效 */
 		bool play()
 		{
-			if (_focus < _animNameVec.size())
+			if (_focus < ANIM_LIST.size())
 			{
-				_manager->playAnimation(_map[_animNameVec[_focus]].get());
-
+				_manager->playAnimation(ANIM_LIST.at(_focus).get());
 				return true;
 			}
 			return false;
@@ -155,10 +147,12 @@ namespace GM
 		/* @brief 播放指定的动画，如果只有一个动画在播放，则修改权重无效 */
 		bool play(const std::string& name, float weight)
 		{
-			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
-
-			_manager->playAnimation(_map[name].get(), _animPriorityVec[_focus], weight);
-
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+					_focus = i;
+			}
+			_manager->playAnimation(ANIM_LIST.at(_focus).get(), _animPriorityVec[_focus], weight);
 			return true;
 		}
 
@@ -170,18 +164,22 @@ namespace GM
 		/* @brief 停止指定的动画 */
 		bool stop(const std::string& name)
 		{
-			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
-			_manager->stopAnimation(_map[name].get());
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+					_focus = i;
+			}
+			_manager->stopAnimation(ANIM_LIST.at(_focus).get());
 			return true;
 		}
 
 		/* @brief 暂停所有动画 */
 		bool pause()
 		{
-			for (unsigned int i = 0; i < _animNameVec.size(); i++)
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
 			{
 				// _animPauseTimeVec：用于继续播放时的开始时间
-				_manager->pauseAnimation(_map[_animNameVec[i]].get(), _animPauseTimeVec[i]);
+				_manager->pauseAnimation(ANIM_LIST.at(_focus).get());
 				return true;
 			}
 			return false;
@@ -189,10 +187,13 @@ namespace GM
 		/* @brief 暂停指定的动画 */
 		bool pause(const std::string& name)
 		{
-			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
-
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+					_focus = i;
+			}
 			// 用于继续播放时的开始时间
-			_manager->pauseAnimation(_map[name].get(), _animPauseTimeVec[_focus]);
+			_manager->pauseAnimation(ANIM_LIST.at(_focus).get());
 
 			return true;
 		}
@@ -200,9 +201,9 @@ namespace GM
 		/* @brief 继续播放当前聚焦的动画 */
 		bool resume()
 		{
-			if (_focus < _animNameVec.size())
+			if (_focus < ANIM_LIST.size())
 			{
-				_manager->resumeAnimation(_map[_animNameVec[_focus]].get(), _animPriorityVec[_focus], 1.0, _animPauseTimeVec[_focus]);
+				_manager->resumeAnimation(ANIM_LIST.at(_focus).get(), _animPriorityVec[_focus], 1.0);
 				return true;
 			}
 			return false;
@@ -210,9 +211,12 @@ namespace GM
 		/* @brief 继续播放指定的动画 */
 		bool resume(const std::string& name)
 		{
-			for (unsigned int i = 0; i < _animNameVec.size(); i++) if (_animNameVec[i] == name) _focus = i;
-
-			_manager->resumeAnimation(_map[name].get(), _animPriorityVec[_focus], 1.0, _animPauseTimeVec[_focus]);
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+					_focus = i;
+			}
+			_manager->resumeAnimation(ANIM_LIST.at(_focus).get(), _animPriorityVec[_focus], 1.0);
 
 			return true;
 		}
@@ -220,7 +224,7 @@ namespace GM
 		/* @brief 设置当前聚焦的动画的播放优先级 */
 		bool setPriority(const int iPriority)
 		{
-			if (_focus < _animNameVec.size())
+			if (_focus < ANIM_LIST.size())
 			{
 				_animPriorityVec[_focus] = iPriority;
 				return true;
@@ -230,9 +234,9 @@ namespace GM
 		/* @brief 设置指定动画的播放优先级 */
 		bool setPriority(const std::string& name, const int iPriority)
 		{
-			for (unsigned int i = 0; i < _animNameVec.size(); i++)
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
 			{
-				if (_animNameVec[i] == name)
+				if (ANIM_LIST.at(i)->getName() == name)
 				{
 					_animPriorityVec[i] = iPriority;
 					return true;
@@ -242,9 +246,9 @@ namespace GM
 		}
 		bool getPriority(const std::string& name, int& iPriority)
 		{
-			for (unsigned int i = 0; i < _animNameVec.size(); i++)
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
 			{
-				if (_animNameVec[i] == name)
+				if (ANIM_LIST.at(i)->getName() == name)
 				{
 					iPriority = _animPriorityVec[i];
 					return true;
@@ -256,9 +260,9 @@ namespace GM
 		/* @brief 设置当前聚焦的动画的播放时长, 单位：秒 */
 		bool setDuration(const double fDuration)
 		{
-			if (_focus < _animNameVec.size())
+			if (_focus < ANIM_LIST.size())
 			{
-				_map[_animNameVec[_focus]].get()->setDuration(fDuration);
+				ANIM_LIST.at(_focus)->setDuration(fDuration);
 				return true;
 			}
 			return false;
@@ -267,31 +271,40 @@ namespace GM
 		/* @brief 设置指定动画的播放时长, 单位：秒 */
 		bool setDuration(const std::string& name, const double fDuration)
 		{
-			if (!(_map[name].get()))
-				return false;
-
-			_map[name].get()->setDuration(fDuration);
-			return true;
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+				{
+					ANIM_LIST.at(i)->setDuration(fDuration);
+					return true;
+				}
+			}
+			return false;
 		}
 		bool getDuration(const std::string& name, double& fDuration)
 		{
-			if (!(_map[name].get()))
-				return false;
-			fDuration = _map[name].get()->getDuration();
-			if (fDuration == 0)
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
 			{
-				_map[name].get()->computeDuration();
-				fDuration = _map[name].get()->getDuration();
+				if (ANIM_LIST.at(i)->getName() == name)
+				{
+					fDuration = ANIM_LIST.at(i)->getDuration();
+					if (fDuration == 0)
+					{
+						ANIM_LIST.at(i)->computeDuration();
+						fDuration = ANIM_LIST.at(i)->getDuration();
+					}
+					return true;
+				}
 			}
-			return true;
+			return false;
 		}
 
 		/* @brief 设置当前聚焦的动画的播放模式 */
 		bool setPlayMode(osgAnimation::Animation::PlayMode ePlayMode)
 		{
-			if (_focus < _animNameVec.size())
+			if (_focus < ANIM_LIST.size())
 			{
-				_map[_animNameVec[_focus]].get()->setPlayMode(ePlayMode);
+				ANIM_LIST.at(_focus)->setPlayMode(ePlayMode);
 				return true;
 			}
 			return false;
@@ -299,39 +312,49 @@ namespace GM
 		/* @brief 设置指定动画的播放模式 */
 		bool setPlayMode(const std::string& name, osgAnimation::Animation::PlayMode ePlayMode)
 		{
-			if (!(_map[name].get()))
-				return false;
-
-			_map[name].get()->setPlayMode(ePlayMode);
-			return true;
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+				{
+					ANIM_LIST.at(i)->setPlayMode(ePlayMode);
+					return true;
+				}
+			}
+			return false;
 		}
 		/* @brief 获取指定动画的播放模式 */
 		bool getPlayMode(const std::string& name, osgAnimation::Animation::PlayMode& ePlayMode)
 		{
-			if (!(_map[name].get()))
-				return false;
-
-			ePlayMode = _map[name].get()->getPlayMode();
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+				{
+					ePlayMode = ANIM_LIST.at(i)->getPlayMode();
+					return true;
+				}
+			}
 			return true;
 		}
 
 		const std::string& getCurrentAnimationName() const
 		{
-			return _animNameVec[_focus];
+			return ANIM_LIST.at(_focus)->getName();
 		}
 
-		const std::vector<std::string>& getAnimationList() const
+		std::vector<std::string>& getAnimationList() const
 		{
-			return _animNameVec;
+			std::vector<std::string> vAnimationList;
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				vAnimationList.push_back(ANIM_LIST.at(i)->getName());
+			}
+			return vAnimationList;
 		}
 
 	private:
 		osg::ref_ptr<CGMBasicAnimationManager>	_manager; // 动画管理器
-		osgAnimation::AnimationMap				_map; // 动画映射
-		std::vector<std::string>				_animNameVec; // 动画名称
-		std::vector<double>						_animPauseTimeVec; // 动画暂停、继续时间
 		std::vector<int>						_animPriorityVec; // 动画优先级
-		ModelNameVector							_modelNameVec; // 模型名称
+		std::vector<std::string>				_modelNameVec; // 模型名称
 		unsigned int							_focus; // 当前动画焦点
 	};
 }
@@ -551,10 +574,9 @@ bool CGMAnimation::SetAnimationResume(const std::string& strModelName, const std
 bool CGMAnimation::GetAnimationList(const std::string& strModelName, std::vector<std::string>& vAnimationList)
 {
 	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
-	if (!pAniPlayer)
-		return false;
-	for (auto& str : pAniPlayer->getAnimationList())
-		vAnimationList.push_back(str);
+	if (!pAniPlayer) return false;
+
+	vAnimationList = pAniPlayer->getAnimationList();
 	return true;
 }
 

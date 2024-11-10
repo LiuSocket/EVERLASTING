@@ -119,6 +119,11 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	sData.eMaterial = EGM_MATERIAL_PBR;
 	Add(sData);
 
+	SetAnimationEnable("MIGI", true);
+	//SetAnimationMode("MIGI", EGM_PLAY_LOOP);
+	//SetAnimationDuration("MIGI", 10.0f);
+	SetAnimationPlay("MIGI", 1.0f);
+
 	return true;
 }
 
@@ -127,22 +132,17 @@ bool CGMModel::Load()
 {
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
 	// 加载背景模型
-	osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
-	if (pNode.valid())
-	{
-		_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
-	}	
-	// 加载角色模型
-	pNode = _GetNode("MIGI");
-	if (pNode.valid())
-	{
-		_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
-	}
-
-	SetAnimationEnable("MIGI", true);
-	SetAnimationMode("MIGI", EGM_PLAY_LOOP);
-	SetAnimationDuration("MIGI", 4.0f);
-	SetAnimationPlay("MIGI", 1.0f);
+	//osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
+	//if (pNode.valid())
+	//{
+	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
+	//}	
+	//// 加载角色模型
+	//pNode = _GetNode("MIGI");
+	//if (pNode.valid())
+	//{
+	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
+	//}
 
 	return true;
 }

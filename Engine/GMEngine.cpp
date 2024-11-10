@@ -198,7 +198,7 @@ bool CGMEngine::Update()
 			m_pModel->Update(deltaTime);
 			m_pLight->Update(deltaTime);
 
-			GM_Viewer->advance(deltaTime);
+			GM_Viewer->advance(USE_REFERENCE_TIME);
 			GM_Viewer->eventTraversal();
 			GM_Viewer->updateTraversal();
 

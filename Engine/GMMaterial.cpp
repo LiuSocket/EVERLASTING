@@ -356,9 +356,10 @@ void CGMMaterial::SetBackgroundShader(osg::Node* pNode)
 	pStateSet->addUniform(m_pCommonUniform->GetScreenSize());
 	// Ìí¼Óshader
 	std::string strShaderPath = m_pConfigData->strCorePath + m_strModelShaderPath;
-	CGMKit::LoadShader(pStateSet,
+	CGMKit::LoadShaderWithCommonFrag(pStateSet,
 		strShaderPath + "GMBackground.vert",
 		strShaderPath + "GMBackground.frag",
+		strShaderPath + "GMCommon.frag",
 		"Background");
 	pNode->setStateSet(pStateSet);
 }

@@ -10,16 +10,13 @@
 /// @date		2024.10.21
 //////////////////////////////////////////////////////////////////////////
 #include "GMLight.h"
+#include <osg/Texture2D>
 
 using namespace GM;
 
 /*************************************************************************
 Global Constants
 *************************************************************************/
-
-namespace GM
-{
-}
 
 /*************************************************************************
 CGMLight Methods
@@ -50,6 +47,38 @@ bool CGMLight::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	m_pLightSource = new osg::LightSource;
 	m_pLightSource->setLight(pLight.get());
 	GM_Root->addChild(m_pLightSource);
+
+	//´´½¨ÒõÓ°
+	int iShadowMapSize = 1024;
+	int iHalfSize = iShadowMapSize / 2;
+
+	m_pShadowTexture = new osg::Texture2D();
+	m_pShadowTexture->setTextureSize(iShadowMapSize, iShadowMapSize);
+	m_pShadowTexture->setInternalFormat(GL_R32F);
+	m_pShadowTexture->setSourceFormat(GL_RED);
+	m_pShadowTexture->setSourceType(GL_FLOAT);
+	m_pShadowTexture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
+	m_pShadowTexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	m_pShadowTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_BORDER);
+	m_pShadowTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_BORDER);
+	m_pShadowTexture->setBorderColor(osg::Vec4d(0, 0, 0, 0));
+	m_pShadowTexture->setDataVariance(osg::Object::DYNAMIC);
+	m_pShadowTexture->setResizeNonPowerOfTwoHint(true);
+
+	m_pShadowCamera = new osg::Camera();
+	m_pShadowCamera->setName("shadowCamera");
+	m_pShadowCamera->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 0.0));
+	m_pShadowCamera->setCullMask(GM_SHADOW_CAST_MASK);
+	m_pShadowCamera->setRenderOrder(osg::Camera::PRE_RENDER);
+	m_pShadowCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	m_pShadowCamera->setViewport(new osg::Viewport(0, 0, iShadowMapSize, iShadowMapSize));
+	m_pShadowCamera->setReferenceFrame(osg::Camera::ABSOLUTE_RF);
+	m_pShadowCamera->setAllowEventFocus(false);
+	m_pShadowCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+	m_pShadowCamera->setViewMatrixAsLookAt(osg::Vec3(1, -2, 1.5), osg::Vec3(0, 0, 0), osg::Vec3(0, 0, 1));
+	m_pShadowCamera->setProjectionMatrixAsOrtho(-iHalfSize, iHalfSize, -iHalfSize, iHalfSize, -5, 5);
+
+	GM_Root->addChild(m_pShadowCamera.get());
 
 	return true;
 }
@@ -91,6 +120,11 @@ bool CGMLight::Update(double dDeltaTime)
 bool CGMLight::UpdatePost(double dDeltaTime)
 {
 	return true;
+}
+
+void CGMLight::AddShadowNode(osg::Node* pNode)
+{
+	m_pShadowCamera->addChild(pNode);
 }
 
 void CGMLight::_InnerUpdate(const double dDeltaTime)

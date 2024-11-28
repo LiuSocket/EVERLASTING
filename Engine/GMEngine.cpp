@@ -134,6 +134,10 @@ bool CGMEngine::Init()
 	m_pModel->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
 	m_pLight->Init(m_pKernelData, m_pConfigData);
 
+	//设置阴影
+	m_pLight->AddShadowNode(m_pModel->GetShadowRootNode());
+
+	GM_View->getCamera()->setCullMask(GM_MAIN_MASK);
 	GM_View->setCameraManipulator(m_pManipulator);
 	//状态信息
 	osgViewer::StatsHandler* pStatsHandler = new osgViewer::StatsHandler;

@@ -59,7 +59,6 @@ void main()
 	float metallic = texel_p.r;
 	float roughness = texel_p.g;
 	float ambientOcc = texel_p.b;
-	float noiseFact = noiseV1(viewTexNorm);
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
 

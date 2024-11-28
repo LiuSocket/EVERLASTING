@@ -61,6 +61,7 @@ namespace GM
 		bool UpdatePost(double dDeltaTime);
 		/** @brief 添加模型 */
 		bool Add(const SGMModelData& sData);
+
 		/**
 		* @brief 激活或者禁用模型的动画功能（骨骼动画、变形动画）
 		* @param strName: 模型在场景中的名称
@@ -143,6 +144,12 @@ namespace GM
 		*/
 		bool SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName = "");
 
+		/** @brief 获取阴影模型根节点 */
+		inline osg::Node* GetShadowRootNode() const
+		{
+			return m_pShadowRootNode.get();
+		}
+
 	private:
 		/**
 		* @brief 加载材质
@@ -168,6 +175,7 @@ namespace GM
 		CGMCommonUniform* m_pCommonUniform = nullptr;			//!< 公共Uniform
 
 		osg::ref_ptr<osg::Group>			m_pRootNode;
+		osg::ref_ptr<osg::Group>			m_pShadowRootNode;
 		std::map<std::string, SGMModelData>	m_pModelDataMap;	//!< 模型数据map
 		std::map<std::string, osg::ref_ptr<osg::Node>> m_pNodeMap;	//!< 模型节点map
 

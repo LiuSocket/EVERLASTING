@@ -90,6 +90,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	m_pCommonUniform = pCommonUniform;
 
 	m_pRootNode = new osg::Group;
+	m_pShadowRootNode = new osg::Group;
 	GM_Root->addChild(m_pRootNode.get());
 	osg::StateSet* pStateset = m_pRootNode->getOrCreateStateSet();
 	// 强制单面显示
@@ -111,6 +112,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	sData.strFilePath = "Background.FBX";
 	sData.iEntRenderBin = 0;
 	sData.eMaterial = EGM_MATERIAL_Background;
+	sData.bCastShadow = false;
 	Add(sData);
 
 	// 加载角色模型
@@ -132,17 +134,17 @@ bool CGMModel::Load()
 {
 	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
 	// 加载背景模型
-	//osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
-	//if (pNode.valid())
-	//{
-	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
-	//}	
-	//// 加载角色模型
-	//pNode = _GetNode("MIGI");
-	//if (pNode.valid())
-	//{
-	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
-	//}
+	osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
+	if (pNode.valid())
+	{
+		_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
+	}	
+	// 加载角色模型
+	pNode = _GetNode("MIGI");
+	if (pNode.valid())
+	{
+		_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
+	}
 
 	return true;
 }
@@ -182,12 +184,19 @@ bool CGMModel::UpdatePost(double dDeltaTime)
 bool CGMModel::Add(const SGMModelData& sData)
 {
 	// 加载背景模型
-	osg::ref_ptr<osg::Node> pNode = osgDB::readNodeFile(
-		m_pConfigData->strCorePath + m_strDefModelPath + sData.strFilePath,
-		m_pDDSOptions);
+	osg::ref_ptr<osg::Node> pNode = osgDB::readNodeFile(m_pConfigData->strCorePath + m_strDefModelPath + sData.strFilePath,
+		m_pDDSOptions);// 保证dds纹理的正确加载
 	if (pNode.valid())
 	{
+		// 设置阴影
+		if (sData.bCastShadow)
+			pNode->setNodeMask(GM_MAIN_MASK | GM_SHADOW_CAST_MASK);
+		else
+			pNode->setNodeMask(GM_MAIN_MASK);
+
 		m_pRootNode->addChild(pNode.get());
+		m_pShadowRootNode->addChild(pNode.get());
+
 		m_pModelDataMap[sData.strName] = sData;
 		m_pNodeMap[sData.strName] = pNode;
 		// 设置材质
@@ -265,6 +274,8 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 		break;
 	}
 	pStateSet->setRenderBinDetails(sData.iEntRenderBin, "RenderBin");
+	// 设置阴影
+	pStateSet->setDefine("SHADOW_RECEIVE", osg::StateAttribute::ON);
 
 	return true;
 }

@@ -12,6 +12,7 @@
 
 #include "GMPost.h"
 #include "GMKit.h"
+#include <osg/CullFace>
 
 using namespace GM;
 /*************************************************************************
@@ -106,6 +107,10 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	vp->setViewport(0, 0, width, height);
 	pMainCam->setRenderOrder(osg::Camera::PRE_RENDER, 20);
 	pMainCam->attach(osg::Camera::COLOR_BUFFER0, pSceneTex, 0, 0, false, 8, 0);
+
+	osg::ref_ptr<osg::StateSet> pStateset = pMainCam->getOrCreateStateSet();
+	// 强制单面显示
+	pStateset->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
 	// Create post triangle
 	m_pPostGeode = new osg::Geode();

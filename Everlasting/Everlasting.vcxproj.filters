@@ -98,6 +98,9 @@
     <ClCompile Include="..\Engine\GMLight.cpp">
       <Filter>GMEngine\Core\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\BindImageTexture.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -164,6 +167,9 @@
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\GMDispatchCompute.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\BindImageTexture.h">
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

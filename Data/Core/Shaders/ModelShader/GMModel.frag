@@ -1,5 +1,14 @@
 const float CUT_ALPHA = 0.001;
 
+#ifdef SHADOW_CAST
+
+void main()
+{
+	gl_FragColor = vec4(1,1,1,1);
+}
+
+#else // not SHADOW_CAST
+
 uniform mat4			osg_ViewMatrixInverse;
 uniform sampler2D		texBaseColor;
 uniform sampler2D		texMRA;
@@ -14,6 +23,7 @@ in vData
 	vec3	viewNormal;
 	vec3	viewTang;
 	vec3	viewBinormal;
+	vec3	shadowPos;
 } vertOut;
 
 /* Reflect Environment BRDF */
@@ -62,6 +72,9 @@ void main()
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
 
+	/* shadow */
+	float shadow = Shadow(vertOut.shadowPos);
+
 	/* Reflect Environment BRDF */
 	vec4 reflectEnv = ReflectEnvironment(localReflect, roughness);
 	reflectEnv.rgb *= gl_LightSource[0].ambient.rgb + gl_LightSource[0].diffuse.rgb;
@@ -70,7 +83,7 @@ void main()
 	vec4 ambient = vec4(mix(vec3(0.1, 0.12, 0.13), vec3(0.02), max(0.5*(1.0-localReflect.z),0)), 1.0);
 
 	/* Diffuse BRDF */
-	vec3 diffuseL = max(0,dotNL)*gl_LightSource[0].diffuse.rgb;
+	vec3 diffuseL = (shadow*max(0,dotNL))*gl_LightSource[0].diffuse.rgb;
 	vec3 diffuseFact = (1-metallic)*diffuseL*gl_FrontMaterial.diffuse.rgb;
 
 	/* Microfacet Specular BRDF */
@@ -90,5 +103,7 @@ void main()
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-	gl_FragColor = outColor;
+	gl_FragColor = vec4(shadow,shadow,shadow,1);//outColor;
 }
+
+#endif // SHADOW_CAST or not

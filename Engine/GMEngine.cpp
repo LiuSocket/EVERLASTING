@@ -135,7 +135,10 @@ bool CGMEngine::Init()
 	m_pLight->Init(m_pKernelData, m_pConfigData);
 
 	//设置阴影
-	m_pLight->AddShadowNode(m_pModel->GetShadowRootNode());
+	m_pLight->AddShadowNode(m_pModel->GetRootNode());
+	m_pModel->SetShadowMap(m_pLight->GetShadowMap());
+
+	m_pModel->SetUniform(m_pLight->GetView2ShadowMatrixUniform());
 
 	GM_View->getCamera()->setCullMask(GM_MAIN_MASK);
 	GM_View->setCameraManipulator(m_pManipulator);

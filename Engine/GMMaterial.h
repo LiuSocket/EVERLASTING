@@ -47,66 +47,21 @@ namespace GM
 		/** @brief 初始化 */
 		bool Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform);
 
-		/** @brief 加载 PBR shader
+		/** @brief 加载 PBR材质
 		* @param pNode 需要修改材质的节点指针
 		*/
-		void SetPBRShader(osg::Node* pNode);
+		void SetPBRMaterial(osg::Node* pNode);
 
-		/** @brief 加载 背景 shader
+		/** @brief 加载 背景材质
 		* @param pNode 需要修改材质的节点指针
 		*/
-		void SetBackgroundShader(osg::Node* pNode);
+		void SetBackgroundMaterial(osg::Node* pNode);
+
+		/** @brief 加载 PBR shader
+		*/
+		void SetShader(osg::StateSet* pSS, EGMMaterial eMaterial);
 
 	private:
-		/** @brief 初始化环境探针probe */
-		void _InitProbe();
-		/**
-		* @brief 创建用于生成自定义mipmap的Compute节点
-		* @param iSourceLevel: 源mipmap层级，只能是0、1、2、3、4
-		*/
-		CGMDispatchCompute* _CreateMipmapCompute(const int iSourceLevel);
-
-		/** @brief 创建用于拷贝mipmap的节点 */
-		osg::Geometry* _CreateMipmapCopyNode();
-		/**
-		* @brief 用全景图生成反射探针Probe
-		* @param strInputFilePath		输入的全景图路径
-		* @param strOutputFilePath		输出的probe图路径
-		* @return bool					是否成功
-		*/
-		bool _CreateProbe( const std::string& strInputFilePath, const std::string& strOutputFilePath);
-
-		/**
-		* @brief 方向 转 全景图数据中的UV
-		* @param vDir			方向，单位为：°，球面坐标系，x = 北偏东角度，y = 俯仰角
-		* @return osg::Vec2f	全景图中的UV [0.0,1.0]
-		*/
-		inline osg::Vec2f _Dir2UV(const osg::Vec2f& vDir) const
-		{
-			return osg::Vec2f(vDir.x() / 360.0f, vDir.y() / 180.0f + 0.5f);
-		}
-		/**
-		* @brief 像素地址 转 像素中心点的UV
-		* @param iAddress		像素地址（逐像素排列，不是内存）
-		* @param iW				图宽度
-		* @param iH				图高度
-		* @return osg::Vec2f	像素中心点的UV，(0.0, 1.0)
-		*/
-		inline osg::Vec2f _PixelAddress2UV(const unsigned int iPixelAddress, const int iW, const int iH) const
-		{
-			return osg::Vec2f(((iPixelAddress % iW) + 0.5f) / float(iW), ((iPixelAddress / iW) + 0.5f) / float(iH));
-		}
-		/**
-		* @brief float转unsigned char
-		* @param fIn			float输入,范围[0.0,1.0]
-		* @return unsigned char	输出的8位数据，[0,255]的整数
-		*/
-		inline unsigned char _Float2UnsignedChar(const float fIn) const
-		{
-			float fX = 255.0f * fIn;
-			if ((fX - int(fX)) >= 0.5f) { fX += 1.0; }
-			return (unsigned char)(fmin(fX, 255.0f));
-		}
 
 	// 变量
 	private:

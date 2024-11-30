@@ -184,7 +184,7 @@
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -198,6 +198,7 @@
     <ClCompile Include="..\Engine\Assist\tinyxml.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlerror.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlparser.cpp" />
+    <ClCompile Include="..\Engine\BindImageTexture.cpp" />
     <ClCompile Include="..\Engine\GMAnimation.cpp" />
     <ClCompile Include="..\Engine\GMBaseManipulator.cpp" />
     <ClCompile Include="..\Engine\GMCommonUniform.cpp" />
@@ -220,6 +221,7 @@
     <ClInclude Include="..\Engine\Assist\mikktspace.h" />
     <ClInclude Include="..\Engine\Assist\tinystr.h" />
     <ClInclude Include="..\Engine\Assist\tinyxml.h" />
+    <ClInclude Include="..\Engine\BindImageTexture.h" />
     <ClInclude Include="..\Engine\GMAnimation.h" />
     <ClInclude Include="..\Engine\GMBaseManipulator.h" />
     <ClInclude Include="..\Engine\GMCommon.h" />

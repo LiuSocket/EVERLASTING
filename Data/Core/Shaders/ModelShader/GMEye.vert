@@ -35,8 +35,8 @@ void main()
 	vertOut.viewBinormal = normalize(gl_NormalMatrix*binormal);
 	vertOut.shadowPos = (view2ShadowMatrix*viewVertPos).xyz;
 
-	gl_Position = gl_ProjectionMatrix * viewVertPos;
 	gl_TexCoord[0] = gl_MultiTexCoord0;
+	gl_Position = ftransform();
 }
 
 #endif // SHADOW_CAST or not

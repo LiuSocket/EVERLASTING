@@ -97,8 +97,8 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	pStateset->setAttributeAndModes(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),iValue);
 	pStateset->setMode(GL_LIGHTING, osg::StateAttribute::ON);
 	pStateset->setMode(GL_LIGHT0, osg::StateAttribute::ON);
-	pStateset->setTextureAttributeAndModes(SHADOW_TEX_UNIT, m_pShadowTexture.get(), osg::StateAttribute::ON);
-	pStateset->addUniform(new osg::Uniform("texShadow", SHADOW_TEX_UNIT));
+	pStateset->setTextureAttributeAndModes(SHADOW_TEX_UNIT, m_pShadowTexture.get(), iValue);
+	pStateset->addUniform(new osg::Uniform("texShadow", SHADOW_TEX_UNIT), iValue);
 
 	m_pMaterial->Init(pKernelData, pConfigData, pCommonUniform);
 
@@ -116,7 +116,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	// 加载角色模型
 	sData.strName = "MIGI";
 	sData.strFilePath = "MIGI.FBX";
-	sData.eMaterial = EGM_MATERIAL_PBR;
+	sData.eMaterial = EGM_MATERIAL_Human;
 	Add(sData);
 
 	SetAnimationEnable("MIGI", true);
@@ -132,7 +132,7 @@ bool CGMModel::Load()
 {
 	for (auto& itr : m_pNodeMap)
 	{
-		m_pMaterial->SetShader(itr.second->getOrCreateStateSet(), m_pModelDataMap.at(itr.first).eMaterial);
+		_SetMaterial(itr.second.get(), m_pModelDataMap.at(itr.first));
 	}
 
 	return true;
@@ -229,6 +229,21 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 	case EGM_MATERIAL_PBR:
 	{
 		m_pMaterial->SetPBRMaterial(pNode);
+	}
+	break;
+	case EGM_MATERIAL_Human:
+	{
+		m_pMaterial->SetHumanMaterial(pNode);
+	}
+	break;
+	case EGM_MATERIAL_SSS:
+	{
+		m_pMaterial->SetSSSMaterial(pNode);
+	}
+	break;
+	case EGM_MATERIAL_Eye:
+	{
+		m_pMaterial->SetEyeMaterial(pNode);
 	}
 	break;
 	case EGM_MATERIAL_Background:

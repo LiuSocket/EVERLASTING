@@ -43,110 +43,16 @@ Class
 
 namespace GM
 {
-	class CopyMipmapCallback : public osg::Drawable::DrawCallback
-	{
-	public:
-		CopyMipmapCallback(std::vector<osg::ref_ptr<osg::TextureCubeMap>>& src, osg::TextureCubeMap* dst)
-			: _pSrcTexVec(src), _pDstTex(dst)
-		{
-			_fbo = new osg::FrameBufferObject();
-		}
-
-		void drawImplementation(osg::RenderInfo& renderInfo, const osg::Drawable* drawable) const
-		{
-			osg::State* state = renderInfo.getState();
-			const unsigned int iContextID = renderInfo.getContextID();
-
-			// get the texture object for the current contextID.
-			osg::Texture::TextureObject* textureObject = _pDstTex->getTextureObject(iContextID);
-			if (!textureObject)
-			{
-				// create texture object.
-				_pDstTex->apply(*state);
-
-				textureObject = _pDstTex->getTextureObject(iContextID);
-
-				if (!textureObject)
-				{
-					// failed to create texture object
-					OSG_NOTICE << "Warning : failed to create TextureCubeMap texture obeject, copyTexSubImageCubeMap abandoned." << std::endl;
-					return;
-				}
-			}
-			if (textureObject)
-			{
-				// we have a valid image
-				textureObject->bind();
-
-				int iLevelMax = min(int(log2(_pDstTex->getTextureWidth())), PROBE_MIPMAP_NUM);
-				for (int iLevel = 0; iLevel <= iLevelMax; iLevel++)
-				{
-					for (unsigned int iFace = 0; iFace < 6; iFace++)
-					{
-						_fbo->setAttachment(
-							osg::Camera::COLOR_BUFFER,
-							osg::FrameBufferAttachment(_pSrcTexVec.at(iLevel).get(), iFace, 0));
-						_fbo->apply(*renderInfo.getState());
-
-						GLint iW = _pSrcTexVec.at(iLevel)->getTextureWidth();
-						GLint iH = _pSrcTexVec.at(iLevel)->getTextureHeight();
-
-						switch (iFace)
-						{
-						case osg::TextureCubeMap::POSITIVE_X:
-						{
-							glCopyTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, iLevel, 0, 0, 0, 0, iW, iH);
-						}
-						break;
-						case osg::TextureCubeMap::NEGATIVE_X:
-						{
-							glCopyTexSubImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, iLevel, 0, 0, 0, 0, iW, iH);
-						}
-						break;
-						case osg::TextureCubeMap::POSITIVE_Y:
-						{
-							glCopyTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, iLevel, 0, 0, 0, 0, iW, iH);
-						}
-						break;
-						case osg::TextureCubeMap::NEGATIVE_Y:
-						{
-							glCopyTexSubImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, iLevel, 0, 0, 0, 0, iW, iH);
-						}
-						break;
-						case osg::TextureCubeMap::POSITIVE_Z:
-						{
-							glCopyTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, iLevel, 0, 0, 0, 0, iW, iH);
-						}
-						break;
-						case osg::TextureCubeMap::NEGATIVE_Z:
-						{
-							glCopyTexSubImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, iLevel, 0, 0, 0, 0, iW, iH);
-						}
-						break;
-						default:
-							break;
-						}
-					}
-				}
-			}
-		}
-
-	private:
-		osg::ref_ptr<osg::FrameBufferObject> _fbo;
-		std::vector<osg::ref_ptr<osg::TextureCubeMap>> _pSrcTexVec;
-		osg::ref_ptr<osg::TextureCubeMap> _pDstTex;
-	};
-
 	/*
 	* @brief 模型材质的drawable访问器，用于自动补齐末尾的未添加的纹理单元
 	* 简化模型制作流程，这样模型可以只添加需要的贴图，但不能跳过某一个纹理单元添加后面的纹理单元
 	* 正确纹理单元组合：0，0+1，0+1+2, 0+1+2+3，0+1+2+3+4
 	* 错误纹理单元组合：0+2+3，2+4...
 	*/
-	class AutoTexVisitor : public osg::NodeVisitor
+	class AutoAddTexVisitor : public osg::NodeVisitor
 	{
 	public:
-		AutoTexVisitor(std::vector<osg::ref_ptr<osg::Texture2D>> vTex)
+		AutoAddTexVisitor(std::vector<osg::ref_ptr<osg::Texture2D>> vTex)
 			: osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), _vTex(vTex) {}
 
 		void apply(osg::Node& node)
@@ -184,6 +90,41 @@ namespace GM
 
 	private:
 		std::vector<osg::ref_ptr<osg::Texture2D>> _vTex;
+	};
+
+	/*
+	*  @brief 人类模型访问器，用于给皮肤和眼睛添加材质
+	*/
+	class HumanVisitor : public osg::NodeVisitor
+	{
+	public:
+		HumanVisitor(CGMMaterial* pMaterial)
+			: osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), _pMaterial(pMaterial){}
+
+		void apply(osg::Node& node) { traverse(node); }
+
+		void apply(osg::Geode& node)
+		{
+			if (node.getName().find("_skin") != std::string::npos)
+			{
+				// 如果节点名称中包含"_skin"，则设置皮肤材质
+				_pMaterial->SetSSSMaterial(&node);
+			}
+			else if (node.getName().find("_eye") != std::string::npos)
+			{
+				// 根据节点名称找到眼睛模型，设置眼睛材质
+				_pMaterial->SetEyeMaterial(&node);
+			}
+			else{}
+
+			traverse(node);
+		}
+
+	private:
+
+	// 成员变量
+	private:
+		CGMMaterial* _pMaterial = nullptr;
 	};
 }
 
@@ -316,30 +257,98 @@ bool CGMMaterial::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, C
 
 void CGMMaterial::SetPBRMaterial(osg::Node* pNode)
 {
-	//!< 自动补齐地面模型的纹理单元
-	AutoTexVisitor cAutoTexVisitor(m_pPBRTexVector);
-	pNode->accept(cAutoTexVisitor);
+	//!< 自动补齐PBR模型的纹理单元
+	AutoAddTexVisitor cAutoAddTexVisitor(m_pPBRTexVector);
+	pNode->accept(cAutoAddTexVisitor);
 
 	osg::ref_ptr<osg::StateSet> pStateSet = pNode->getOrCreateStateSet();
 	// Uniform
 	int iChannel = 0;
+	_PlusUnitUsed(iChannel);
 	// 漫反射贴图（RGB通道存放颜色，A通道存放不透明度）
-	osg::ref_ptr<osg::Uniform> pTexBaseColorUniform = new osg::Uniform("texBaseColor", iChannel++);//纹理单元不要乱分配！
+	osg::ref_ptr<osg::Uniform> pTexBaseColorUniform = new osg::Uniform("texBaseColor", iChannel++);
 	pStateSet->addUniform(pTexBaseColorUniform.get());
+	_PlusUnitUsed(iChannel);
 	// MRA贴图（R通道存放金属度，G通道存放粗糙度，B通道存放AO贴图，A通道待定）
 	osg::ref_ptr<osg::Uniform> pTexPbrUniform = new osg::Uniform("texMRA", iChannel++);
 	pStateSet->addUniform(pTexPbrUniform.get());
+	_PlusUnitUsed(iChannel);
 	// 自发光贴图（RGB通道存放颜色，A通道待定）
 	osg::ref_ptr<osg::Uniform> pTexIlluminationUniform = new osg::Uniform("texIllumination", iChannel++);
 	pStateSet->addUniform(pTexIlluminationUniform.get());
+	_PlusUnitUsed(iChannel);
 	// 法线贴图（RGB通道存放法线，A通道待定）
 	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
 	pStateSet->addUniform(pTexNormalUniform.get());
+	_PlusUnitUsed(iChannel);
 	// 环境探针贴图
 	CGMKit::AddTexture(pStateSet.get(), m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);
+	_PlusUnitUsed(iChannel);
 
 	// 添加shader
 	SetShader(pStateSet.get(), EGM_MATERIAL_PBR);
+}
+
+void CGMMaterial::SetHumanMaterial(osg::Node* pNode)
+{
+	HumanVisitor cHumanVisitor(this);
+	pNode->accept(cHumanVisitor);
+}
+
+void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
+{
+	osg::ref_ptr<osg::StateSet> pStateSet = pNode->getOrCreateStateSet();
+	// Uniform
+	int iChannel = 0;
+	_PlusUnitUsed(iChannel);
+	// 漫反射贴图（RGB通道存放颜色，A通道存放不透明度）
+	osg::ref_ptr<osg::Uniform> pTexBaseColorUniform = new osg::Uniform("texBaseColor", iChannel++);
+	pStateSet->addUniform(pTexBaseColorUniform.get());
+	_PlusUnitUsed(iChannel);
+	// MRA贴图（R通道存放金属度，G通道存放粗糙度，B通道存放AO贴图，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexPbrUniform = new osg::Uniform("texMRA", iChannel++);
+	pStateSet->addUniform(pTexPbrUniform.get());
+	_PlusUnitUsed(iChannel);
+	// 次表面贴图（RGB通道存放次表面颜色，A通道存放曲率图）
+	osg::ref_ptr<osg::Uniform> pTexSSSRUniform = new osg::Uniform("texSSSR", iChannel++);
+	pStateSet->addUniform(pTexSSSRUniform.get());
+	_PlusUnitUsed(iChannel);
+	// 法线贴图（RGB通道存放法线，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
+	pStateSet->addUniform(pTexNormalUniform.get());
+	_PlusUnitUsed(iChannel);
+	// 环境探针贴图
+	CGMKit::AddTexture(pStateSet.get(), m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);
+	_PlusUnitUsed(iChannel);
+
+	// 添加shader
+	SetShader(pStateSet.get(), EGM_MATERIAL_SSS);
+}
+
+void CGMMaterial::SetEyeMaterial(osg::Node* pNode)
+{
+	osg::ref_ptr<osg::StateSet> pStateSet = pNode->getOrCreateStateSet();
+	// Uniform
+	int iChannel = 0;
+	_PlusUnitUsed(iChannel);
+	// 漫反射贴图（RGB通道存放虹膜和眼白的颜色，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexBaseColorUniform = new osg::Uniform("texBaseColor", iChannel++);
+	pStateSet->addUniform(pTexBaseColorUniform.get());
+	_PlusUnitUsed(iChannel);
+	// PR贴图（R通道存放“视差/Parallax”，G通道存放“粗糙度/Roughness”，B通道待定，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexPRUniform = new osg::Uniform("texPR", iChannel++);
+	pStateSet->addUniform(pTexPRUniform.get());
+	_PlusUnitUsed(iChannel);
+	// 法线贴图（RGB通道存放法线，A通道待定）
+	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
+	pStateSet->addUniform(pTexNormalUniform.get());
+	_PlusUnitUsed(iChannel);
+	// 环境探针贴图
+	CGMKit::AddTexture(pStateSet.get(), m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);
+	_PlusUnitUsed(iChannel);
+
+	// 添加shader
+	SetShader(pStateSet.get(), EGM_MATERIAL_Eye);
 }
 
 void CGMMaterial::SetBackgroundMaterial(osg::Node* pNode)
@@ -361,10 +370,28 @@ void CGMMaterial::SetShader(osg::StateSet* pSS, EGMMaterial eMaterial)
 	case EGM_MATERIAL_PBR:
 	{
 		CGMKit::LoadShaderWithCommonFrag(pSS,
-			strShaderPath + "GMModel.vert",
-			strShaderPath + "GMModel.frag",
+			strShaderPath + "GMPBR.vert",
+			strShaderPath + "GMPBR.frag",
 			strShaderPath + "GMCommon.frag",
-			"PBR");
+			"PBR", true);
+	}
+	break;
+	case EGM_MATERIAL_SSS:
+	{
+		CGMKit::LoadShaderWithCommonFrag(pSS,
+			strShaderPath + "GMSSS.vert",
+			strShaderPath + "GMSSS.frag",
+			strShaderPath + "GMCommon.frag",
+			"SSS", true);
+	}
+	break;
+	case EGM_MATERIAL_Eye:
+	{
+		CGMKit::LoadShaderWithCommonFrag(pSS,
+			strShaderPath + "GMEye.vert",
+			strShaderPath + "GMEye.frag",
+			strShaderPath + "GMCommon.frag",
+			"Eye", true);
 	}
 	break;
 	case EGM_MATERIAL_Background:
@@ -379,4 +406,14 @@ void CGMMaterial::SetShader(osg::StateSet* pSS, EGMMaterial eMaterial)
 	default:
 		break;
 	}
+}
+
+bool CGMMaterial::_PlusUnitUsed(int& iUnit)
+{
+	if (SHADOW_TEX_UNIT == iUnit)
+	{
+		iUnit++;
+		return false;
+	}
+	return true;
 }

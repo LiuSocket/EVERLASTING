@@ -29,7 +29,6 @@ namespace GM
 	Class
 	*************************************************************************/
 	class CGMDispatchCompute;
-	class CopyMipmapCallback;
 
 	/*!
 	*  @Class CGMMaterial
@@ -51,17 +50,41 @@ namespace GM
 		* @param pNode 需要修改材质的节点指针
 		*/
 		void SetPBRMaterial(osg::Node* pNode);
-
-		/** @brief 加载 背景材质
+		/**
+		* @brief 加载 人类（包括皮肤和眼睛）材质
+		* @param pNode 需要修改材质的节点指针
+		*/
+		void SetHumanMaterial(osg::Node* pNode);
+		/**
+		* @brief 加载 次表面散射材质
+		* @param pNode/pGeom 需要修改材质的节点指针
+		*/
+		void SetSSSMaterial(osg::Node* pNode);
+		/**
+		* @brief 加载 眼睛材质
+		* @param pNode/pGeom 需要修改材质的节点指针
+		*/
+		void SetEyeMaterial(osg::Node* pNode);
+		/**
+		* @brief 加载 背景材质
 		* @param pNode 需要修改材质的节点指针
 		*/
 		void SetBackgroundMaterial(osg::Node* pNode);
 
-		/** @brief 加载 PBR shader
+		/**
+		* @brief 加载shader
+		* @param pStateSet 需要添加shader的状态集
+		* @param eMaterial 材质类型
 		*/
-		void SetShader(osg::StateSet* pSS, EGMMaterial eMaterial);
+		void SetShader(osg::StateSet* pStateSet, EGMMaterial eMaterial);
 
 	private:
+		/**
+		* @brief 判断当前纹理单元是否已经被占用，如果被占用，则++（跳过被占用的纹理单元）
+		* @param iUnit 纹理单元
+		* @return bool: 如果被占用则返回false，否则返回true
+		*/
+		bool _PlusUnitUsed(int& iUnit);
 
 	// 变量
 	private:
@@ -86,9 +109,6 @@ namespace GM
 
 		std::vector<osg::ref_ptr<osg::TextureCubeMap>> m_pCubeMapVector; //!< cubemap数组，6个方向6层level
 		std::vector<osg::ref_ptr<CGMDispatchCompute>> m_pMipmapComputeVec; // 生成自定义mipmap的计算着色器节点
-		osg::ref_ptr<osg::Geometry>				m_pCopyMipmapGeom;		// 拷贝mipmap的集合节点
-		CopyMipmapCallback* m_pCopyMipmapCB = nullptr;	// 拷贝mipmap的回调
-
 	};
 
 }	// GM

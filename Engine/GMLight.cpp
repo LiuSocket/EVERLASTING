@@ -70,6 +70,8 @@ bool CGMLight::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	m_pShadowTexture = new osg::Texture2D;
 	m_pShadowTexture->setTextureSize(iShadowMapSize, iShadowMapSize);
 	m_pShadowTexture->setInternalFormat(GL_DEPTH_COMPONENT);
+	m_pShadowTexture->setSourceFormat(GL_DEPTH_COMPONENT);
+	m_pShadowTexture->setSourceType(GL_FLOAT);
 	m_pShadowTexture->setShadowComparison(true);
 	m_pShadowTexture->setShadowTextureMode(osg::Texture2D::LUMINANCE);
 	m_pShadowTexture->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR);
@@ -97,6 +99,7 @@ bool CGMLight::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	osg::ref_ptr<osg::StateSet> pShadowSS = m_pShadowCamera->getOrCreateStateSet();
 	pShadowSS->setDefine("SHADOW_CAST", iValue);
 	pShadowSS->setAttributeAndModes(new osg::CullFace(osg::CullFace::FRONT), iValue);
+	pShadowSS->setMode(GL_CULL_FACE, iValue);
 
 	GM_Root->addChild(m_pShadowCamera.get());
 	return true;

@@ -47,9 +47,9 @@ void main()
 	vec3 viewVertDir = normalize(vertOut.viewPos);
 	vec3 viewNorm = normalize(vertOut.viewNormal);
 
-	vec4 texel_p = texture2D(texMRA, gl_TexCoord[0].st); // R = Metallic,G = Roughness,B = AO
-	vec4 texel_i = texture2D(texIllumination, gl_TexCoord[0].st);
-	vec4 texel_n = texture2D(texNormal, gl_TexCoord[0].st);
+	vec4 texel_p = texture(texMRA, gl_TexCoord[0].st); // R = Metallic,G = Roughness,B = AO
+	vec4 texel_i = texture(texIllumination, gl_TexCoord[0].st);
+	vec4 texel_n = texture(texNormal, gl_TexCoord[0].st);
 
 	vec3 normalTangent = normalize(texel_n.xyz-vec3(0.5));
 	vec3 viewTexNorm = normalize(
@@ -103,7 +103,7 @@ void main()
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-	gl_FragColor = vec4(shadow,shadow,shadow,1);//outColor;
+	gl_FragColor = outColor; //vec4(shadow,shadow,shadow,1);//
 }
 
 #endif // SHADOW_CAST or not

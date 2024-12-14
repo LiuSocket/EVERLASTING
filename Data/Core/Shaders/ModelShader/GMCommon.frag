@@ -102,5 +102,5 @@ float Shadow(vec3 shadowPos)
 	// return osgShadow_ambientBias.x + shadow * osgShadow_ambientBias.y;
 
 	float shadow = texture(texShadow, shadowPos).r;
-	return shadow;
+	return 1;
 }

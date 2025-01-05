@@ -103,10 +103,20 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	int height = m_pConfigData->iScreenHeight;
 
 	osg::Camera* pMainCam = GM_View->getCamera();
-	osg::Viewport* vp = pMainCam->getViewport();
-	vp->setViewport(0, 0, width, height);
+	osg::Vec3d vEye = osg::Vec3d(0.0, -70.0, 8.0); // 单位：厘米
+	osg::Vec3d vCenter = osg::Vec3d(0.0, 0.0, 8.0); // 单位：厘米
+	osg::Vec3d vUp = osg::Vec3d(0.0, 0.0, 1.0); // 单位：厘米
+	pMainCam->setViewMatrixAsLookAt(vEye, vCenter, vUp);
+	pMainCam->setProjectionMatrixAsPerspective(
+		m_pConfigData->fFovy,
+		double(width) / double(height),
+		2.0, 2e4); // 单位：厘米
 	pMainCam->setRenderOrder(osg::Camera::PRE_RENDER, 20);
 	pMainCam->attach(osg::Camera::COLOR_BUFFER, pSceneTex, 0, 0, false, 8, 0);
+	pMainCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+	pMainCam->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+	pMainCam->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 0.0));
+	pMainCam->setViewport(new osg::Viewport(0, 0, width, height));
 
 	osg::ref_ptr<osg::StateSet> pStateset = pMainCam->getOrCreateStateSet();
 	// 强制单面显示

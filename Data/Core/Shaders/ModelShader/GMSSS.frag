@@ -96,10 +96,6 @@ void main()
 	vec3 fresnel = EnvDFGLazarov(colorMin.rgb, 1.0-roughness, dotVN);
 	outColor.rgb = mix(ToneMapping(diffuseFact+ambient.rgb)*outColor.rgb, reflectEnv.rgb, fresnel) + specularBRDF.rgb;
 
-	/* illumination */
-	vec4 illumination = texel_SSSR;
-	outColor.rgb = mix(outColor.rgb, vec3(1), illumination.rgb);
-
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 

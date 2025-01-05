@@ -261,11 +261,6 @@ void CGMEngine::ResizeScreen(const int iW, const int iH)
 CGMViewWidget* CGMEngine::CreateViewWidget(QWidget* parent)
 {
 	GM_Viewer = new CGMViewWidget(GM_View, parent);
-	GM_View->getCamera()->setProjectionMatrixAsPerspective(
-		m_pConfigData->fFovy,
-		static_cast<double>(m_pConfigData->iScreenWidth) / static_cast<double>(m_pConfigData->iScreenHeight),
-		2.0, 2e4); // 单位：厘米
-
 	m_pPost->CreatePost(m_pSceneTex.get(), m_pBackgroundTex.get(), m_pForegroundTex.get());
 	if (EGMRENDER_LOW != m_pConfigData->eRenderQuality)
 	{

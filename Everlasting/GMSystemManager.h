@@ -57,14 +57,7 @@ public:
 	/** @brief 键盘按键弹起事件 */
 	bool GMKeyUp(GM::EGMKeyCode eKC);
 
-	/**
-	* SetCursorVisible
-	* 设置鼠标显示/隐藏
-	* @author LiuTao
-	* @since 2021.09.11
-	* @param bVisible:			鼠标是否显示
-	* @return void
-	*/
+	/** @brief 设置鼠标显示/隐藏 */
 	void SetCursorVisible(bool bVisible);
 
 protected:

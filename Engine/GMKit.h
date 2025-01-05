@@ -12,7 +12,7 @@
 #pragma once
 
 #include "GMCommon.h"
-#include "BindImageTexture.h"
+#include <osg/BindImageTexture>
 #include <osg/StateSet>
 
 namespace GM

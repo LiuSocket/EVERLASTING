@@ -49,7 +49,7 @@ void main()
 
 	vec4 texel_p = texture(texMRA, gl_TexCoord[0].st); // R = Metallic,G = Roughness,B = AO
 	vec4 texel_SSSR = texture(texSSSR, gl_TexCoord[0].st);
-	vec4 texel_n = vec4(0.5,0.5,1.0,1.0);//texture(texNormal, gl_TexCoord[0].st);
+	vec4 texel_n = texture(texNormal, gl_TexCoord[0].st);
 
 	vec3 normalTangent = normalize(texel_n.xyz-vec3(0.5));
 	vec3 viewTexNorm = normalize(
@@ -103,7 +103,7 @@ void main()
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-	gl_FragColor = outColor; //vec4(shadow,shadow,shadow,1);//
+	gl_FragColor = outColor; //vec4(shadow,shadow,shadow,1);
 }
 
 #endif // SHADOW_CAST or not

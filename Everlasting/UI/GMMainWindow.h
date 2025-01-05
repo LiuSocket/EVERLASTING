@@ -64,8 +64,5 @@ private:
 	bool								m_bInit;
 	bool								m_bFull;				//!< 是否全屏
 	bool								m_bPressed;				//!< 是否按下鼠标
-	bool								m_bShowVolume;			//!< 是否显示实时变化的音量
 	QPoint								m_vPos;					//!< 窗口的位置
-	int									m_iAudioDuration;		//!< 音频总时长，单位：ms
-	QString								m_strName;				//!< 音频文件名称，包含后缀名
 };

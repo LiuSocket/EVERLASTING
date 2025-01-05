@@ -18,8 +18,8 @@
 #include "GMPost.h"
 #include "GMModel.h"
 #include "GMLight.h"
+#include "osgQt/GraphicsWindowQt.h"
 #include <osgViewer/ViewerEventHandlers>
-#include <osgQt/GraphicsWindowQt>
 #include <QtCore/QTimer>
 
 #include <iostream>

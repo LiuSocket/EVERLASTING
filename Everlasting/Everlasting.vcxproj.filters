@@ -30,6 +30,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="GMEngine\osgQt">
+      <UniqueIdentifier>{99111f8d-5854-46c2-bd72-7eeb6743c6db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Engine\Assist\tinystr.cpp">
@@ -98,8 +101,8 @@
     <ClCompile Include="..\Engine\GMLight.cpp">
       <Filter>GMEngine\Core\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Engine\BindImageTexture.cpp">
-      <Filter>GMEngine\Core\Source Files</Filter>
+    <ClCompile Include="..\Engine\osgQt\GraphicsWindowQt.cpp">
+      <Filter>GMEngine\osgQt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,8 +172,8 @@
     <ClInclude Include="..\Engine\GMDispatchCompute.h">
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\Engine\BindImageTexture.h">
-      <Filter>GMEngine\Core\Header Files</Filter>
+    <ClInclude Include="..\Engine\osgQt\GraphicsWindowQt.h">
+      <Filter>GMEngine\osgQt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

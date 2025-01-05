@@ -11,8 +11,8 @@
 //////////////////////////////////////////////////////////////////////////
 #pragma once
 
+#include "osgQt/GraphicsWindowQt.h"
 #include <osgViewer/CompositeViewer>
-#include <osgQt/GraphicsWindowQt>
 #include <QtCore/QTimer>
 
 class CGMViewWidget : public QWidget, public osgViewer::CompositeViewer

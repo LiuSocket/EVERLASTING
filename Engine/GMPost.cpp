@@ -106,7 +106,7 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	osg::Viewport* vp = pMainCam->getViewport();
 	vp->setViewport(0, 0, width, height);
 	pMainCam->setRenderOrder(osg::Camera::PRE_RENDER, 20);
-	pMainCam->attach(osg::Camera::COLOR_BUFFER0, pSceneTex, 0, 0, false, 8, 0);
+	pMainCam->attach(osg::Camera::COLOR_BUFFER, pSceneTex, 0, 0, false, 8, 0);
 
 	osg::ref_ptr<osg::StateSet> pStateset = pMainCam->getOrCreateStateSet();
 	// 强制单面显示
@@ -115,8 +115,6 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	// Create post triangle
 	m_pPostGeode = new osg::Geode();
 	m_pPostGeode->addDrawable(_CreateScreenTriangle(width, height));
-	osg::ref_ptr<osg::StateSet>	pSsPost = m_pPostGeode->getOrCreateStateSet();
-	GLenum buffer = pMainCam->getGraphicsContext()->getTraits()->doubleBuffer ? GL_BACK : GL_FRONT;
 
 	m_pPostCam = new osg::Camera;
 	m_pPostCam->setName("postCamera");
@@ -128,14 +126,13 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	m_pPostCam->setAllowEventFocus(false);
 	m_pPostCam->setRenderOrder(osg::Camera::POST_RENDER, 100);
 	m_pPostCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-	m_pPostCam->setDrawBuffer(buffer);
-	m_pPostCam->setReadBuffer(buffer);
 	m_pPostCam->setViewMatrix(osg::Matrix::identity());
 	m_pPostCam->setProjectionMatrixAsOrtho2D(0, width, 0, height);
 	m_pPostCam->addChild(m_pPostGeode.get());
 
 	GM_Root->addChild(m_pPostCam.get());
 
+	osg::ref_ptr<osg::StateSet>	pSsPost = m_pPostGeode->getOrCreateStateSet();
 	pSsPost->addUniform(m_pCommonUniform->GetScreenSize());
 	//pSsPost->setDefine("VOLUME", m_bVolume ? osg::StateAttribute::ON : osg::StateAttribute::OFF);
 
@@ -179,24 +176,6 @@ bool CGMPost::SetVolumeEnable(bool bEnabled, osg::Texture* pVolumeTex)
 		pSsPost->setDefine("VOLUME", osg::StateAttribute::OFF);
 		return true;
 	}
-}
-
-bool CGMPost::UpdateHierarchy(int iHieNew)
-{
-	if (EGMRENDER_LOW != m_pConfigData->eRenderQuality)
-	{
-		osg::ref_ptr<osg::StateSet>	pSsPost = m_pPostGeode->getStateSet();
-
-		//if (m_bVolume && (4 == iHieNew || 3 == iHieNew))
-		//{
-		//	pSsPost->setDefine("VOLUME", osg::StateAttribute::ON);
-		//}
-		//else
-		//{
-		//	pSsPost->setDefine("VOLUME", osg::StateAttribute::OFF);
-		//}
-	}
-	return true;
 }
 
 osg::Geometry* CGMPost::_CreateScreenTriangle(const int width, const int height)

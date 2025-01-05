@@ -8,8 +8,8 @@ using namespace GM;
 
 CGMMainWindow::CGMMainWindow(QWidget *parent)
 	: QMainWindow(parent), m_pSceneWidget(nullptr),
-	m_bInit(false), m_bFull(false), m_bPressed(false), m_bShowVolume(false),
-	m_vPos(QPoint(0,0)), m_iAudioDuration(5000), m_strName(QString())
+	m_bInit(false), m_bFull(false), m_bPressed(false),
+	m_vPos(QPoint(0,0))
 {
 	ui.setupUi(this);
 	setWindowFlags(Qt::FramelessWindowHint);

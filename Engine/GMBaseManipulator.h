@@ -164,4 +164,4 @@ namespace GM
 		bool					m_bDoubleClick;					// ÊÇ·ñ´¦ÓÚË«»÷×´Ì¬
 	};
 
-}	// DP
+}	// GM

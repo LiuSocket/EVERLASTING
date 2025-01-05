@@ -54,9 +54,7 @@ namespace GM
 		/** @brief 加载 */
 		bool Load();
 		/**
-		* 修改屏幕尺寸时调用此函数
-		* @author LiuTao
-		* @since 2022.07.21
+		* @brief 修改屏幕尺寸时调用此函数
 		* @param width: 屏幕宽度
 		* @param height: 屏幕高度
 		* @return void
@@ -64,10 +62,7 @@ namespace GM
 		void ResizeScreen(const int width, const int height);
 
 		/**
-		* CreatePost
-		* 创建后期
-		* @author LiuTao
-		* @since 2022.07.20
+		* @brief 创建后期
 		* @param pSceneTex:			场景颜色图
 		* @param pBackgroundTex:	背景颜色图
 		* @param pForegroundTex:	前景颜色图
@@ -78,28 +73,17 @@ namespace GM
 			osg::Texture* pForegroundTex);
 
 		/**
-		* SetVolumeEnable
-		* 开关体渲染
-		* @author LiuTao
-		* @since 2022.07.28
+		* @brief 开关体渲染
 		* @param bEnabled: 开启或关闭体渲染
 		* @param pVolumeTex: 体渲染图
 		* @return bool 成功true， 失败false
 		*/
 		bool SetVolumeEnable(bool bEnabled, osg::Texture* pVolumeTex = nullptr);
 
-		/**
-		* UpdateHierarchy
-		* @brief 由于空间层级变化而更新场景
-		* @param iHierarchy:		更新后的空间层级编号
-		* @return bool:				成功true，失败false
-		*/
-		bool UpdateHierarchy(int iHieNew);
-
 	private:
 		/**
 		* @brief 创建渲染面
-		*屏幕两倍大小的三角面，比矩形效率要高一些
+		* 屏幕两倍大小的三角面，比矩形效率要高一些
 		* @param width: 等效矩形的宽度
 		* @param height: 等效矩形的高度
 		* @return osg::Geometry* 返回几何节点指针

@@ -40,9 +40,4 @@ namespace GM
 		osg::ref_ptr<osg::Camera>					pForegroundCam;		//!< Ç°¾°RTTÏà»ú
 	};
 
-	/*!
-	*  @brief äÖÈ¾Ë³Ðò
-	*/
-
-
 }	// GM

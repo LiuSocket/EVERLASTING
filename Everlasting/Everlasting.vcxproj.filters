@@ -30,6 +30,15 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="GMEngine\osgQOpenGL">
+      <UniqueIdentifier>{68b05701-6c08-4c14-a0a9-9a58806fddeb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GMEngine\osgQOpenGL\Source Files">
+      <UniqueIdentifier>{e9bd3a3b-7a1e-4c5a-8f11-e9ff42f3cd84}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GMEngine\osgQOpenGL\Header Files">
+      <UniqueIdentifier>{508f42a8-a237-4763-ae75-e3ebe78e68fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Engine\Assist\tinystr.cpp">
@@ -97,6 +106,27 @@
     </ClCompile>
     <ClCompile Include="..\Engine\GMLight.cpp">
       <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\osgQOpenGL\CullVisitorEx.cpp">
+      <Filter>GMEngine\osgQOpenGL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\osgQOpenGL\GraphicsWindowEx.cpp">
+      <Filter>GMEngine\osgQOpenGL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\osgQOpenGL\osgQOpenGLWidget.cpp">
+      <Filter>GMEngine\osgQOpenGL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\osgQOpenGL\osgQOpenGLWindow.cpp">
+      <Filter>GMEngine\osgQOpenGL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\osgQOpenGL\OSGRenderer.cpp">
+      <Filter>GMEngine\osgQOpenGL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\osgQOpenGL\RenderStageEx.cpp">
+      <Filter>GMEngine\osgQOpenGL\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Engine\osgQOpenGL\StateEx.cpp">
+      <Filter>GMEngine\osgQOpenGL\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +196,18 @@
     <ClInclude Include="..\Engine\GMDispatchCompute.h">
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\osgQOpenGL\CullVisitorEx.h">
+      <Filter>GMEngine\osgQOpenGL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\osgQOpenGL\GraphicsWindowEx.h">
+      <Filter>GMEngine\osgQOpenGL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\osgQOpenGL\RenderStageEx.h">
+      <Filter>GMEngine\osgQOpenGL\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\osgQOpenGL\StateEx.h">
+      <Filter>GMEngine\osgQOpenGL\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="..\Engine\GMViewWidget.h">
@@ -179,6 +221,15 @@
     </QtMoc>
     <QtMoc Include="UI\GMUIManager.h">
       <Filter>Everlasting\UI</Filter>
+    </QtMoc>
+    <QtMoc Include="..\Engine\osgQOpenGL\osgQOpenGLWidget.h">
+      <Filter>GMEngine\osgQOpenGL\Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\Engine\osgQOpenGL\osgQOpenGLWindow.h">
+      <Filter>GMEngine\osgQOpenGL\Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\Engine\osgQOpenGL\OSGRenderer.h">
+      <Filter>GMEngine\osgQOpenGL\Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>

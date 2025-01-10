@@ -88,14 +88,6 @@ namespace GM
 		*/
 		bool SetVolumeEnable(bool bEnabled, osg::Texture* pVolumeTex = nullptr);
 
-		/**
-		* UpdateHierarchy
-		* @brief 由于空间层级变化而更新场景
-		* @param iHierarchy:		更新后的空间层级编号
-		* @return bool:				成功true，失败false
-		*/
-		bool UpdateHierarchy(int iHieNew);
-
 	private:
 		/**
 		* @brief 创建渲染面

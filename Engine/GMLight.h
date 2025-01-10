@@ -53,6 +53,18 @@ namespace GM
 		/** @brief 更新(在主相机更新姿态之后) */
 		bool UpdatePost(double dDeltaTime);
 
+		/** @brief 增加需要阴影的节点 */
+		void AddShadowNode(osg::Node* pNode);
+		/** @brief 获取阴影贴图 */
+		inline osg::Texture2D* GetShadowMap() const
+		{
+			return m_pShadowTexture.get();
+		}
+		inline osg::Uniform* const GetView2ShadowMatrixUniform() const
+		{
+			return m_mView2ShadowUniform.get();
+		}
+
 	private:
 		void _InnerUpdate(const double dDeltaTime);
 
@@ -62,6 +74,12 @@ namespace GM
 		SGMConfigData* m_pConfigData;					//!< 配置数据
 
 		//!< osg的射灯
-		osg::ref_ptr<osg::LightSource>		m_pLightSource;
+		osg::ref_ptr<osg::LightSource>			m_pLightSource;
+		//!< 阴影相机
+		osg::ref_ptr<osg::Camera>				m_pShadowCamera;
+		//!< 阴影贴图
+		osg::ref_ptr<osg::Texture2D>			m_pShadowTexture;
+		//!< view空间转阴影空间的Uniform
+		osg::ref_ptr<osg::Uniform>				m_mView2ShadowUniform;
 	};
 }	// GM

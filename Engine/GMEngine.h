@@ -99,6 +99,8 @@ namespace GM
 		
 		/** @brief 创建视口(QT:QWidget) */
 		CGMViewWidget* CreateViewWidget(QWidget* parent);
+		/* @brief 初始化GM_VIEW，之后才能获取GM_Viewer */
+		void InitGMViewer();
 
 	private:
 		/**
@@ -134,10 +136,10 @@ namespace GM
 		// 变量
 	private:
 
-		SGMKernelData*						m_pKernelData;				//!< 内核数据
-		SGMConfigData*						m_pConfigData;				//!< 配置数据
-		CGMCommonUniform*					m_pCommonUniform;			//!< 公用Uniform
-		CGMBaseManipulator*					m_pManipulator;				//!< 基础操作器
+		SGMKernelData*						m_pKernelData = nullptr;	//!< 内核数据
+		SGMConfigData*						m_pConfigData = nullptr;	//!< 配置数据
+		CGMCommonUniform*					m_pCommonUniform = nullptr;	//!< 公用Uniform
+		CGMBaseManipulator*					m_pManipulator = nullptr;	//!< 基础操作器
 
 		bool								m_bInit = false;			//!< 初始化标志
 		bool								m_bRendering = true;		//!< 是否渲染
@@ -145,9 +147,9 @@ namespace GM
 		float								m_fDeltaStep = 0.0f;		//!< 单位s
 		float								m_fConstantStep = 0.1f;		//!< 等间隔更新的时间,单位s
 
-		CGMPost*							m_pPost;					//!< 后期模块
-		CGMModel*							m_pModel;					//!< 模型模块
-		CGMLight*							m_pLight;					//!< 光照模块
+		CGMPost*							m_pPost = nullptr;			//!< 后期模块
+		CGMModel*							m_pModel = nullptr;			//!< 模型模块
+		CGMLight*							m_pLight = nullptr;			//!< 光照模块
 
 		osg::ref_ptr<osg::Texture2D>		m_pSceneTex;				//!< 主场景颜色图
 		osg::ref_ptr<osg::Texture2D>		m_pBackgroundTex;			//!< 背景颜色图

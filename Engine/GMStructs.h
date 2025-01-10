@@ -915,7 +915,7 @@ namespace GM
 		/** @brief 构造 */
 		SGMModelData()
 			: strName(""), strFilePath(""), vPos(0, 0, 0), vOri(0, 0, 0), vScale(1, 1, 1), iEntRenderBin(1),
-			eMaterial(EGM_MATERIAL_PBR), eBlend(EGM_BLEND_Opaque)
+			eMaterial(EGM_MATERIAL_PBR), eBlend(EGM_BLEND_Opaque), bCastShadow(true)
 		{}
 
 		// 变量
@@ -927,5 +927,6 @@ namespace GM
 		int					iEntRenderBin;			//!< 模型渲染顺序Renderbin
 		EGMMaterial			eMaterial;				//!< 材质
 		EGMBlend			eBlend;					//!< 半透明混合模式
+		bool				bCastShadow;			//!< 是否投射阴影
 	};
 }	// GM

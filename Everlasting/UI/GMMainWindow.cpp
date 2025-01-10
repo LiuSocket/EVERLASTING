@@ -7,9 +7,7 @@
 using namespace GM;
 
 CGMMainWindow::CGMMainWindow(QWidget *parent)
-	: QMainWindow(parent), m_pSceneWidget(nullptr),
-	m_bInit(false), m_bFull(false), m_bPressed(false), m_bShowVolume(false),
-	m_vPos(QPoint(0,0)), m_iAudioDuration(5000), m_strName(QString())
+	: QMainWindow(parent),m_vPos(QPoint(0,0))
 {
 	ui.setupUi(this);
 	setWindowFlags(Qt::FramelessWindowHint);
@@ -47,6 +45,7 @@ bool CGMMainWindow::Init()
 
 	m_pSceneWidget = GM_ENGINE.CreateViewWidget(this);
 	ui.centralVLayout->insertWidget(2,(QWidget*)m_pSceneWidget);
+	connect(m_pSceneWidget, SIGNAL(initialized()), this, SLOT(_slotInitGMViewer()));
 
 	QImage* pAudioImg = new QImage;
 	pAudioImg->load(":/Resources/default_Image.png");
@@ -99,7 +98,7 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 	}
 }
 
-bool CGMMainWindow::GetFullScreen()
+bool CGMMainWindow::GetFullScreen() const
 {
 	return m_bFull;
 }
@@ -249,4 +248,9 @@ void CGMMainWindow::keyPressEvent(QKeyEvent* event)
 void CGMMainWindow::keyReleaseEvent(QKeyEvent* event)
 {
 	QWidget::keyReleaseEvent(event);
+}
+
+void CGMMainWindow::_slotInitGMViewer()
+{
+	GM_ENGINE.InitGMViewer();
 }

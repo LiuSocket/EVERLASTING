@@ -15,7 +15,6 @@
 #include "GMAnimation.h"
 #include "GMTangentSpaceGenerator.h"
 
-#include <osg/CullFace>
 #include <osg/StateSet>
 #include <osg/Texture3D>
 #include <osg/MatrixTransform>
@@ -91,15 +90,15 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 
 	m_pRootNode = new osg::Group;
 	GM_Root->addChild(m_pRootNode.get());
-	osg::StateSet* pStateset = m_pRootNode->getOrCreateStateSet();
-	// 强制单面显示
-	pStateset->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+
+	unsigned int iValue = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
+	osg::ref_ptr<osg::StateSet> pStateset = m_pRootNode->getOrCreateStateSet();
 	// 强制设置半透明混合模式
-	pStateset->setAttributeAndModes(
-		new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),
-		osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+	pStateset->setAttributeAndModes(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),iValue);
 	pStateset->setMode(GL_LIGHTING, osg::StateAttribute::ON);
 	pStateset->setMode(GL_LIGHT0, osg::StateAttribute::ON);
+	pStateset->setTextureAttributeAndModes(SHADOW_TEX_UNIT, m_pShadowTexture.get(), iValue);
+	pStateset->addUniform(new osg::Uniform("texShadow", SHADOW_TEX_UNIT), iValue);
 
 	m_pMaterial->Init(pKernelData, pConfigData, pCommonUniform);
 
@@ -111,12 +110,13 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 	sData.strFilePath = "Background.FBX";
 	sData.iEntRenderBin = 0;
 	sData.eMaterial = EGM_MATERIAL_Background;
+	sData.bCastShadow = false;
 	Add(sData);
 
 	// 加载角色模型
 	sData.strName = "MIGI";
 	sData.strFilePath = "MIGI.FBX";
-	sData.eMaterial = EGM_MATERIAL_PBR;
+	sData.eMaterial = EGM_MATERIAL_Human;
 	Add(sData);
 
 	SetAnimationEnable("MIGI", true);
@@ -130,19 +130,10 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
 /** @brief 加载 */
 bool CGMModel::Load()
 {
-	std::string strModelPath = m_pConfigData->strCorePath + m_strDefModelPath;
-	// 加载背景模型
-	//osg::ref_ptr<osg::Node> pNode = _GetNode("Bacdground");
-	//if (pNode.valid())
-	//{
-	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("Bacdground"));
-	//}	
-	//// 加载角色模型
-	//pNode = _GetNode("MIGI");
-	//if (pNode.valid())
-	//{
-	//	_SetMaterial(pNode.get(), m_pModelDataMap.at("MIGI"));
-	//}
+	for (auto& itr : m_pNodeMap)
+	{
+		_SetMaterial(itr.second.get(), m_pModelDataMap.at(itr.first));
+	}
 
 	return true;
 }
@@ -182,12 +173,19 @@ bool CGMModel::UpdatePost(double dDeltaTime)
 bool CGMModel::Add(const SGMModelData& sData)
 {
 	// 加载背景模型
-	osg::ref_ptr<osg::Node> pNode = osgDB::readNodeFile(
-		m_pConfigData->strCorePath + m_strDefModelPath + sData.strFilePath,
-		m_pDDSOptions);
+	osg::ref_ptr<osg::Node> pNode = osgDB::readNodeFile(m_pConfigData->strCorePath + m_strDefModelPath + sData.strFilePath,
+		m_pDDSOptions);// 保证dds纹理的正确加载
 	if (pNode.valid())
 	{
-		m_pRootNode->addChild(pNode.get());
+		// 设置阴影
+		if (sData.bCastShadow)
+			pNode->setNodeMask(GM_MAIN_MASK | GM_SHADOW_CAST_MASK);
+		else
+			pNode->setNodeMask(GM_MAIN_MASK);
+
+		if(!m_pRootNode->containsNode(pNode.get()))
+			m_pRootNode->addChild(pNode.get());
+
 		m_pModelDataMap[sData.strName] = sData;
 		m_pNodeMap[sData.strName] = pNode;
 		// 设置材质
@@ -195,6 +193,13 @@ bool CGMModel::Add(const SGMModelData& sData)
 		return true;
 	}
 	return false;
+}
+
+void CGMModel::SetUniform(
+	osg::Uniform* pView2Shadow)
+{
+	osg::StateSet* pStateset = m_pRootNode->getOrCreateStateSet();
+	pStateset->addUniform(pView2Shadow);
 }
 
 osg::Node* CGMModel::_GetNode(const std::string& strModelName)
@@ -223,12 +228,27 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 	{
 	case EGM_MATERIAL_PBR:
 	{
-		m_pMaterial->SetPBRShader(pNode);
+		m_pMaterial->SetPBRMaterial(pNode);
+	}
+	break;
+	case EGM_MATERIAL_Human:
+	{
+		m_pMaterial->SetHumanMaterial(pNode);
+	}
+	break;
+	case EGM_MATERIAL_SSS:
+	{
+		m_pMaterial->SetSSSMaterial(pNode);
+	}
+	break;
+	case EGM_MATERIAL_Eye:
+	{
+		m_pMaterial->SetEyeMaterial(pNode);
 	}
 	break;
 	case EGM_MATERIAL_Background:
 	{
-		m_pMaterial->SetBackgroundShader(pNode);
+		m_pMaterial->SetBackgroundMaterial(pNode);
 	}
 	break;
 	default:
@@ -265,6 +285,8 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 		break;
 	}
 	pStateSet->setRenderBinDetails(sData.iEntRenderBin, "RenderBin");
+	// 设置阴影
+	pStateSet->setDefine("SHADOW_RECEIVE", osg::StateAttribute::ON);
 
 	return true;
 }
@@ -331,4 +353,9 @@ bool CGMModel::SetAnimationPause(const std::string& strModelName, const std::str
 bool CGMModel::SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName)
 {
 	return m_pAnimationManager->SetAnimationResume(strModelName, strAnimationName);
+}
+
+void CGMModel::SetShadowMap(osg::Texture2D* pShadowMap)
+{
+	m_pShadowTexture = pShadowMap;
 }

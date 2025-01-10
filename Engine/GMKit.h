@@ -12,6 +12,7 @@
 #pragma once
 
 #include "GMCommon.h"
+#include <osg/BindImageTexture>
 #include <osg/StateSet>
 
 namespace GM
@@ -19,6 +20,7 @@ namespace GM
 	/*************************************************************************
 	Class
 	*************************************************************************/
+	class CGMDispatchCompute;
 	/*!
 	*  @Class CGMKit
 	*  @brief toolkits for Galaxy-Music
@@ -123,8 +125,8 @@ namespace GM
 		*
 		* @return bool： success = true，fail = false
 		*/
-		static bool AddImage(osg::StateSet* pStateSet, osg::Texture* pTex, const char* texName,
-			const int unit, GLenum access, GLenum format = 0U, int level = 0, bool layered = false, int layer = 0);
+		static bool AddImageTexture(CGMDispatchCompute* pCompute, osg::Texture* pTex, const char* texName,
+			const int unit, osg::BindImageTexture::Access access, GLenum format = 0, int level = 0, bool layered = false, int layer = 0);
 
 		/**
 		* @brief 获取图片的RGBA通道值

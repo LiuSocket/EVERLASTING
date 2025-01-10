@@ -30,7 +30,7 @@ public:
 	* @brief 获取界面全屏状态
 	* @return bool		是否处于全屏状态
 	*/
-	bool GetFullScreen();
+	bool GetFullScreen() const;
 
 public slots:
 
@@ -55,17 +55,17 @@ protected:
 	void keyPressEvent(QKeyEvent *event);
 	void keyReleaseEvent(QKeyEvent *event);
 
-private:
+private slots:
+
+	/** @brief 初始化GM_Viewer */
+	void _slotInitGMViewer();
 
 private:
 	Ui::GMMainWindow					ui;
-	CGMViewWidget*						m_pSceneWidget;
+	CGMViewWidget*						m_pSceneWidget = nullptr;
 
-	bool								m_bInit;
-	bool								m_bFull;				//!< 是否全屏
-	bool								m_bPressed;				//!< 是否按下鼠标
-	bool								m_bShowVolume;			//!< 是否显示实时变化的音量
-	QPoint								m_vPos;					//!< 窗口的位置
-	int									m_iAudioDuration;		//!< 音频总时长，单位：ms
-	QString								m_strName;				//!< 音频文件名称，包含后缀名
+	bool								m_bInit = false;
+	bool								m_bFull = false;			//!< 是否全屏
+	bool								m_bPressed = false;			//!< 是否按下鼠标
+	QPoint								m_vPos;						//!< 窗口的位置
 };

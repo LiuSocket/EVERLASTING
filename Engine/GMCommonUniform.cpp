@@ -61,9 +61,9 @@ void CGMCommonUniform::Update(double dDeltaTime)
 
 void CGMCommonUniform::UpdateLater(double dDeltaTime)
 {
-	osg::Matrixd mViewMatrix = GM_View->getCamera()->getViewMatrix();
+	osg::Matrixd mViewMatrix = GM_Viewer->getCamera()->getViewMatrix();
 	osg::Vec3d vEye, vCenter, vUp;
-	GM_View->getCamera()->getViewMatrixAsLookAt(vEye, vCenter, vUp);
+	GM_Viewer->getCamera()->getViewMatrixAsLookAt(vEye, vCenter, vUp);
 
 	// 将摄像机view空间下的Up向量传入shader中
 	osg::Vec3d vWorldSky = vEye;

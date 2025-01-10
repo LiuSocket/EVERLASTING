@@ -260,7 +260,10 @@ namespace GM
 	enum EGMMaterial
 	{
 		EGM_MATERIAL_PBR = 0,			//!< 默认PBR材质
-		EGM_MATERIAL_Background = 1		//!< 背景材质
+		EGM_MATERIAL_Human = 1,			//!< 人类材质（可以自动给子节点设置皮肤SSS和眼睛等材质）
+		EGM_MATERIAL_SSS = 2,			//!< 次表面散射（SSS）材质
+		EGM_MATERIAL_Eye = 3,			//!< 眼睛材质
+		EGM_MATERIAL_Background = 4		//!< 背景材质
 	};
 
 	/*!

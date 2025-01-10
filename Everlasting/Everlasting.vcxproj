@@ -5,10 +5,6 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Develop|x64">
-      <Configuration>Develop</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
@@ -32,12 +28,6 @@
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Develop|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
@@ -54,11 +44,6 @@
     </QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Develop|x64'" Label="QtSettings">
-    <QtInstall>5.7_msvc2015_64</QtInstall>
-    <QtModules />
-    <QtBuildConfig>release</QtBuildConfig>
-  </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
     <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
   </Target>
@@ -72,26 +57,16 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Develop|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(QtMsBuild)\Qt.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <OutDir>$(SolutionDir)Bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Out\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_d</TargetName>
     <IncludePath>$(SolutionDir)3RD\include;$(SolutionDir)OSG\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OSG\include;$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutDir>$(SolutionDir)Bin\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)Out\$(ProjectName)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)3RD\include;$(SolutionDir)OSG\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OSG\include;$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Develop|x64'">
     <OutDir>$(SolutionDir)Bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Out\$(ProjectName)\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)3RD\include;$(SolutionDir)OSG\include;$(IncludePath)</IncludePath>
@@ -112,7 +87,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\$(Configuration)\;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>osgViewerd.lib;osgAnimationd.lib;osgGAd.lib;osgDBd.lib;osgUtild.lib;osgQtd.lib;osgd.lib;qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5OpenGLd.lib;opengl32.lib;Qt5Widgetsd.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenThreadsd.lib;osgd.lib;osgViewerd.lib;osgAnimationd.lib;osgGAd.lib;osgDBd.lib;osgUtild.lib;qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,26 +106,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\$(Configuration)\;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>osgqt.lib;osg.lib;osgAnimation.lib;osgDB.lib;osgFX.lib;osgGA.lib;osgUtil.lib;osgShadow.lib;osgViewer.lib;osgWidget.lib;osgManipulator.lib;OpenThreads.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;Qt5Qml.lib;Qt5UiTools.lib;Qt5OpenGL.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Develop|x64'">
-    <QtMoc>
-      <ExecutionDescription>Moc'ing %(Identity)...</ExecutionDescription>
-      <QtMocFileName>.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</QtMocFileName>
-    </QtMoc>
-    <QtUic>
-      <ExecutionDescription>Uic'ing %(Identity)...</ExecutionDescription>
-      <QtUicFileName>.\GeneratedFiles\ui_%(Filename).h</QtUicFileName>
-    </QtUic>
-    <ClCompile>
-      <AdditionalIncludeDirectories>.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtOpenGL;$(QTDIR)\include\QtWidgets;.\UI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>UNICODE;_UNICODE;WIN32;_ENABLE_EXTENDED_ALIGNED_STORAGE;WIN64;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;_WINDOWS;QT_WIDGETS_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)Lib\$(Configuration)\;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>osgqt.lib;osg.lib;osgAnimation.lib;osgDB.lib;osgFX.lib;osgGA.lib;osgUtil.lib;osgShadow.lib;osgViewer.lib;osgWidget.lib;osgManipulator.lib;OpenThreads.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;Qt5Qml.lib;Qt5UiTools.lib;Qt5OpenGL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenThreads.lib;osg.lib;osgAnimation.lib;osgDB.lib;osgFX.lib;osgGA.lib;osgViewer.lib;osgUtil.lib;osgWidget.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -179,19 +135,6 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Develop|x64'" Label="Configuration">
-    <ClCompile>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <Optimization>MaxSpeed</Optimization>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Engine\Assist\mikktspace.cpp" />
     <ClCompile Include="..\Engine\Assist\tinystr.cpp" />
@@ -211,6 +154,13 @@
     <ClCompile Include="..\Engine\GMTangentSpaceGenerator.cpp" />
     <ClCompile Include="..\Engine\GMViewWidget.cpp" />
     <ClCompile Include="..\Engine\GMXml.cpp" />
+    <ClCompile Include="..\Engine\osgQOpenGL\CullVisitorEx.cpp" />
+    <ClCompile Include="..\Engine\osgQOpenGL\GraphicsWindowEx.cpp" />
+    <ClCompile Include="..\Engine\osgQOpenGL\osgQOpenGLWidget.cpp" />
+    <ClCompile Include="..\Engine\osgQOpenGL\osgQOpenGLWindow.cpp" />
+    <ClCompile Include="..\Engine\osgQOpenGL\OSGRenderer.cpp" />
+    <ClCompile Include="..\Engine\osgQOpenGL\RenderStageEx.cpp" />
+    <ClCompile Include="..\Engine\osgQOpenGL\StateEx.cpp" />
     <ClCompile Include="GMSystemManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="UI\GMMainWindow.cpp" />
@@ -238,6 +188,13 @@
     <ClInclude Include="..\Engine\GMStructs.h" />
     <ClInclude Include="..\Engine\GMTangentSpaceGenerator.h" />
     <ClInclude Include="..\Engine\GMXml.h" />
+    <ClInclude Include="..\Engine\osgQOpenGL\CullVisitorEx.h" />
+    <ClInclude Include="..\Engine\osgQOpenGL\GraphicsWindowEx.h" />
+    <QtMoc Include="..\Engine\osgQOpenGL\osgQOpenGLWidget.h" />
+    <QtMoc Include="..\Engine\osgQOpenGL\osgQOpenGLWindow.h" />
+    <QtMoc Include="..\Engine\osgQOpenGL\OSGRenderer.h" />
+    <ClInclude Include="..\Engine\osgQOpenGL\RenderStageEx.h" />
+    <ClInclude Include="..\Engine\osgQOpenGL\StateEx.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="UI\GMUIManager.h" />
     <QtMoc Include="UI\GMMainWindow.h" />

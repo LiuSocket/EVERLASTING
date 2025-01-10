@@ -11,38 +11,13 @@
 //////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include <osgViewer/CompositeViewer>
-#include <osgQt/GraphicsWindowQt>
-#include <QtCore/QTimer>
+#include "osgQOpenGL/osgQOpenGLWidget.h"
 
-class CGMViewWidget : public QWidget, public osgViewer::CompositeViewer
+class CGMViewWidget : public osgQOpenGLWidget
 {
 	Q_OBJECT;
 
 public:
-	CGMViewWidget(osgViewer::View* pView,
-		QWidget* parent = 0, Qt::WindowFlags f = 0,
-		osgViewer::CompositeViewer::ThreadingModel threadingModel = osgViewer::CompositeViewer::SingleThreaded);
+	CGMViewWidget(QWidget* parent = 0);
 	~CGMViewWidget();
-
-protected:
-	osgQt::GraphicsWindowQt* createGraphicsWindow(
-		int x, int y, int w, int h,
-		const std::string& name = "",
-		bool windowDecoration = false);
-
-	void enterEvent(QEvent* event);
-
-signals:
-
-	/**
-	* _signalEnter3D
-	* @brief 进入三维界面
-	* @param void
-	* @return void
-	*/
-	void _signalEnter3D();
-
-protected:
-	QTimer _timer;
 };

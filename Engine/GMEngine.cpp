@@ -19,7 +19,6 @@
 #include "GMModel.h"
 #include "GMLight.h"
 #include <osgViewer/ViewerEventHandlers>
-#include <osgQt/GraphicsWindowQt>
 #include <QtCore/QTimer>
 
 #include <iostream>
@@ -46,7 +45,7 @@ public:
 
 	bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter&)
 	{
-		if (ea.getEventType() == osgGA::GUIEventAdapter::RESIZE && _pEngine)
+		if ((ea.getEventType() == osgGA::GUIEventAdapter::RESIZE) && _pEngine)
 		{
 			_pEngine->ResizeScreen(ea.getWindowWidth(), ea.getWindowHeight());
 			return true;
@@ -77,8 +76,6 @@ CGMEngine* CGMEngine::getSingletonPtr(void)
 
 /** @brief 构造 */
 CGMEngine::CGMEngine():
-	m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
-	m_pPost(nullptr), m_pModel(nullptr),
 	m_pSceneTex(nullptr), m_pBackgroundTex(nullptr), m_pForegroundTex(nullptr)
 {
 	Init();
@@ -102,8 +99,6 @@ bool CGMEngine::Init()
 	m_pKernelData = new SGMKernelData();
 
 	GM_Root = new osg::Group();
-	GM_View = new osgViewer::View();
-	GM_View->setSceneData(GM_Root);
 
 	m_pSceneTex = new osg::Texture2D();
 	m_pSceneTex->setTextureSize(m_pConfigData->iScreenWidth, m_pConfigData->iScreenHeight);
@@ -134,16 +129,14 @@ bool CGMEngine::Init()
 	m_pModel->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
 	m_pLight->Init(m_pKernelData, m_pConfigData);
 
-	GM_View->setCameraManipulator(m_pManipulator);
-	//状态信息
-	osgViewer::StatsHandler* pStatsHandler = new osgViewer::StatsHandler;
-	pStatsHandler->setKeyEventTogglesOnScreenStats(osgGA::GUIEventAdapter::KEY_F1);
-	GM_View->addEventHandler(pStatsHandler);
+	//设置阴影
+	m_pLight->AddShadowNode(m_pModel->GetRootNode());
+	m_pModel->SetShadowMap(m_pLight->GetShadowMap());
+
+	m_pModel->SetUniform(m_pLight->GetView2ShadowMatrixUniform());
 
 	m_bInit = true;
 	m_pKernelData->bInited = m_bInit;
-
-	GM_View->addEventHandler(new ResizeEventHandler(this));
 
 	return true;
 }
@@ -153,10 +146,9 @@ bool CGMEngine::Init()
 void CGMEngine::Release()
 {
 	setlocale(LC_ALL, "C");
-	if (GM_Viewer.valid())
+	if (GM_ViewWidget)
 	{
-		GM_Viewer->stopThreading();
-		GM_Viewer = 0L;
+		delete GM_ViewWidget;
 	}
 
 	GM_DELETE(m_pCommonUniform);
@@ -198,14 +190,14 @@ bool CGMEngine::Update()
 			m_pModel->Update(deltaTime);
 			m_pLight->Update(deltaTime);
 
-			GM_Viewer->advance(USE_REFERENCE_TIME);
-			GM_Viewer->eventTraversal();
-			GM_Viewer->updateTraversal();
+			//GM_Viewer->advance(USE_REFERENCE_TIME);
+			//GM_Viewer->eventTraversal();
+			//GM_Viewer->updateTraversal();
 
 			// 在主相机改变位置后再更新
 			_UpdateLater(deltaTime);
 
-			GM_Viewer->renderingTraversals();
+			//GM_Viewer->renderingTraversals();
 		}
 	}
 	return true;
@@ -229,7 +221,7 @@ bool CGMEngine::Save()
 
 void CGMEngine::ResizeScreen(const int iW, const int iH)
 {
-	osg::ref_ptr<osg::Camera> pMainCam = GM_View->getCamera();
+	osg::ref_ptr<osg::Camera> pMainCam = GM_Viewer->getCamera();
 	if (pMainCam.valid())
 	{
 		double fovy, aspectRatio, zNear, zFar;
@@ -253,18 +245,26 @@ void CGMEngine::ResizeScreen(const int iW, const int iH)
 
 CGMViewWidget* CGMEngine::CreateViewWidget(QWidget* parent)
 {
-	GM_Viewer = new CGMViewWidget(GM_View, parent);
-	GM_View->getCamera()->setProjectionMatrixAsPerspective(
-		m_pConfigData->fFovy,
-		static_cast<double>(m_pConfigData->iScreenWidth) / static_cast<double>(m_pConfigData->iScreenHeight),
-		2.0, 2e4); // 单位：厘米
+	GM_ViewWidget = new CGMViewWidget(parent);
+	return GM_ViewWidget;
+}
+
+void CGMEngine::InitGMViewer()
+{
+	GM_Viewer->setSceneData(GM_Root);
+	GM_Viewer->setCameraManipulator(m_pManipulator);
+	GM_Viewer->setQuitEventSetsDone(false);
+	//状态信息
+	osgViewer::StatsHandler* pStatsHandler = new osgViewer::StatsHandler;
+	pStatsHandler->setKeyEventTogglesOnScreenStats(osgGA::GUIEventAdapter::KEY_F1);
+	GM_Viewer->addEventHandler(pStatsHandler);
+	GM_Viewer->addEventHandler(new ResizeEventHandler(this));
 
 	m_pPost->CreatePost(m_pSceneTex.get(), m_pBackgroundTex.get(), m_pForegroundTex.get());
 	if (EGMRENDER_LOW != m_pConfigData->eRenderQuality)
 	{
 		//m_pPost->SetVolumeEnable(true, m_pGalaxy->GetTAATex());
 	}
-	return GM_Viewer.get();
 }
 
 /** @brief 加载配置 */
@@ -361,13 +361,13 @@ bool CGMEngine::_UpdateLater(const double dDeltaTime)
 {
 	// background camera
 	osg::Vec3d vEye, vCenter, vUp;
-	GM_View->getCamera()->getViewMatrixAsLookAt(vEye, vCenter, vUp);
+	GM_Viewer->getCamera()->getViewMatrixAsLookAt(vEye, vCenter, vUp);
 	osg::Vec3d vBackCamDir = vCenter - vEye;
 	m_pKernelData->pBackgroundCam->setViewMatrixAsLookAt(osg::Vec3d(0, 0, 0), vBackCamDir, vUp);
 	//前景相机和主相机有相同的姿态
 	m_pKernelData->pForegroundCam->setViewMatrixAsLookAt(vEye, vCenter, vUp);
 	double fFovy, fAspectRatio, fZNear, fZFar;
-	GM_View->getCamera()->getProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
+	GM_Viewer->getCamera()->getProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
 	m_pKernelData->pBackgroundCam->setProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
 	m_pKernelData->pForegroundCam->setProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
 

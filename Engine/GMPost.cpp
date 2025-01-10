@@ -12,6 +12,7 @@
 
 #include "GMPost.h"
 #include "GMKit.h"
+#include <osg/CullFace>
 
 using namespace GM;
 /*************************************************************************
@@ -101,17 +102,32 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	int width = m_pConfigData->iScreenWidth;
 	int height = m_pConfigData->iScreenHeight;
 
-	osg::Camera* pMainCam = GM_View->getCamera();
-	osg::Viewport* vp = pMainCam->getViewport();
-	vp->setViewport(0, 0, width, height);
+	osg::Camera* pMainCam = GM_Viewer->getCamera();
+	pMainCam->setName("mainCamera");
+	pMainCam->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 0.0));
+	pMainCam->setCullMask(GM_MAIN_MASK);
+	pMainCam->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+	pMainCam->setProjectionMatrixAsPerspective(
+		m_pConfigData->fFovy,
+		static_cast<double>(width) / static_cast<double>(height),
+		2.0, 2e4); // 单位：厘米
+	pMainCam->setViewport(new osg::Viewport(0, 0, width, height));
+	osg::Vec3d vEye = osg::Vec3d(0.0, -80.0, 9.0); // 单位：厘米
+	osg::Vec3d vCenter = osg::Vec3d(0.0, 0.0, 9.0); // 单位：厘米
+	osg::Vec3d vUp = osg::Vec3d(0.0, 0.0, 1.0); // 单位：厘米
+	pMainCam->setViewMatrixAsLookAt(vEye, vCenter, vUp);
+	pMainCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 	pMainCam->setRenderOrder(osg::Camera::PRE_RENDER, 20);
-	pMainCam->attach(osg::Camera::COLOR_BUFFER0, pSceneTex, 0, 0, false, 8, 0);
+	pMainCam->attach(osg::Camera::COLOR_BUFFER, pSceneTex, 0, 0, false, 8, 0);
+
+	osg::ref_ptr<osg::StateSet> pStateset = pMainCam->getOrCreateStateSet();
+	// 强制单面显示
+	pStateset->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 
 	// Create post triangle
 	m_pPostGeode = new osg::Geode();
 	m_pPostGeode->addDrawable(_CreateScreenTriangle(width, height));
 	osg::ref_ptr<osg::StateSet>	pSsPost = m_pPostGeode->getOrCreateStateSet();
-	GLenum buffer = pMainCam->getGraphicsContext()->getTraits()->doubleBuffer ? GL_BACK : GL_FRONT;
 
 	m_pPostCam = new osg::Camera;
 	m_pPostCam->setName("postCamera");
@@ -123,8 +139,6 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	m_pPostCam->setAllowEventFocus(false);
 	m_pPostCam->setRenderOrder(osg::Camera::POST_RENDER, 100);
 	m_pPostCam->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
-	m_pPostCam->setDrawBuffer(buffer);
-	m_pPostCam->setReadBuffer(buffer);
 	m_pPostCam->setViewMatrix(osg::Matrix::identity());
 	m_pPostCam->setProjectionMatrixAsOrtho2D(0, width, 0, height);
 	m_pPostCam->addChild(m_pPostGeode.get());
@@ -174,24 +188,6 @@ bool CGMPost::SetVolumeEnable(bool bEnabled, osg::Texture* pVolumeTex)
 		pSsPost->setDefine("VOLUME", osg::StateAttribute::OFF);
 		return true;
 	}
-}
-
-bool CGMPost::UpdateHierarchy(int iHieNew)
-{
-	if (EGMRENDER_LOW != m_pConfigData->eRenderQuality)
-	{
-		osg::ref_ptr<osg::StateSet>	pSsPost = m_pPostGeode->getStateSet();
-
-		//if (m_bVolume && (4 == iHieNew || 3 == iHieNew))
-		//{
-		//	pSsPost->setDefine("VOLUME", osg::StateAttribute::ON);
-		//}
-		//else
-		//{
-		//	pSsPost->setDefine("VOLUME", osg::StateAttribute::OFF);
-		//}
-	}
-	return true;
 }
 
 osg::Geometry* CGMPost::_CreateScreenTriangle(const int width, const int height)

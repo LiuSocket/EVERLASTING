@@ -341,14 +341,13 @@ namespace GM
 			return ANIM_LIST.at(_focus)->getName();
 		}
 
-		std::vector<std::string>& getAnimationList() const
+		void getAnimationList(std::vector<std::string>& vAnimationList) const
 		{
-			std::vector<std::string> vAnimationList;
+			vAnimationList.clear();
 			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
 			{
 				vAnimationList.push_back(ANIM_LIST.at(i)->getName());
 			}
-			return vAnimationList;
 		}
 
 	private:
@@ -576,7 +575,7 @@ bool CGMAnimation::GetAnimationList(const std::string& strModelName, std::vector
 	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
 	if (!pAniPlayer) return false;
 
-	vAnimationList = pAniPlayer->getAnimationList();
+	pAniPlayer->getAnimationList(vAnimationList);
 	return true;
 }
 

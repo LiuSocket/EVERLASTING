@@ -30,6 +30,7 @@
 *.exe
 *.out
 *.app
+/.vs
 /.vs/EVERLASTING
 /3RD
 /Bin

@@ -305,12 +305,12 @@ void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
 	osg::ref_ptr<osg::Uniform> pTexBaseColorUniform = new osg::Uniform("texBaseColor", iChannel++);
 	pStateSet->addUniform(pTexBaseColorUniform.get());
 	_PlusUnitUsed(iChannel);
-	// MRA贴图（R通道存放金属度，G通道存放粗糙度，B通道存放AO贴图，A通道待定）
-	osg::ref_ptr<osg::Uniform> pTexPbrUniform = new osg::Uniform("texMRA", iChannel++);
+	// MRA贴图（R通道金属度，G通道粗糙度，B通道AO贴图，A通道厚度图（Thickness Map））
+	osg::ref_ptr<osg::Uniform> pTexPbrUniform = new osg::Uniform("texMRAT", iChannel++);
 	pStateSet->addUniform(pTexPbrUniform.get());
 	_PlusUnitUsed(iChannel);
-	// 次表面贴图（RGB通道存放次表面颜色，A通道存放曲率图）
-	osg::ref_ptr<osg::Uniform> pTexSSSRUniform = new osg::Uniform("texSSSR", iChannel++);
+	// 次表面贴图（RGB通道存放次表面颜色，A通道存放曲率图（Curvature Map））
+	osg::ref_ptr<osg::Uniform> pTexSSSRUniform = new osg::Uniform("texSSSC", iChannel++);
 	pStateSet->addUniform(pTexSSSRUniform.get());
 	_PlusUnitUsed(iChannel);
 	// 法线贴图（RGB通道存放法线，A通道待定）

@@ -46,7 +46,7 @@ public:
 
 	bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter&)
 	{
-		if (ea.getEventType() == osgGA::GUIEventAdapter::RESIZE && _pEngine)
+		if ((osgGA::GUIEventAdapter::RESIZE & ea.getEventType()) && _pEngine)
 		{
 			_pEngine->ResizeScreen(ea.getWindowWidth(), ea.getWindowHeight());
 			return true;

@@ -11,8 +11,8 @@ void main()
 
 uniform mat4			osg_ViewMatrixInverse;
 uniform sampler2D		texBaseColor;
-uniform sampler2D		texMRA;
-uniform sampler2D		texSSSR;
+uniform sampler2D		texMRAT;
+uniform sampler2D		texSSSC;
 uniform sampler2D		texNormal;
 uniform sampler2D		texEnvProbe;
 
@@ -45,18 +45,17 @@ void main()
 
 	float lengthV = length(vertOut.viewPos);
 	vec3 viewVertDir = normalize(vertOut.viewPos);
+	vec3 viewTangent = normalize(vertOut.viewTang);
+	vec3 viewBinorm = normalize(vertOut.viewBinormal);
 	vec3 viewNorm = normalize(vertOut.viewNormal);
+	mat3 tang2View = mat3(viewTangent, viewBinorm, viewNorm);
 
-	vec4 texel_p = texture(texMRA, gl_TexCoord[0].st); // R = Metallic,G = Roughness,B = AO
-	vec4 texel_SSSR = texture(texSSSR, gl_TexCoord[0].st);
+	vec4 texel_MRAT = texture(texMRAT, gl_TexCoord[0].st); // R = Metallic, G = Roughness, B = AO, A = Thickness
+	vec4 texel_SSSC = texture(texSSSC, gl_TexCoord[0].st); // RGB = SSS color, A = Curvature
 	vec4 texel_n = texture(texNormal, gl_TexCoord[0].st);
 
 	vec3 normalTangent = normalize(texel_n.xyz-vec3(0.5));
-	vec3 viewTexNorm = normalize(
-		mat3(normalize(vertOut.viewTang)
-			,normalize(vertOut.viewBinormal)
-			,viewNorm)
-		*normalTangent);
+	vec3 viewTexNorm = normalize(tang2View*normalTangent);
 
 	vec3 viewHalf = normalize(viewLight-viewVertDir);
 	const float minFact = 1e-8;
@@ -66,9 +65,12 @@ void main()
 	float dotVN = max(dot(-viewVertDir, viewTexNorm),minFact);
 	float dotVH = max(dot(-viewVertDir, viewHalf),minFact);
 
-	float metallic = texel_p.r;
-	float roughness = texel_p.g;
-	float ambientOcc = texel_p.b;
+	float metallic = texel_MRAT.r;
+	float roughness = texel_MRAT.g;
+	float ambientOcc = texel_MRAT.b;
+	float thickness = texel_MRAT.a;
+	vec3 SSSColor = texel_SSSC.rgb;
+	float curvature = texel_SSSC.a;
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
 

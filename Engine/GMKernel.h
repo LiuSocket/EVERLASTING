@@ -32,7 +32,7 @@ namespace GM
 	 */
 	struct SGMKernelData
 	{
-		bool										bInited;			//!< 是否初始化
+		bool										bInited = false;	//!< 是否初始化
 		osg::ref_ptr<osg::Group>					vRoot;				//!< 根节点
 		osg::ref_ptr<osgViewer::View>				vView;				//!< 视口
 		osg::ref_ptr<CGMViewWidget>					vViewer;			//!< 视口管理器

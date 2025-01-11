@@ -103,10 +103,10 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	int height = m_pConfigData->iScreenHeight;
 
 	osg::Camera* pMainCam = GM_View->getCamera();
-	osg::Vec3d vEye = osg::Vec3d(0.0, -70.0, 8.0); // 单位：厘米
-	osg::Vec3d vCenter = osg::Vec3d(0.0, 0.0, 8.0); // 单位：厘米
+	osg::Vec3d vEye = osg::Vec3d(0.0, -1.0, 1.0); // 单位：厘米
+	osg::Vec3d vCenter = osg::Vec3d(0.0, 0.0, 1.0); // 单位：厘米
 	osg::Vec3d vUp = osg::Vec3d(0.0, 0.0, 1.0); // 单位：厘米
-	pMainCam->setViewMatrixAsLookAt(vEye, vCenter, vUp);
+	pMainCam->setViewMatrixAsLookAt(vEye, vCenter, vUp);// 这里设置其实没有意义，这个值后面会被操作器覆盖
 	pMainCam->setProjectionMatrixAsPerspective(
 		m_pConfigData->fFovy,
 		double(width) / double(height),

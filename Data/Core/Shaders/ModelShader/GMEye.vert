@@ -11,16 +11,11 @@ void main()
 
 uniform mat4 view2ShadowMatrix;
 
-attribute vec3		tangent;
-attribute vec3		binormal;
-
 out vData
 {
 	vec4	objPos;
 	vec3	viewPos;
 	vec3	viewNormal;
-	vec3	viewTang;
-	vec3	viewBinormal;
 	vec3	shadowPos;
 } vertOut;
 
@@ -31,8 +26,6 @@ void main()
 	vertOut.objPos = gl_Vertex;
 	vertOut.viewPos = viewVertPos.xyz / viewVertPos.w;
 	vertOut.viewNormal = normalize(gl_NormalMatrix*gl_Normal);
-	vertOut.viewTang = normalize(gl_NormalMatrix*tangent);
-	vertOut.viewBinormal = normalize(gl_NormalMatrix*binormal);
 	vertOut.shadowPos = (view2ShadowMatrix*viewVertPos).xyz;
 
 	gl_TexCoord[0] = gl_MultiTexCoord0;

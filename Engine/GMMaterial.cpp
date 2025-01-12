@@ -335,14 +335,6 @@ void CGMMaterial::SetEyeMaterial(osg::Node* pNode)
 	osg::ref_ptr<osg::Uniform> pTexBaseColorUniform = new osg::Uniform("texBaseColor", iChannel++);
 	pStateSet->addUniform(pTexBaseColorUniform.get());
 	_PlusUnitUsed(iChannel);
-	// PR贴图（R通道存放“视差/Parallax”，G通道存放“粗糙度/Roughness”，B通道待定，A通道待定）
-	osg::ref_ptr<osg::Uniform> pTexPRUniform = new osg::Uniform("texPR", iChannel++);
-	pStateSet->addUniform(pTexPRUniform.get());
-	_PlusUnitUsed(iChannel);
-	// 法线贴图（RGB通道存放法线，A通道待定）
-	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
-	pStateSet->addUniform(pTexNormalUniform.get());
-	_PlusUnitUsed(iChannel);
 	// 环境探针贴图
 	CGMKit::AddTexture(pStateSet.get(), m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);
 	_PlusUnitUsed(iChannel);

@@ -13,7 +13,9 @@ uniform sampler2D		texEnvProbe;
 
 in vData
 {
-	vec4	objPos;
+	vec3	modelPos;
+	vec3	modelCameraPos;
+	vec3	modelNormal;
 	vec3	viewPos;
 	vec3	viewNormal;
 	vec3	shadowPos;
@@ -45,19 +47,27 @@ void main()
 	float dotVN = max(dot(-viewVertDir, viewNorm),minFact);
 	float dotVH = max(dot(-viewVertDir, viewHalf),minFact);
 
-	const float eyeRefractRatio = 1.376;
+	const float eyeRadius = 0.95;
+	const float modelIrisPosZ = 0.81;
+	const float eyeRefractRatio = 1.0/90.0;
+	vec3 modelVertDir = normalize(vertOut.modelPos - vertOut.modelCameraPos);
+	vec3 modelNorm = normalize(vertOut.modelNormal);
 	// the base color and roughness of eye must consider the refraction of cornea
-	vec3 eyeRefractDir = refract(viewVertDir, viewNorm, eyeRefractRatio);
+	vec3 modelRefractDir = normalize(refract(modelVertDir, modelNorm, eyeRefractRatio));
+	float lenVert2Iris = max(0.0, vertOut.modelPos.z - modelIrisPosZ);
+	vec3 modelIrisPos = vertOut.modelPos + modelRefractDir*(lenVert2Iris/max(1e-9,abs(modelRefractDir.z)));
+	vec2 baseUV = (modelIrisPos.xy+eyeRadius)/(2.0*eyeRadius);
 
-	float roughnessIn = 1-0.6*smoothstep(0.35, 0.42, coordLen2Center); // inner layer
-	float roughnessOut = 0.1; // out layer
+	float roughnessIn = 1.0-0.7*smoothstep(0.35, 0.42, coordLen2Center); // inner layer
+	const float roughnessOut = 0.1; // out layer
 
-	vec4 baseColor = texture(texBaseColor, gl_TexCoord[0].st);
+	vec4 baseColor = texture(texBaseColor, baseUV);
 	vec4 outColor = baseColor;
 
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewNorm),0.0)).xyz);
-	vec4 colorMinOut = vec4(vec3(0.04), 0.0);
-	vec4 colorMinIn = vec4(vec3(0.04), 1.0);
+	const vec3 minColor = vec3(0.04);
+	const vec4 colorMinOut = vec4(minColor, 0.0);
+	const vec4 colorMinIn = vec4(minColor, 1.0);
 
 	/* shadow */
 	float shadow = Shadow(vertOut.shadowPos);
@@ -77,21 +87,22 @@ void main()
 	vec3 diffuseL = (shadow*max(0,dotNL))*gl_LightSource[0].diffuse.rgb;
 	vec3 diffuseFact = diffuseL*gl_FrontMaterial.diffuse.rgb;
 
+	vec4 specularCommon = gl_LightSource[0].specular*(smoothstep(-0.01,0.1, dotNL)/(4.0*dotNL_1*dotVN));
 	/* Specular of out layer */
-	float specularOut = specD(roughnessOut, dotNH)*specG(roughnessOut, dotNL_1, dotVN);
+	vec4 specularOut = (specD(roughnessOut, dotNH)*specG(roughnessOut, dotNL_1, dotVN))*specF(colorMinOut, dotVH);
 	/* Specular of in layer */
-	float specularIn = specD(roughnessIn, dotNH)*specG(roughnessIn, dotNL_1, dotVN);
-	/* Microfacet Specular BRDF put in and out together */
-	vec4 specularBRDF = gl_LightSource[0].specular*((specularOut*specF(colorMinOut, dotVH) + specularIn*specF(colorMinIn, dotVH))
-		*smoothstep(-0.01,0.1, dotNL)/(4.0*dotNL_1*dotVN));
+	vec4 specularIn = (specD(roughnessIn, dotNH)*specG(roughnessIn, dotNL_1, dotVN))*specF(colorMinIn, dotVH);
 
-	vec3 fresnel = EnvDFGLazarov(colorMinIn.rgb, 1.0-roughnessOut, dotVN);
-	outColor.rgb = mix(ToneMapping(diffuseFact+ambient.rgb)*outColor.rgb, reflectOut.rgb, fresnel) + specularBRDF.rgb;
+	vec3 fresnelOut = EnvDFGLazarov(minColor, 1.0-roughnessOut, dotVN);
+	vec3 fresnelIn = EnvDFGLazarov(minColor, 1.0-roughnessIn, dotVN);
+	outColor.rgb = mix(ToneMapping(diffuseFact+ambient.rgb)*outColor.rgb, reflectIn.rgb, fresnelIn) + specularIn.rgb;
+	outColor.rgb = mix(outColor.rgb, reflectOut.rgb, fresnelOut) + specularOut.rgb;
 
+	float fresnelAlphaOut = (fresnelOut.r+fresnelOut.g+fresnelOut.b)*0.3333;
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
-	outColor.a = alpha + ((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
+	outColor.a = alpha + specularOut.a + mix(specularIn.a, 1.0, fresnelAlphaOut);
 
-	gl_FragColor = outColor; //vec4(shadow,shadow,shadow,1);//
+	gl_FragColor = outColor; //vec4(shadow,shadow,shadow,1);//vec4(fract(baseUV-0.5),0,1);//
 }
 
 #endif // SHADOW_CAST or not

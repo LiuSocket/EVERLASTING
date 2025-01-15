@@ -13,7 +13,9 @@ uniform mat4 view2ShadowMatrix;
 
 out vData
 {
-	vec4	objPos;
+	vec3	modelPos;
+	vec3	modelCameraPos;
+	vec3	modelNormal;
 	vec3	viewPos;
 	vec3	viewNormal;
 	vec3	shadowPos;
@@ -23,7 +25,9 @@ void main()
 {
 	vec4 viewVertPos = gl_ModelViewMatrix * gl_Vertex;
 
-	vertOut.objPos = gl_Vertex;
+	vertOut.modelPos = gl_Vertex.xyz;
+	vertOut.modelCameraPos = (inverse(gl_ModelViewMatrix))[3].xyz;
+	vertOut.modelNormal = gl_Normal;
 	vertOut.viewPos = viewVertPos.xyz / viewVertPos.w;
 	vertOut.viewNormal = normalize(gl_NormalMatrix*gl_Normal);
 	vertOut.shadowPos = (view2ShadowMatrix*viewVertPos).xyz;

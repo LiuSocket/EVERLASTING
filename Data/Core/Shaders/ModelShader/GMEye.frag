@@ -47,9 +47,9 @@ void main()
 	float dotVN = max(dot(-viewVertDir, viewNorm),minFact);
 	float dotVH = max(dot(-viewVertDir, viewHalf),minFact);
 
-	const float eyeRadius = 0.95;
-	const float modelIrisPosZ = 0.81;
-	const float eyeRefractRatio = 1.0/90.0;
+	const float eyeRadius = 1.09;
+	const float modelIrisPosZ = 0.97;
+	const float eyeRefractRatio = 1.0/1.3;
 	vec3 modelVertDir = normalize(vertOut.modelPos - vertOut.modelCameraPos);
 	vec3 modelNorm = normalize(vertOut.modelNormal);
 	// the base color and roughness of eye must consider the refraction of cornea
@@ -58,7 +58,7 @@ void main()
 	vec3 modelIrisPos = vertOut.modelPos + modelRefractDir*(lenVert2Iris/max(1e-9,abs(modelRefractDir.z)));
 	vec2 baseUV = (modelIrisPos.xy+eyeRadius)/(2.0*eyeRadius);
 
-	float roughnessIn = 1.0-0.7*smoothstep(0.35, 0.42, coordLen2Center); // inner layer
+	float roughnessIn = 1.0-0.7*smoothstep(0.5, 0.56, coordLen2Center); // inner layer
 	const float roughnessOut = 0.1; // out layer
 
 	vec4 baseColor = texture(texBaseColor, baseUV);

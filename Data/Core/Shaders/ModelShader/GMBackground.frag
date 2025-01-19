@@ -20,8 +20,8 @@ void main()
 	vec3 backColor = mix(vec3(0.4,0.45,0.5), vec3(0.6,0.63,0.66), exp2(-length(objPos.xyz)*0.03)) + fragmentNoise;
 	// shadow
 	float shadow = Shadow(shadowPos);
-	backColor *= mix(vec3(0.32,0.34,0.36), vec3(1), shadow);
-	gl_FragColor = vec4(backColor, 1.0); //vec4(shadow,shadow,shadow,1);//
+	backColor *= mix(vec3(0.51,0.54,0.57), vec3(1), shadow);
+	gl_FragColor = vec4(backColor, 1.0);
 }
 
 #endif // SHADOW_CAST or not

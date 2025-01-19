@@ -57,50 +57,63 @@ vec3 EnvDFGLazarov(vec3 F0, float gloss, float dotVN)
 	return F0 * scale + bias;
 }
 
-#define SAMPLECOUNT 16
-#define SAMPLECOUNT_FLOAT 16.0
-#define INV_SAMPLECOUNT (1.0 / SAMPLECOUNT_FLOAT)
-uniform sampler2DShadow texShadow;
+uniform sampler2D texShadow;
 
 float Shadow(vec3 shadowPos)
 {
-	// float softFactor = osgShadow_softnessWidth * shadowProj.w;
-	// vec4 smCoord  = shadowProj;
-	// vec3 jitterCoord = vec3( gl_FragCoord.xy / osgShadow_jitteringScale, 0.0 );
-	// float shadow = 0.0;
-	// // First "cheap" sample test
-	// const float pass_div = 1.0 / (2.0 * 4.0);
-	// for ( int i = 0; i < 4; ++i )
-	// {
-	// 	// Get jitter values in [0,1]; adjust to have values in [-1,1]
-	// 	vec4 offset = 2.0 * texture3D( osgShadow_jitterTexture, jitterCoord ) -1.0;
-	// 	jitterCoord.z += INV_SAMPLECOUNT;
+	const vec2 shadowTexSize = vec2(1024.0);
+	const vec2 pixUnit2 = 2.0/shadowTexSize;
 
-	// 	smCoord.xy = shadowProj.xy  + (offset.xy) * softFactor;
-	// 	shadow +=  shadow2DProj( osgShadow_shadowTexture, smCoord ).x * pass_div;
+	vec4 shadow11 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(2,2)*pixUnit2, 0)-shadowPos.z);
 
-	// 	smCoord.xy = shadowProj.xy  + (offset.zw) * softFactor;
-	// 	shadow +=  shadow2DProj( osgShadow_shadowTexture, smCoord ).x *pass_div;
-	// }
-	// // skip all the expensive shadow sampling if not needed
-	// if ( shadow * (shadow -1.0) != 0.0 )
-	// {
-	// 	shadow *= pass_div;
-	// 	for (int i=0; i<SAMPLECOUNT - 4; ++i)
-	// 	{
-	// 		vec4 offset = 2.0 * texture3D( osgShadow_jitterTexture, jitterCoord ) - 1.0;
-	// 		jitterCoord.z += 1.0 / SAMPLECOUNT_FLOAT;
+	vec4 shadow22 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(1,1)*pixUnit2, 0)-shadowPos.z);
+	vec4 shadow23 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(0,1)*pixUnit2, 0)-shadowPos.z);
 
-	// 		smCoord.xy = shadowProj.xy  + offset.xy * softFactor;
-	// 		shadow +=  shadow2DProj( osgShadow_shadowTexture, smCoord ).x * INV_SAMPLECOUNT;
+	vec4 shadow32 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(1,0)*pixUnit2, 0)-shadowPos.z);
+	vec4 shadow33 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy, 0)-shadowPos.z);
 
-	// 		smCoord.xy = shadowProj.xy  + offset.zw * softFactor;
-	// 		shadow +=  shadow2DProj( osgShadow_shadowTexture, smCoord ).x * INV_SAMPLECOUNT;
-	// 	}
-	// }
-	// // apply shadow, modulo the ambient bias
-	// return osgShadow_ambientBias.x + shadow * osgShadow_ambientBias.y;
+	vec4 shadow44 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(1,1)*pixUnit2, 0)-shadowPos.z);
 
-	float shadow = texture(texShadow, shadowPos).r;
-	return 1;
+	float shadow = shadow11.x + shadow11.y + shadow11.z + shadow11.w
+				+ shadow22.x + shadow22.y + shadow22.z + shadow22.w
+				+ shadow23.x + shadow23.y + shadow23.z + shadow23.w
+				+ shadow32.x + shadow32.y + shadow32.z + shadow32.w
+				+ shadow33.x + shadow33.y + shadow33.z + shadow33.w
+				+ shadow44.x + shadow44.y + shadow44.z + shadow44.w;
+	float sampleCount = 24.0;
+
+	if(shadow>0.5 && shadow < 23.5)
+	{
+		
+		
+		vec4 shadow12 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(1,2)*pixUnit2, 0)-shadowPos.z);
+		vec4 shadow13 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(0,2)*pixUnit2, 0)-shadowPos.z);
+		vec4 shadow14 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(-1,2)*pixUnit2, 0)-shadowPos.z);
+	
+		vec4 shadow21 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(2,1)*pixUnit2, 0)-shadowPos.z);
+		vec4 shadow24 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(-1,1)*pixUnit2, 0)-shadowPos.z);
+
+		vec4 shadow31 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(2,0)*pixUnit2, 0)-shadowPos.z);
+		vec4 shadow34 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(-1,0)*pixUnit2, 0)-shadowPos.z);
+
+		vec4 shadow41 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(-2,1)*pixUnit2, 0)-shadowPos.z);
+		vec4 shadow42 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(-1,1)*pixUnit2, 0)-shadowPos.z);
+		vec4 shadow43 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(0,1)*pixUnit2, 0)-shadowPos.z);
+
+
+
+		shadow += shadow12.x + shadow12.y + shadow12.z + shadow12.w
+				+ shadow13.x + shadow13.y + shadow13.z + shadow13.w
+				+ shadow14.x + shadow14.y + shadow14.z + shadow14.w
+				+ shadow21.x + shadow21.y + shadow21.z + shadow21.w
+				+ shadow24.x + shadow24.y + shadow24.z + shadow24.w
+				+ shadow31.x + shadow31.y + shadow31.z + shadow31.w
+				+ shadow34.x + shadow34.y + shadow34.z + shadow34.w
+				+ shadow41.x + shadow41.y + shadow41.z + shadow41.w
+				+ shadow42.x + shadow42.y + shadow42.z + shadow42.w
+				+ shadow43.x + shadow43.y + shadow43.z + shadow43.w;
+
+		sampleCount = 64.0;
+	}
+	return shadow/sampleCount;
 }

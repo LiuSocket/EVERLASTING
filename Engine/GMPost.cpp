@@ -120,7 +120,7 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 
 	osg::ref_ptr<osg::StateSet> pStateset = pMainCam->getOrCreateStateSet();
 	// 强制单面显示
-	pStateset->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+	pStateset->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK), osg::StateAttribute::ON);
 
 	// Create post triangle
 	m_pPostGeode = new osg::Geode();

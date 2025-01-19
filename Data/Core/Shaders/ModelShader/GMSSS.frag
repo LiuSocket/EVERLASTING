@@ -90,7 +90,7 @@ void main()
 	reflectEnv.rgb *= gl_LightSource[0].ambient.rgb + gl_LightSource[0].diffuse.rgb;
 	
 	/* ambient BRDF */
-	vec4 ambient = vec4(mix(vec3(0.1, 0.12, 0.13), vec3(0.02), max(0.5*(1.0-localReflect.z),0)), 1.0);
+	vec4 ambient = vec4(mix(vec3(0.2, 0.24, 0.26), vec3(0.04), max(0.5*(1.0-localReflect.z),0)), 1.0);
 
 	/* Diffuse BRDF */
 	vec3 diffuseL = shadow*max(vec3(0),sss)*gl_LightSource[0].diffuse.rgb;
@@ -109,8 +109,7 @@ void main()
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-
-	gl_FragColor = outColor; //vec4(shadow,shadow,shadow,1);
+	gl_FragColor = outColor;
 }
 
 #endif // SHADOW_CAST or not

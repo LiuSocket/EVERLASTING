@@ -67,13 +67,6 @@ CGMEngine& CGMEngine::getSingleton(void)
     assert(msSingleton);
     return (*msSingleton);
 }
-CGMEngine* CGMEngine::getSingletonPtr(void)
-{
-    if (!msSingleton)
-        msSingleton = GM_NEW(CGMEngine);
-    assert(msSingleton);
-    return msSingleton;
-}
 
 /** @brief 构造 */
 CGMEngine::CGMEngine():
@@ -104,6 +97,7 @@ bool CGMEngine::Init()
     GM_Root = new osg::Group();
     GM_View = new osgViewer::View();
     GM_View->setSceneData(GM_Root);
+    GM_LIGHT.Init(m_pKernelData, m_pConfigData);
 
     m_pSceneTex = new osg::Texture2D();
     m_pSceneTex->setTextureSize(m_pConfigData->iScreenWidth, m_pConfigData->iScreenHeight);
@@ -127,18 +121,10 @@ bool CGMEngine::Init()
     m_pManipulator = new CGMBaseManipulator();
     m_pPost = new CGMPost();
     m_pModel = new CGMModel();
-    m_pLight = new CGMLight();
 
     m_pCommonUniform->Init(m_pKernelData, m_pConfigData);
     m_pPost->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
     m_pModel->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
-    m_pLight->Init(m_pKernelData, m_pConfigData);
-
-    //设置阴影
-    m_pLight->SetShadowEnable(m_pModel->GetRootNode());
-    m_pModel->SetShadowMap(m_pLight->GetShadowMap());
-
-    m_pModel->SetUniform(m_pLight->GetView2ShadowMatrixUniform());
 
     GM_View->getCamera()->setCullMask(GM_MAIN_MASK);
     GM_View->setCameraManipulator(m_pManipulator);
@@ -151,6 +137,14 @@ bool CGMEngine::Init()
     m_pKernelData->bInited = m_bInit;
 
     GM_View->addEventHandler(new ResizeEventHandler(this));
+
+    SLightData sMainLight;
+    sMainLight.strName = "mainLight";
+    sMainLight.eType = EGMLIGHT_SOURCE_DIRECTIONAL;
+    sMainLight.vDir = osg::Vec4d(-1, 2, -1.5, 0.0);
+    sMainLight.fLuminous = 5e3f;
+    sMainLight.bShadow = true;
+    GM_LIGHT.Add(sMainLight);
 
     return true;
 }
@@ -165,6 +159,8 @@ void CGMEngine::Release()
         GM_Viewer->stopThreading();
         GM_Viewer = 0L;
     }
+
+    GM_LIGHT.Release();
 
     GM_DELETE(m_pCommonUniform);
     GM_DELETE(m_pConfigData);
@@ -181,7 +177,7 @@ bool CGMEngine::Update()
     if (GM_Viewer->done())
         return true;
 
-    if (GM_Viewer->getRunFrameScheme() == osgViewer::ViewerBase::CONTINUOUS || GM_Viewer->checkNeedToDoFrame())
+    if (GM_Viewer->checkNeedToDoFrame())
     {
         double timeCurrFrame = osg::Timer::instance()->time_s();
         double deltaTime = timeCurrFrame - m_dTimeLastFrame; //单位:秒
@@ -200,10 +196,11 @@ bool CGMEngine::Update()
 
         if (m_bRendering)
         {
+            GM_LIGHT.Update(deltaTime);
+
             m_pCommonUniform->Update(deltaTime);
             m_pPost->Update(deltaTime);
             m_pModel->Update(deltaTime);
-            m_pLight->Update(deltaTime);
 
             GM_Viewer->advance(USE_REFERENCE_TIME);
             GM_Viewer->eventTraversal();
@@ -221,9 +218,11 @@ bool CGMEngine::Update()
 /** @brief 加载 */
 bool CGMEngine::Load()
 {
+    GM_LIGHT.Clear();
+
     m_pPost->Load();
     m_pModel->Load();
-    m_pLight->Load();
+
     return true;
 }
 
@@ -373,9 +372,11 @@ bool CGMEngine::_UpdateLater(const double dDeltaTime)
     m_pKernelData->pBackgroundCam->setProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
     m_pKernelData->pForegroundCam->setProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
 
-    m_pCommonUniform->UpdateLater(dDeltaTime);
-    m_pPost->UpdateLater(dDeltaTime);
+    GM_LIGHT.UpdatePost(dDeltaTime);
+
+    m_pCommonUniform->UpdatePost(dDeltaTime);
+    m_pPost->UpdatePost(dDeltaTime);
     m_pModel->UpdatePost(dDeltaTime);
-    m_pLight->UpdatePost(dDeltaTime);
+
     return true;
 }

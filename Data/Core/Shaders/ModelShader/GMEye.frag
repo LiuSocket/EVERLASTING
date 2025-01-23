@@ -34,8 +34,14 @@ vec4 ReflectEnvironment(vec3 localReflect, float roughness)
 
 void main()
 {
+	vec3 viewLight = vec3(0,0,1);
+	vec3 mainlightColor = vec3(1,1,1);
+#ifdef GM_MAX_LIGHTNUM
+	viewLight = -viewDirAndSpotExponent[0].xyz;
+	mainlightColor = colorAndRange[0].rgb;
+#endif // GM_MAX_LIGHTNUM
+
 	float coordLen2Center = length(gl_TexCoord[0].st*2-vec2(1));
-	vec3 viewLight = normalize(gl_LightSource[0].position.xyz);
 	float lengthV = length(vertOut.viewPos);
 	vec3 viewVertDir = normalize(vertOut.viewPos);
 	vec3 viewNorm = normalize(vertOut.viewNormal);
@@ -70,24 +76,26 @@ void main()
 	const vec4 colorMinIn = vec4(minColor, 1.0);
 
 	/* shadow */
-	float shadow = Shadow(vertOut.shadowPos);
+	float shadow = 1.0;
+#ifdef SHADOW_RECEIVE
+	shadow = Shadow(vertOut.shadowPos);
+#endif // SHADOW_RECEIVE
 
-	vec3 lightAmbDif = gl_LightSource[0].ambient.rgb + gl_LightSource[0].diffuse.rgb;
 	/* Reflect Environment BRDF of out layer */
 	vec4 reflectOut = ReflectEnvironment(localReflect, roughnessOut);
-	reflectOut.rgb *= lightAmbDif;
+	reflectOut.rgb *= mainlightColor;
 	/* Reflect Environment BRDF of inner layer */
 	vec4 reflectIn = ReflectEnvironment(localReflect, roughnessIn);
-	reflectIn.rgb *= lightAmbDif;
+	reflectIn.rgb *= mainlightColor;
 	
 	/* ambient BRDF */
 	vec4 ambient = vec4(mix(vec3(0.2, 0.24, 0.26), vec3(0.04), max(0.5*(1.0-localReflect.z),0)), 1.0);
 
 	/* Diffuse BRDF */
-	vec3 diffuseL = (shadow*max(0,dotNL))*gl_LightSource[0].diffuse.rgb;
+	vec3 diffuseL = (shadow*max(0,dotNL))*mainlightColor;
 	vec3 diffuseFact = diffuseL*gl_FrontMaterial.diffuse.rgb;
 
-	vec4 specularCommon = gl_LightSource[0].specular*(smoothstep(-0.01,0.1, dotNL)/(4.0*dotNL_1*dotVN));
+	vec4 specularCommon = vec4(mainlightColor,1)*(smoothstep(-0.01,0.1, dotNL)/(4.0*dotNL_1*dotVN));
 	/* Specular of out layer */
 	vec4 specularOut = (specD(roughnessOut, dotNH)*specG(roughnessOut, dotNL_1, dotVN))*specF(colorMinOut, dotVH);
 	/* Specular of in layer */

@@ -12,6 +12,7 @@
 
 #include "GMMaterial.h"
 #include "GMKit.h"
+#include "GMLight.h"
 #include "GMCommon.h"
 #include "GMDispatchCompute.h"
 
@@ -287,6 +288,9 @@ void CGMMaterial::SetPBRMaterial(osg::Node* pNode)
 
 	// 添加shader
 	SetShader(pStateSet.get(), EGM_MATERIAL_PBR);
+
+	// 设置光照
+	GM_LIGHT.SetLightEnable(pNode, true);
 }
 
 void CGMMaterial::SetHumanMaterial(osg::Node* pNode)
@@ -323,6 +327,9 @@ void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
 
 	// 添加shader
 	SetShader(pStateSet.get(), EGM_MATERIAL_SSS);
+
+	// 设置光照
+	GM_LIGHT.SetLightEnable(pNode, true);
 }
 
 void CGMMaterial::SetEyeMaterial(osg::Node* pNode)
@@ -341,6 +348,9 @@ void CGMMaterial::SetEyeMaterial(osg::Node* pNode)
 
 	// 添加shader
 	SetShader(pStateSet.get(), EGM_MATERIAL_Eye);
+
+	// 设置光照
+	GM_LIGHT.SetLightEnable(pNode, true);
 }
 
 void CGMMaterial::SetBackgroundMaterial(osg::Node* pNode)
@@ -365,7 +375,7 @@ void CGMMaterial::SetShader(osg::StateSet* pSS, EGMMaterial eMaterial)
 			strShaderPath + "GMPBR.vert",
 			strShaderPath + "GMPBR.frag",
 			strShaderPath + "GMCommon.frag",
-			"PBR", true);
+			true, true);
 	}
 	break;
 	case EGM_MATERIAL_SSS:
@@ -374,7 +384,7 @@ void CGMMaterial::SetShader(osg::StateSet* pSS, EGMMaterial eMaterial)
 			strShaderPath + "GMSSS.vert",
 			strShaderPath + "GMSSS.frag",
 			strShaderPath + "GMCommon.frag",
-			"SSS", true);
+			true, true);
 	}
 	break;
 	case EGM_MATERIAL_Eye:
@@ -383,7 +393,7 @@ void CGMMaterial::SetShader(osg::StateSet* pSS, EGMMaterial eMaterial)
 			strShaderPath + "GMEye.vert",
 			strShaderPath + "GMEye.frag",
 			strShaderPath + "GMCommon.frag",
-			"Eye", true);
+			true, true);
 	}
 	break;
 	case EGM_MATERIAL_Background:
@@ -392,7 +402,7 @@ void CGMMaterial::SetShader(osg::StateSet* pSS, EGMMaterial eMaterial)
 			strShaderPath + "GMBackground.vert",
 			strShaderPath + "GMBackground.frag",
 			strShaderPath + "GMCommon.frag",
-			"Background");
+			true);
 	}
 	break;
 	default:

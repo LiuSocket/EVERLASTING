@@ -16,43 +16,71 @@
 
 using namespace GM;
 
+std::map<std::string, osg::ref_ptr<osg::Program>>	CGMKit::_pProgramMap;
+
 bool CGMKit::LoadShader(
 	osg::StateSet* pStateSet,
 	const std::string& vertFilePath,
 	const std::string& fragFilePath,
 	const std::string& geomFilePath,
-	const std::string& strShaderName,
+	const bool bForceUpdate,
 	bool bPixelLighting)
 {
-	osg::ref_ptr<osg::Program> pProgram = new osg::Program;
-	pProgram->setName(strShaderName);
+	std::string shaderName = GetProgramName(vertFilePath, fragFilePath);
+	osg::StateAttribute::GLModeValue value = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
+	osg::ref_ptr<osg::Program> pProgram = nullptr;
+	// 如果已经有这个program，则复用
+	if (_pProgramMap.find(shaderName) != _pProgramMap.end())
+	{
+		if (bForceUpdate)
+		{
+			_pProgramMap.erase(shaderName);
+			pProgram = new osg::Program;
+			pProgram->setName(shaderName);
+			_pProgramMap[shaderName] = pProgram;
+		}
+		else
+		{
+			pProgram = _pProgramMap.at(shaderName);
+			pStateSet->setAttributeAndModes(pProgram, value);
+			return true;
+		}
+	}
+	else
+	{
+		pProgram = new osg::Program;
+		pProgram->setName(shaderName);
+		_pProgramMap[shaderName] = pProgram;
+	}
 
-	osg::Shader *pVertShader = new osg::Shader;
+	osg::Shader* pVertShader = new osg::Shader;
 	pVertShader->setType(osg::Shader::VERTEX);
 	std::string vertOut = _ReadShaderFile(vertFilePath);
 	pVertShader->setShaderSource(vertOut);
 
-	osg::Shader *pFragShader = new osg::Shader;
+	osg::Shader* pFragShader = new osg::Shader;
 	pFragShader->setType(osg::Shader::FRAGMENT);
 	std::string fragOut = _ReadShaderFile(fragFilePath);
 	pFragShader->setShaderSource(fragOut);
-
-	osg::Shader *pGeomShader = new osg::Shader;
-	pGeomShader->setType(osg::Shader::GEOMETRY);
-	std::string geomOut = _ReadShaderFile(geomFilePath);
-	pGeomShader->setShaderSource(geomOut);
 
 	if (bPixelLighting)
 	{
 		pProgram->addBindAttribLocation("tangent", 6);
 		pProgram->addBindAttribLocation("binormal", 7);
 	}
-	if (pVertShader && pFragShader && pGeomShader)
+	if (pVertShader && pFragShader)
 	{
 		pProgram->addShader(pVertShader);
 		pProgram->addShader(pFragShader);
-		pProgram->addShader(pGeomShader);
-		pStateSet->setAttributeAndModes(pProgram.get(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+		if ("" != geomFilePath)
+		{
+			osg::Shader* pGeomShader = new osg::Shader;
+			pGeomShader->setType(osg::Shader::GEOMETRY);
+			std::string geomOut = _ReadShaderFile(geomFilePath);
+			pGeomShader->setShaderSource(geomOut);
+			pProgram->addShader(pGeomShader);
+		}
+		pStateSet->setAttributeAndModes(pProgram, value);
 		return true;
 	}
 	else
@@ -65,18 +93,42 @@ bool CGMKit::LoadShaderWithCommonFrag(osg::StateSet * pStateSet,
 	const std::string & vertFilePath,
 	const std::string & fragFilePath,
 	const std::string & fragCommonFilePath,
-	const std::string & shaderName,
+	const bool bForceUpdate,
 	const bool bPixelLighting)
 {
-	osg::ref_ptr<osg::Program> pProgram = new osg::Program;
-	pProgram->setName(shaderName);
+	std::string shaderName = GetProgramName(vertFilePath, fragFilePath);
+	osg::StateAttribute::GLModeValue value = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
+	osg::ref_ptr<osg::Program> pProgram = nullptr;
+	// 如果已经有这个program，则复用
+	if (_pProgramMap.find(shaderName) != _pProgramMap.end())
+	{
+		if (bForceUpdate)
+		{
+			_pProgramMap.erase(shaderName);
+			pProgram = new osg::Program;
+			pProgram->setName(shaderName);
+			_pProgramMap[shaderName] = pProgram;
+		}
+		else
+		{
+			pProgram = _pProgramMap.at(shaderName);
+			pStateSet->setAttributeAndModes(pProgram, value);
+			return true;
+		}
+	}
+	else
+	{
+		pProgram = new osg::Program;
+		pProgram->setName(shaderName);
+		_pProgramMap[shaderName] = pProgram;
+	}
 
-	osg::Shader *pVertShader = new osg::Shader;
+	osg::Shader* pVertShader = new osg::Shader;
 	pVertShader->setType(osg::Shader::VERTEX);
 	std::string vertOut = _ReadShaderFile(vertFilePath);
 	pVertShader->setShaderSource(vertOut);
 
-	osg::Shader *pFragShader = new osg::Shader;
+	osg::Shader* pFragShader = new osg::Shader;
 	pFragShader->setType(osg::Shader::FRAGMENT);
 	std::string fragOut = _ReadShaderFile(fragFilePath);
 
@@ -96,7 +148,7 @@ bool CGMKit::LoadShaderWithCommonFrag(osg::StateSet * pStateSet,
 	{
 		pProgram->addShader(pVertShader);
 		pProgram->addShader(pFragShader);
-		pStateSet->setAttributeAndModes(pProgram.get(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+		pStateSet->setAttributeAndModes(pProgram, value);
 		return true;
 	}
 	else
@@ -109,17 +161,41 @@ bool CGMKit::LoadShader(
 	osg::StateSet* pStateSet,
 	const std::string& vertFilePath,
 	const std::string& fragFilePath,
-	const std::string& strShaderName)
+	const bool bForceUpdate)
 {
-	osg::ref_ptr<osg::Program> pProgram = new osg::Program;
-	pProgram->setName(strShaderName);
+	std::string shaderName = GetProgramName(vertFilePath, fragFilePath);
+	osg::StateAttribute::GLModeValue value = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
+	osg::ref_ptr<osg::Program> pProgram = nullptr;
+	// 如果已经有这个program，则复用
+	if (_pProgramMap.find(shaderName) != _pProgramMap.end())
+	{
+		if (bForceUpdate)
+		{
+			_pProgramMap.erase(shaderName);
+			pProgram = new osg::Program;
+			pProgram->setName(shaderName);
+			_pProgramMap[shaderName] = pProgram;
+		}
+		else
+		{
+			pProgram = _pProgramMap.at(shaderName);
+			pStateSet->setAttributeAndModes(pProgram, value);
+			return true;
+		}
+	}
+	else
+	{
+		pProgram = new osg::Program;
+		pProgram->setName(shaderName);
+		_pProgramMap[shaderName] = pProgram;
+	}
 
-	osg::Shader *pVertShader = new osg::Shader;
+	osg::Shader* pVertShader = new osg::Shader;
 	pVertShader->setType(osg::Shader::VERTEX);
 	std::string vertOut = _ReadShaderFile(vertFilePath);
 	pVertShader->setShaderSource(vertOut);
 
-	osg::Shader *pFragShader = new osg::Shader;
+	osg::Shader* pFragShader = new osg::Shader;
 	pFragShader->setType(osg::Shader::FRAGMENT);
 	std::string fragOut = _ReadShaderFile(fragFilePath);
 	pFragShader->setShaderSource(fragOut);
@@ -128,7 +204,7 @@ bool CGMKit::LoadShader(
 	{
 		pProgram->addShader(pVertShader);
 		pProgram->addShader(pFragShader);
-		pStateSet->setAttributeAndModes(pProgram.get(), osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+		pStateSet->setAttributeAndModes(pProgram, value);
 		return true;
 	}
 	else
@@ -140,15 +216,39 @@ bool CGMKit::LoadShader(
 bool CGMKit::LoadComputeShader(
 	osg::StateSet * pStateSet,
 	const std::string& compFilePath,
-	const std::string& shaderName)
+	const bool bForceUpdate)
 {
 	if (!pStateSet || "" == compFilePath) return false;
 
 	std::string strComputeSrc = _ReadShaderFile(compFilePath);
 	if ("" == strComputeSrc) return false;
 
-	osg::ref_ptr<osg::Program> pProgram = new osg::Program;
-	pProgram->setName(shaderName);
+	std::string shaderName = GetProgramName(compFilePath);
+	osg::ref_ptr<osg::Program> pProgram = nullptr;
+	// 如果已经有这个program，则复用
+	if (_pProgramMap.find(shaderName) != _pProgramMap.end())
+	{
+		if (bForceUpdate)
+		{
+			_pProgramMap.erase(shaderName);
+			pProgram = new osg::Program;
+			pProgram->setName(shaderName);
+			_pProgramMap[shaderName] = pProgram;
+		}
+		else
+		{
+			pProgram = _pProgramMap.at(shaderName);
+			pStateSet->setAttributeAndModes(pProgram, osg::StateAttribute::ON);
+			return true;
+		}
+	}
+	else
+	{
+		pProgram = new osg::Program;
+		pProgram->setName(shaderName);
+		_pProgramMap[shaderName] = pProgram;
+	}
+
 	pProgram->addShader(new osg::Shader(osg::Shader::COMPUTE, strComputeSrc));
 	pStateSet->setAttributeAndModes(pProgram.get(), osg::StateAttribute::ON);
 
@@ -159,8 +259,8 @@ bool CGMKit::AddTexture(osg::StateSet* pStateSet, osg::Texture* pTex, const char
 {
 	if (!pStateSet || !pTex || ("" == texName) || (iUnit < 0)) 	return false;
 
-	pStateSet->setTextureAttributeAndModes(iUnit, pTex);
 	pStateSet->addUniform(new osg::Uniform(texName, iUnit));
+	pStateSet->setTextureAttributeAndModes(iUnit, pTex);
 
 	return true;
 }
@@ -174,8 +274,6 @@ bool CGMKit::AddImageTexture(CGMDispatchCompute* pCompute, osg::Texture* pTex, c
 	if (!pStateSet) return false;
 
 	pStateSet->addUniform(new osg::Uniform(texName, unit));
-
-	// add a callback to reset the textures after the draw.
 	pStateSet->setAttributeAndModes(new osg::BindImageTexture(unit, pTex, access, format, level, layered, layer));
 	pCompute->GetTextureMap().insert(std::make_pair(unit, pTex));
 
@@ -246,6 +344,49 @@ std::string& CGMKit::_ReplaceIn(std::string& s, const std::string& sub, const st
 		b += other.size();
 	}
 	return s;
+}
+
+
+std::string CGMKit::GetProgramName(const std::string& path0, const std::string& path1)
+{
+	std::string str0 = path0;
+	std::string str1 = path1;
+
+	// 先尽量缩短字符串
+	_ReplaceIn(str0, "Data/Core/Shaders/", "");
+	_ReplaceIn(str1, "Data/Core/Shaders/", "");
+
+	_ReplaceIn(str0, ".glsl", "_");
+	_ReplaceIn(str1, ".glsl", "_");
+
+	// 再将字符串中的"../"和"./"替换成 "_"
+	_ReplaceIn(str0, "../", "");
+	_ReplaceIn(str0, "./", "");
+
+	_ReplaceIn(str1, "../", "");
+	_ReplaceIn(str1, "./", "");
+
+	// 再将字符串中的"/"和"\\"和"."和":"替换成 "_"
+	_ReplaceIn(str0, "/", "_");
+	_ReplaceIn(str0, "\\", "_");
+	_ReplaceIn(str0, ".", "_");
+	_ReplaceIn(str0, ":", "_");
+
+	_ReplaceIn(str1, "/", "_");
+	_ReplaceIn(str1, "\\", "_");
+	_ReplaceIn(str1, ".", "_");
+	_ReplaceIn(str1, ":", "_");
+
+	return str0 + "_" + str1;
+}
+
+osg::Program* CGMKit::GetProgram(const std::string& strProgramName)
+{
+	if (_pProgramMap.find(strProgramName) != _pProgramMap.end())
+	{
+		return _pProgramMap.at(strProgramName).get();
+	}
+	return nullptr;
 }
 
 std::string CGMKit::_ReadShaderFile(const std::string& filePath)

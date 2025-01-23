@@ -40,8 +40,8 @@ namespace GM
 		void Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData);
 		/** @brief 更新(在主相机更新姿态之前) */
 		void Update(double dDeltaTime);
-		/** @brief 更新(在主相机更新姿态之后，所有其他模块UpdateLater之前) */
-		void UpdateLater(double dDeltaTime);
+		/** @brief 更新(在主相机更新姿态之后，所有其他模块UpdatePost之前) */
+		void UpdatePost(double dDeltaTime);
 		/**
 		* 修改屏幕尺寸时调用此函数
 		* @param width: 屏幕宽度

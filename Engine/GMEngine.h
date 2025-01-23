@@ -26,7 +26,6 @@ namespace GM
 	Macro Defines
 	*************************************************************************/
 	#define GM_ENGINE					CGMEngine::getSingleton()
-	#define GM_ENGINE_PTR				CGMEngine::getSingletonPtr()
 
 	/*************************************************************************
 	Enums
@@ -61,7 +60,6 @@ namespace GM
 	public:
 		/** @brief 获取单例 */
 		static CGMEngine& getSingleton(void);
-		static CGMEngine* getSingletonPtr(void);
 
 		/** @brief 初始化 */
 		bool Init();
@@ -147,7 +145,6 @@ namespace GM
 
 		CGMPost*							m_pPost;					//!< 后期模块
 		CGMModel*							m_pModel;					//!< 模型模块
-		CGMLight*							m_pLight;					//!< 光照模块
 
 		osg::ref_ptr<osg::Texture2D>		m_pSceneTex;				//!< 主场景颜色图
 		osg::ref_ptr<osg::Texture2D>		m_pBackgroundTex;			//!< 背景颜色图

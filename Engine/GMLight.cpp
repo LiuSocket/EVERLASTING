@@ -13,6 +13,7 @@
 
 #include <osg/Texture2D>
 #include <osg/CullFace>
+#include <osg/BufferObject>
 
 using namespace GM;
 
@@ -23,6 +24,18 @@ Global Constants
 /*************************************************************************
 CGMLight Methods
 *************************************************************************/
+
+template<> CGMLight* CGMSingleton<CGMLight>::msSingleton = nullptr;
+
+/** @brief 获取单例 */
+CGMLight& CGMLight::getSingleton(void)
+{
+    if (!msSingleton)
+        msSingleton = GM_NEW(CGMLight);
+    assert(msSingleton);
+    return (*msSingleton);
+}
+
 /** @brief 构造 */
 CGMLight::CGMLight() :
     m_mView2ShadowUniform(new osg::Uniform("view2ShadowMatrix", osg::Matrixf()))
@@ -40,16 +53,12 @@ bool CGMLight::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
     m_pKernelData = pKernelData;
     m_pConfigData = pConfigData;
 
-    // 创建光源
-    osg::ref_ptr<osg::Light> pLight = new osg::Light(0);
-    pLight->setPosition(osg::Vec4(m_vLightPos, 0));
-    pLight->setAmbient(osg::Vec4(0.1, 0.12, 0.15, 1.0));
-    pLight->setDiffuse(osg::Vec4(0.9, 0.88, 0.85, 1.0));
-    pLight->setSpecular(osg::Vec4(1.0, 1.0, 1.0, 1.0));
-
-    m_pLightSource = new osg::LightSource;
-    m_pLightSource->setLight(pLight.get());
-    GM_Root->addChild(m_pLightSource);
+    osg::ref_ptr<osg::UniformBufferObject> pLightDataUBO = new osg::UniformBufferObject;
+    pLightDataUBO->setUsage(GL_DYNAMIC_DRAW);
+    m_pLightBuffer = new osg::BufferTemplate<SLightDataBuffer>();
+    m_pLightBuffer->setBufferObject(pLightDataUBO.get());
+    m_pLightUBB = new osg::UniformBufferBinding(0, m_pLightBuffer.get(), 0, m_pLightBuffer->getTotalDataSize());
+    m_pLightUBB->setDataVariance(osg::Object::DYNAMIC);
 
     // 创建阴影
     _InitShadow();
@@ -57,42 +66,43 @@ bool CGMLight::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
     return true;
 }
 
-/** @brief 加载 */
-bool CGMLight::Load()
+void CGMLight::Release()
 {
-    return true;
+    // 清空光源
+    Clear();
+
+    GM_DELETE(msSingleton);
 }
 
-/** @brief 保存 */
-bool CGMLight::Save()
-{
-    return true;
-}
-
-/** @brief 重置 */
-bool CGMLight::Reset()
-{
-    return true;
-}
-
-/** @brief 更新 */
 bool CGMLight::Update(double dDeltaTime)
 {
-    static double fConstantStep = 0.1;
-    static double fDeltaStep = 0.0;
-    if (fDeltaStep > fConstantStep)
-    {
-        _InnerUpdate(fDeltaStep);
-        fDeltaStep = 0.0;
-    }
-    fDeltaStep += dDeltaTime;
-
     return true;
 }
 
 /** @brief 更新(在主相机更新之后) */
 bool CGMLight::UpdatePost(double dDeltaTime)
 {
+    osg::Matrixd mainView = GM_View->getCamera()->getViewMatrix();
+    // 多光源更新
+    int iID = 0;
+    for (auto& itr : m_mapLight)
+    {
+        osg::Vec4d vViewPos = itr.second.vPos * mainView;
+        osg::Vec4d vViewDir = itr.second.vDir * mainView;
+        osg::Vec3f vColor = itr.second.vColor * itr.second.fLuminous * 2e-4;
+        float fAngle = itr.second.fAngle;
+        float fSpotExponent = itr.second.fSpotExponent;
+        float fRange = 0.1f * fmax(1.0f, itr.second.fLuminous);
+        m_pLightBuffer->getData().SetLight(
+            osg::Vec3f(vViewPos.x(), vViewPos.y(), vViewPos.z()),
+            osg::Vec3f(vViewDir.x(), vViewDir.y(), vViewDir.z()),
+            vColor, fAngle, fSpotExponent, fRange,
+            iID);
+        iID++;
+    }
+    if (0 != iID) m_pLightBuffer->dirty();
+
+    // 更新阴影
     osg::Matrixd biasMatrix(
         0.5, 0.0, 0.0, 0.0,
         0.0, 0.5, 0.0, 0.0,
@@ -109,13 +119,107 @@ bool CGMLight::UpdatePost(double dDeltaTime)
     return true;
 }
 
+bool CGMLight::Add(SLightData& sData)
+{
+    if ("" == sData.strName) return false;
+    // 创建光源
+    if (m_mapLight.find(sData.strName) == m_mapLight.end())
+    {
+        sData.vDir.normalize();
+        m_mapLight[sData.strName] = sData;
+
+        if (EGMLIGHT_SOURCE_DIRECTIONAL == sData.eType && sData.bShadow)
+        {
+            osg::Vec3d vShadowPos = -osg::Vec3d(sData.vDir.x(), sData.vDir.y(), sData.vDir.z())*200;
+            m_pShadowCamera->setViewMatrixAsLookAt(vShadowPos, osg::Vec3d(0, 0, 0), osg::Vec3d(0, 0, 1));
+        }
+
+        if (m_pLightBuffer->getData()._lightNum.x() < GM_MAX_LIGHTNUM)
+            m_pLightBuffer->getData()._lightNum.x()++;
+
+        return true;
+    }
+    return false;
+}
+
+bool CGMLight::Edit(const SLightData& sData)
+{
+    if ("" == sData.strName) return false;
+    // 修改光源
+    if (m_mapLight.find(sData.strName) != m_mapLight.end())
+    {
+        m_mapLight.at(sData.strName) = sData;
+        return true;
+    }
+    return false;
+}
+
+bool CGMLight::Remove(const std::string& strName)
+{
+    if ("" == strName) return false;
+    // 移除光源
+    if (m_mapLight.find(strName) != m_mapLight.end())
+    {
+        m_mapLight.erase(strName);
+
+        if (m_mapLight.size() < m_pLightBuffer->getData()._lightNum.x())
+            m_pLightBuffer->getData()._lightNum.x()--;
+
+        if (m_pLightBuffer->getData()._lightNum.x() < 0)
+            m_pLightBuffer->getData()._lightNum.x() = 0;
+        return true;
+    }
+    return false;
+}
+
+bool CGMLight::Clear()
+{
+    // 清空光源
+    m_mapLight.clear();
+    m_pLightBuffer->getData()._lightNum = osg::Vec4f(.0f, .0f, .0f, 0.0f);
+    return true;
+}
+
+bool CGMLight::Find(SLightData& sData)
+{
+    // 查找光源
+    if (m_mapLight.find(sData.strName) != m_mapLight.end())
+    {
+        sData = m_mapLight[sData.strName];
+        return true;
+    }
+    return false;
+}
+
+bool CGMLight::SetLightEnable(osg::Node* pNode, bool bEnable)
+{
+    osg::StateSet* pSS = pNode->getStateSet();
+    if (!pSS) return false;
+    osg::StateAttribute* pSA = pSS->getAttribute(osg::StateAttribute::PROGRAM);
+    if (!pSA) return false;
+    osg::Program* pProgram = dynamic_cast<osg::Program*>(pSA);
+    if (!pProgram) return false;
+
+    if (bEnable)
+    {
+        pSS->setDefine("GM_MAX_LIGHTNUM", std::to_string(int(GM_MAX_LIGHTNUM)), osg::StateAttribute::ON);
+        pSS->setAttributeAndModes(m_pLightUBB, osg::StateAttribute::ON);
+        pProgram->addBindUniformBlock("LightDataBlock", 0);
+    }
+    else
+    {
+        pSS->removeDefine("GM_MAX_LIGHTNUM");
+        pSS->removeAttribute(m_pLightUBB);
+        // 由于共用program，暂时不能解除UBO绑定
+        //pProgram->removeBindUniformBlock("LightDataBlock");
+    }
+
+    return true;
+}
+
 void CGMLight::SetShadowEnable(osg::Node* pNode)
 {
     m_pShadowCamera->addChild(pNode);
-}
-
-void CGMLight::_InnerUpdate(const double dDeltaTime)
-{
 }
 
 void CGMLight::_InitShadow()
@@ -125,8 +229,9 @@ void CGMLight::_InitShadow()
     float fHalfY = 20.0;
     float fNear = 0.0;
     float fFar = 500.0;
-    // 阴影view矩阵参数
-    osg::Vec3d vShadowPos(m_vLightPos);
+
+    //!< 默认阴影位置
+    osg::Vec3d vShadowPos = osg::Vec3d(1, -2, 1.5);
     vShadowPos.normalize();
     vShadowPos *= 200.0;
 
@@ -145,11 +250,9 @@ void CGMLight::_InitShadow()
 
     m_pShadowCamera = new osg::Camera();
     m_pShadowCamera->setName("shadowCamera");
-    m_pShadowCamera->setClearDepth(1.0);
-    m_pShadowCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
-    m_pShadowCamera->setClearMask(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    m_pShadowCamera->setClearMask(GL_DEPTH_BUFFER_BIT);
     m_pShadowCamera->setCullMask(GM_SHADOW_CAST_MASK);
-    m_pShadowCamera->setReferenceFrame(osg::Camera::ABSOLUTE_RF_INHERIT_VIEWPOINT);
+    m_pShadowCamera->setReferenceFrame(osg::Camera::ABSOLUTE_RF);
     m_pShadowCamera->setRenderOrder(osg::Camera::PRE_RENDER);
     m_pShadowCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
     m_pShadowCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);

@@ -12,6 +12,7 @@
 #include "GMModel.h"
 #include "GMMaterial.h"
 #include "GMKit.h"
+#include "GMLight.h"
 #include "GMAnimation.h"
 #include "GMTangentSpaceGenerator.h"
 
@@ -91,12 +92,16 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
     m_pRootNode = new osg::Group;
     GM_Root->addChild(m_pRootNode.get());
 
+    //设置阴影
+    GM_LIGHT.SetShadowEnable(m_pRootNode);
     unsigned int iValue = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
     osg::ref_ptr<osg::StateSet> pStateset = m_pRootNode->getOrCreateStateSet();
+    pStateset->setTextureAttributeAndModes(SHADOW_TEX_UNIT, GM_LIGHT.GetShadowMap(), iValue);
+    pStateset->addUniform(new osg::Uniform("texShadow", SHADOW_TEX_UNIT), iValue);
+    pStateset->addUniform(GM_LIGHT.GetView2ShadowMatrixUniform());
+
     // 强制设置半透明混合模式
     pStateset->setAttributeAndModes(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),iValue);
-    pStateset->setMode(GL_LIGHTING, osg::StateAttribute::ON);
-    pStateset->setMode(GL_LIGHT0, osg::StateAttribute::ON);
 
     m_pMaterial->Init(pKernelData, pConfigData, pCommonUniform);
 
@@ -194,12 +199,6 @@ bool CGMModel::Add(const SGMModelData& sData)
     return false;
 }
 
-void CGMModel::SetUniform(osg::Uniform* pView2Shadow)
-{
-    osg::StateSet* pStateset = m_pRootNode->getOrCreateStateSet();
-    pStateset->addUniform(pView2Shadow);
-}
-
 osg::Node* CGMModel::_GetNode(const std::string& strModelName)
 {
     if (m_pNodeMap.end() != m_pNodeMap.find(strModelName))
@@ -283,6 +282,7 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
         break;
     }
     pStateSet->setRenderBinDetails(sData.iEntRenderBin, "RenderBin");
+
     // 设置阴影
     pStateSet->setDefine("SHADOW_RECEIVE", osg::StateAttribute::ON);
 
@@ -351,12 +351,4 @@ bool CGMModel::SetAnimationPause(const std::string& strModelName, const std::str
 bool CGMModel::SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName)
 {
     return m_pAnimationManager->SetAnimationResume(strModelName, strAnimationName);
-}
-
-void CGMModel::SetShadowMap(osg::Texture2D* pShadowMap)
-{
-    unsigned int iValue = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
-    osg::ref_ptr<osg::StateSet> pStateset = m_pRootNode->getOrCreateStateSet();
-    pStateset->setTextureAttributeAndModes(SHADOW_TEX_UNIT, pShadowMap, iValue);
-    pStateset->addUniform(new osg::Uniform("texShadow", SHADOW_TEX_UNIT), iValue);
 }

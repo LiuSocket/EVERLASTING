@@ -62,9 +62,6 @@ namespace GM
         /** @brief 添加模型 */
         bool Add(const SGMModelData& sData);
 
-        /* @brief 传递Uniform */
-        void SetUniform(osg::Uniform* pView2Shadow);
-
         /**
         * @brief 激活或者禁用模型的动画功能（骨骼动画、变形动画）
         * @param strName: 模型在场景中的名称
@@ -146,14 +143,6 @@ namespace GM
         * @return bool 成功返回 true，失败返回 false
         */
         bool SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName = "");
-
-        /** @brief 获取阴影模型根节点 */
-        inline osg::Node* GetRootNode() const
-        {
-            return m_pRootNode.get();
-        }
-        /* @brief 设置阴影图 */
-        void SetShadowMap(osg::Texture2D* pShadowMap);
 
     private:
         /**

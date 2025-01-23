@@ -46,7 +46,13 @@ vec3 SSS(vec3 sssDeep, float dotNL, float curvature, float thickness)
 
 void main()
 {
-	vec3 viewLight = normalize(gl_LightSource[0].position.xyz);
+	vec3 viewLight = vec3(0,0,1);
+	vec3 mainlightColor = vec3(1,1,1);
+#ifdef GM_MAX_LIGHTNUM
+	viewLight = -viewDirAndSpotExponent[0].xyz;
+	mainlightColor = colorAndRange[0].rgb;
+#endif // GM_MAX_LIGHTNUM
+
 	vec4 baseColor = texture(texBaseColor, gl_TexCoord[0].st);
 	vec4 outColor = baseColor;
 
@@ -75,7 +81,7 @@ void main()
 	float metallic = texel_MRAT.r;
 	float roughness = texel_MRAT.g;
 	float ambientOcc = texel_MRAT.b;
-	float thickness = texel_MRAT.a;
+	float thickness = 0.5*texel_MRAT.a;
 	vec3 sssDeep = texel_SSSC.rgb;
 	float curvature = texel_SSSC.a;
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
@@ -83,21 +89,24 @@ void main()
 	vec3 sss = SSS(sssDeep, dotNL, curvature, thickness);
 
 	/* shadow */
-	float shadow = Shadow(vertOut.shadowPos);
+	float shadow = 1.0;
+#ifdef SHADOW_RECEIVE
+	shadow = Shadow(vertOut.shadowPos);
+#endif // SHADOW_RECEIVE
 
 	/* Reflect Environment BRDF */
 	vec4 reflectEnv = ReflectEnvironment(localReflect, roughness);
-	reflectEnv.rgb *= gl_LightSource[0].ambient.rgb + gl_LightSource[0].diffuse.rgb;
+	reflectEnv.rgb *= mainlightColor;
 	
 	/* ambient BRDF */
 	vec4 ambient = vec4(mix(vec3(0.2, 0.24, 0.26), vec3(0.04), max(0.5*(1.0-localReflect.z),0)), 1.0);
 
 	/* Diffuse BRDF */
-	vec3 diffuseL = shadow*max(vec3(0),sss)*gl_LightSource[0].diffuse.rgb;
+	vec3 diffuseL = shadow*max(vec3(0),sss)*mainlightColor;
 	vec3 diffuseFact = (1-metallic)*diffuseL*gl_FrontMaterial.diffuse.rgb;
 
 	/* Microfacet Specular BRDF */
-	vec4 specularBRDF = gl_LightSource[0].specular*smoothstep(-0.01,0.1, dotNL)
+	vec4 specularBRDF = vec4(mainlightColor,1)*smoothstep(-0.01,0.1, dotNL)
 		*specD(roughness,dotNH)
 		*specG(roughness, dotNL_1, dotVN)
 		*specF(colorMin, dotVH)

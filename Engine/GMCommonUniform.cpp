@@ -59,7 +59,7 @@ void CGMCommonUniform::Update(double dDeltaTime)
 	m_fTimeUniform->set(float(m_fRenderingTime));
 }
 
-void CGMCommonUniform::UpdateLater(double dDeltaTime)
+void CGMCommonUniform::UpdatePost(double dDeltaTime)
 {
 	osg::Matrixd mViewMatrix = GM_View->getCamera()->getViewMatrix();
 	osg::Vec3d vEye, vCenter, vUp;

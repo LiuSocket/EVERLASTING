@@ -39,7 +39,13 @@ vec4 ReflectEnvironment(vec3 localReflect, float roughness)
 
 void main()
 {
-	vec3 viewLight = normalize(gl_LightSource[0].position.xyz);
+	vec3 viewLight = vec3(0,0,1);
+	vec3 mainlightColor = vec3(1,1,1);
+#ifdef GM_MAX_LIGHTNUM
+	viewLight = -viewDirAndSpotExponent[0].xyz;
+	mainlightColor = colorAndRange[0].rgb;
+#endif // GM_MAX_LIGHTNUM
+
 	vec4 baseColor = texture(texBaseColor, gl_TexCoord[0].st);
 	vec4 outColor = baseColor;
 
@@ -73,21 +79,24 @@ void main()
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
 
 	/* shadow */
-	float shadow = Shadow(vertOut.shadowPos);
+	float shadow = 1.0;
+#ifdef SHADOW_RECEIVE
+	shadow = Shadow(vertOut.shadowPos);
+#endif // SHADOW_RECEIVE
 
 	/* Reflect Environment BRDF */
 	vec4 reflectEnv = ReflectEnvironment(localReflect, roughness);
-	reflectEnv.rgb *= gl_LightSource[0].ambient.rgb + gl_LightSource[0].diffuse.rgb;
+	reflectEnv.rgb *= mainlightColor;
 	
 	/* ambient BRDF */
 	vec4 ambient = vec4(mix(vec3(0.2, 0.24, 0.26), vec3(0.04), max(0.5*(1.0-localReflect.z),0)), 1.0);
 
 	/* Diffuse BRDF */
-	vec3 diffuseL = (shadow*max(0,dotNL))*gl_LightSource[0].diffuse.rgb;
+	vec3 diffuseL = (shadow*max(0,dotNL))*mainlightColor;
 	vec3 diffuseFact = (1-metallic)*diffuseL*gl_FrontMaterial.diffuse.rgb;
 
 	/* Microfacet Specular BRDF */
-	vec4 specularBRDF = gl_LightSource[0].specular*smoothstep(-0.01,0.1, dotNL)
+	vec4 specularBRDF = vec4(mainlightColor,1)*smoothstep(-0.01,0.1, dotNL)
 		*specD(roughness,dotNH)
 		*specG(roughness, dotNL_1, dotVN)
 		*specF(colorMin, dotVH)

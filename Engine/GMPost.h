@@ -50,7 +50,7 @@ namespace GM
 		/** @brief 更新 */
 		bool Update(double dDeltaTime);
 		/** @brief 更新(在主相机更新姿态之后) */
-		bool UpdateLater(double dDeltaTime);
+		bool UpdatePost(double dDeltaTime);
 		/** @brief 加载 */
 		bool Load();
 		/**

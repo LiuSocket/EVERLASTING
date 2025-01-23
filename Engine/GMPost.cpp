@@ -64,7 +64,7 @@ bool CGMPost::Update(double dDeltaTime)
 }
 
 /** @brief 更新(在主相机更新姿态之后) */
-bool CGMPost::UpdateLater(double dDeltaTime)
+bool CGMPost::UpdatePost(double dDeltaTime)
 {
 	return true;
 }
@@ -76,7 +76,7 @@ bool CGMPost::Load()
 	{
 		std::string strPostVertPath = m_pConfigData->strCorePath + m_strShaderPath + "Post.vert";
 		std::string strPostFragPath = m_pConfigData->strCorePath + m_strShaderPath + "Post.frag";
-		CGMKit::LoadShader(m_pPostGeode->getStateSet(), strPostVertPath, strPostFragPath, "Post");
+		CGMKit::LoadShader(m_pPostGeode->getStateSet(), strPostVertPath, strPostFragPath, true);
 	}
 	return true;
 }
@@ -152,7 +152,7 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 
 	std::string strPostVertPath = m_pConfigData->strCorePath + m_strShaderPath + "Post.vert";
 	std::string strPostFragPath = m_pConfigData->strCorePath + m_strShaderPath + "Post.frag";
-	return CGMKit::LoadShader(pSsPost.get(), strPostVertPath, strPostFragPath, "Post");
+	return CGMKit::LoadShader(pSsPost.get(), strPostVertPath, strPostFragPath);
 }
 
 bool CGMPost::SetVolumeEnable(bool bEnabled, osg::Texture* pVolumeTex)

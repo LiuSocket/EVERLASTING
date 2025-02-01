@@ -124,8 +124,6 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
     Add(sData1);
 
     SetAnimationEnable("MIGI", true);
-    //SetAnimationMode("MIGI", EGM_PLAY_LOOP);
-    //SetAnimationDuration("MIGI", 10.0f);
     SetAnimationPlay("MIGI", 1.0f);
 
     return true;

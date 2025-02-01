@@ -149,7 +149,6 @@ bool CGMEngine::Init()
     return true;
 }
 
-
 /** @brief 释放 */
 void CGMEngine::Release()
 {

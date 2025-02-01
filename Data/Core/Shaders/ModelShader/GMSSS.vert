@@ -30,9 +30,9 @@ void main()
 
 	vertOut.objPos = gl_Vertex;
 	vertOut.viewPos = viewVertPos.xyz / viewVertPos.w;
-	vertOut.viewNormal = normalize(gl_NormalMatrix*gl_Normal);
-	vertOut.viewTang = normalize(gl_NormalMatrix*tangent);
-	vertOut.viewBinormal = normalize(gl_NormalMatrix*binormal);
+	vertOut.viewNormal = gl_NormalMatrix*gl_Normal;
+	vertOut.viewTang = gl_NormalMatrix*tangent;
+	vertOut.viewBinormal = gl_NormalMatrix*binormal;
 	vertOut.shadowPos = (view2ShadowMatrix*viewVertPos).xyz;
 
 	gl_TexCoord[0] = gl_MultiTexCoord0;

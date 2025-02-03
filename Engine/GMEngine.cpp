@@ -69,10 +69,7 @@ CGMEngine& CGMEngine::getSingleton(void)
 }
 
 /** @brief 构造 */
-CGMEngine::CGMEngine():
-    m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
-    m_pPost(nullptr), m_pModel(nullptr),
-    m_pSceneTex(nullptr), m_pBackgroundTex(nullptr), m_pForegroundTex(nullptr)
+CGMEngine::CGMEngine()
 {
     Init();
 }
@@ -97,6 +94,7 @@ bool CGMEngine::Init()
     GM_Root = new osg::Group();
     GM_View = new osgViewer::View();
     GM_View->setSceneData(GM_Root);
+
     GM_LIGHT.Init(m_pKernelData, m_pConfigData);
 
     m_pSceneTex = new osg::Texture2D();
@@ -117,14 +115,13 @@ bool CGMEngine::Init()
     // 初始化前景相关节点
     _InitForeground();
 
-    m_pCommonUniform = new CGMCommonUniform();
     m_pManipulator = new CGMBaseManipulator();
-    m_pPost = new CGMPost();
     m_pModel = new CGMModel();
+    m_pPost = new CGMPost();
 
-    m_pCommonUniform->Init(m_pKernelData, m_pConfigData);
-    m_pPost->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
-    m_pModel->Init(m_pKernelData, m_pConfigData, m_pCommonUniform);
+    GM_UNIFORM.Init(m_pKernelData, m_pConfigData);
+    m_pModel->Init(m_pKernelData, m_pConfigData);
+    m_pPost->Init(m_pKernelData, m_pConfigData);
 
     GM_View->getCamera()->setCullMask(GM_MAIN_MASK);
     GM_View->setCameraManipulator(m_pManipulator);
@@ -160,8 +157,8 @@ void CGMEngine::Release()
     }
 
     GM_LIGHT.Release();
+    GM_UNIFORM.Release();
 
-    GM_DELETE(m_pCommonUniform);
     GM_DELETE(m_pConfigData);
     GM_DELETE(m_pKernelData);
     GM_DELETE(msSingleton);
@@ -197,7 +194,7 @@ bool CGMEngine::Update()
         {
             GM_LIGHT.Update(deltaTime);
 
-            m_pCommonUniform->Update(deltaTime);
+            GM_UNIFORM.Update(deltaTime);
             m_pPost->Update(deltaTime);
             m_pModel->Update(deltaTime);
 
@@ -246,12 +243,12 @@ void CGMEngine::ResizeScreen(const int iW, const int iH)
         pMainCam->dirtyAttachmentMap();
     }
 
+    GM_UNIFORM.ResizeScreen(iW, iH);
+
     if (m_pKernelData->pBackgroundCam.valid())
         m_pKernelData->pBackgroundCam->resize(iW, iH);
     if (m_pKernelData->pForegroundCam.valid())
         m_pKernelData->pForegroundCam->resize(iW, iH);
-    if (m_pCommonUniform)
-        m_pCommonUniform->ResizeScreen(iW, iH);
     if (m_pPost)
         m_pPost->ResizeScreen(iW, iH);
 }
@@ -372,8 +369,8 @@ bool CGMEngine::_UpdateLater(const double dDeltaTime)
     m_pKernelData->pForegroundCam->setProjectionMatrixAsPerspective(fFovy, fAspectRatio, fZNear, fZFar);
 
     GM_LIGHT.UpdatePost(dDeltaTime);
+    GM_UNIFORM.UpdatePost(dDeltaTime);
 
-    m_pCommonUniform->UpdatePost(dDeltaTime);
     m_pPost->UpdatePost(dDeltaTime);
     m_pModel->UpdatePost(dDeltaTime);
 

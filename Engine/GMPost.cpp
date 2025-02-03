@@ -11,6 +11,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GMPost.h"
+#include "GMCommonUniform.h"
 #include "GMKit.h"
 #include <osg/CullFace>
 
@@ -30,10 +31,7 @@ CGMGalaxy Methods
 
 /** @brief 构造 */
 CGMPost::CGMPost() :
-	m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
-	m_strShaderPath("Shaders/PostShader/"),
-	m_pVolumeTex(nullptr),
-	m_iPostUnit(0), m_bVolume(false)
+	m_strShaderPath("Shaders/PostShader/")
 {
 }
 
@@ -43,11 +41,10 @@ CGMPost::~CGMPost()
 }
 
 /** @brief 初始化 */
-bool CGMPost::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform)
+bool CGMPost::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 {
 	m_pKernelData = pKernelData;
 	m_pConfigData = pConfigData;
-	m_pCommonUniform = pCommonUniform;
 
 	m_bVolume = EGMRENDER_LOW != pConfigData->eRenderQuality ? true : false;
 
@@ -118,10 +115,6 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	pMainCam->setClearColor(osg::Vec4(0.0, 0.0, 0.0, 0.0));
 	pMainCam->setViewport(new osg::Viewport(0, 0, width, height));
 
-	osg::ref_ptr<osg::StateSet> pStateset = pMainCam->getOrCreateStateSet();
-	// 强制单面显示
-	pStateset->setAttributeAndModes(new osg::CullFace(osg::CullFace::BACK), osg::StateAttribute::ON);
-
 	// Create post triangle
 	m_pPostGeode = new osg::Geode();
 	m_pPostGeode->addDrawable(_CreateScreenTriangle(width, height));
@@ -143,7 +136,7 @@ bool CGMPost::CreatePost(osg::Texture* pSceneTex,
 	GM_Root->addChild(m_pPostCam.get());
 
 	osg::ref_ptr<osg::StateSet>	pSsPost = m_pPostGeode->getOrCreateStateSet();
-	pSsPost->addUniform(m_pCommonUniform->GetScreenSize());
+	pSsPost->addUniform(GM_UNIFORM.GetScreenSize());
 	//pSsPost->setDefine("VOLUME", m_bVolume ? osg::StateAttribute::ON : osg::StateAttribute::OFF);
 
 	CGMKit::AddTexture(pSsPost.get(), pSceneTex, "sceneTex", m_iPostUnit++);

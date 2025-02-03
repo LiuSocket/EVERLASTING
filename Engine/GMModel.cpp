@@ -11,8 +11,9 @@
 //////////////////////////////////////////////////////////////////////////
 #include "GMModel.h"
 #include "GMMaterial.h"
-#include "GMKit.h"
+#include "GMCommonUniform.h"
 #include "GMLight.h"
+#include "GMKit.h"
 #include "GMAnimation.h"
 #include "GMTangentSpaceGenerator.h"
 
@@ -64,10 +65,7 @@ namespace GM
 CGMModel Methods
 *************************************************************************/
 /** @brief 构造 */
-CGMModel::CGMModel() :
-    m_pKernelData(nullptr), m_pConfigData(nullptr), m_pCommonUniform(nullptr),
-    m_pRootNode(nullptr),
-    m_pAnimationManager(nullptr), m_pMaterial(nullptr)
+CGMModel::CGMModel()
 {
     // 创建动画管理器
     m_pAnimationManager = new CGMAnimation();
@@ -83,11 +81,10 @@ CGMModel::~CGMModel()
 }
 
 /** @brief 初始化 */
-bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform)
+bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 {
     m_pKernelData = pKernelData;
     m_pConfigData = pConfigData;
-    m_pCommonUniform = pCommonUniform;
 
     m_pRootNode = new osg::Group;
     GM_Root->addChild(m_pRootNode.get());
@@ -103,7 +100,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
     // 强制设置半透明混合模式
     pStateset->setAttributeAndModes(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),iValue);
 
-    m_pMaterial->Init(pKernelData, pConfigData, pCommonUniform);
+    m_pMaterial->Init(pKernelData, pConfigData);
 
     m_pDDSOptions = new osgDB::Options("dds_flip");
 
@@ -124,7 +121,14 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMC
     Add(sData1);
 
     SetAnimationEnable("MIGI", true);
-    SetAnimationPlay("MIGI", 1.0f);
+
+    SetAnimationMode("MIGI", EGM_PLAY_LOOP, "bone_idle");
+    SetAnimationPriority("MIGI", 200, "bone_idle");
+    SetAnimationPlay("MIGI", 1.0f, "bone_idle");
+
+    SetAnimationMode("MIGI", EGM_PLAY_LOOP, "eye_blink");
+    SetAnimationPriority("MIGI", 100, "eye_blink");
+    SetAnimationPlay("MIGI", 1.0f, "eye_blink");
 
     return true;
 }

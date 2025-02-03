@@ -11,7 +11,6 @@
 //////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include "GMEngine.h"
 #include "GMCommonUniform.h"
 #include <osg/Timer>
 
@@ -20,11 +19,21 @@ using namespace GM;
 /*************************************************************************
  Macro Defines
 *************************************************************************/
-#define PULSE_NUM				128 		// max number of audio pulse
 
 /*************************************************************************
 CGMCommonUniform Methods
 *************************************************************************/
+
+template<> CGMCommonUniform* CGMSingleton<CGMCommonUniform>::msSingleton = nullptr;
+
+/** @brief »ñÈ¡µ¥Àý */
+CGMCommonUniform& CGMCommonUniform::getSingleton(void)
+{
+	if (!msSingleton)
+		msSingleton = GM_NEW(CGMCommonUniform);
+	assert(msSingleton);
+	return (*msSingleton);
+}
 
 CGMCommonUniform::CGMCommonUniform(): m_pKernelData(nullptr),
 	m_vScreenSizeUniform(new osg::Uniform("screenSize", osg::Vec3f(1920.0f, 1080.0f, 0.5f))),
@@ -51,6 +60,11 @@ void CGMCommonUniform::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigDa
 	int iScreenHeight = pConfigData->iScreenHeight;
 
 	m_vScreenSizeUniform->set(osg::Vec3f(iScreenWidth, iScreenHeight, 0.5f));
+}
+
+void CGMCommonUniform::Release()
+{
+	GM_DELETE(msSingleton);
 }
 
 void CGMCommonUniform::Update(double dDeltaTime)

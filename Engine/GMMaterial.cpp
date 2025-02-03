@@ -11,9 +11,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GMMaterial.h"
-#include "GMKit.h"
+#include "GMCommonUniform.h"
 #include "GMLight.h"
-#include "GMCommon.h"
+#include "GMKit.h"
 #include "GMDispatchCompute.h"
 
 #include <osg/TextureCubeMap>
@@ -143,11 +143,10 @@ CGMMaterial::~CGMMaterial()
 {
 }
 
-bool CGMMaterial::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform)
+bool CGMMaterial::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 {
 	m_pKernelData = pKernelData;
 	m_pConfigData = pConfigData;
-	m_pCommonUniform = pCommonUniform;
 
 	// 读取dds时需要垂直翻转
 	m_pDDSOptions = new osgDB::Options("dds_flip");
@@ -356,7 +355,7 @@ void CGMMaterial::SetEyeMaterial(osg::Node* pNode)
 void CGMMaterial::SetBackgroundMaterial(osg::Node* pNode)
 {
 	osg::ref_ptr<osg::StateSet> pStateSet = pNode->getOrCreateStateSet();
-	pStateSet->addUniform(m_pCommonUniform->GetScreenSize());
+	pStateSet->addUniform(GM_UNIFORM.GetScreenSize());
 
 	// 添加shader
 	SetShader(pStateSet.get(), EGM_MATERIAL_Background);

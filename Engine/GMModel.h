@@ -12,7 +12,6 @@
 #pragma once
 
 #include "GMCommon.h"
-#include "GMCommonUniform.h"
 #include "GMKernel.h"
 
 #include <osg/Texture2D>
@@ -48,7 +47,7 @@ namespace GM
         ~CGMModel();
 
         /** @brief 初始化 */
-        bool Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMCommonUniform* pCommonUniform);
+        bool Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData);
         /** @brief 加载 */
         bool Load();
         /** @brief 保存 */
@@ -166,9 +165,8 @@ namespace GM
     private:
         SGMKernelData* m_pKernelData = nullptr;					//!< 内核数据
         SGMConfigData* m_pConfigData = nullptr;					//!< 配置数据
-        CGMCommonUniform* m_pCommonUniform = nullptr;			//!< 公共Uniform
 
-        osg::ref_ptr<osg::Group>			m_pRootNode;
+        osg::ref_ptr<osg::Group>			m_pRootNode = nullptr;
         std::map<std::string, SGMModelData>	m_pModelDataMap;	//!< 模型数据map
         std::map<std::string, osg::ref_ptr<osg::Node>> m_pNodeMap;	//!< 模型节点map
 
@@ -179,8 +177,8 @@ namespace GM
         //!< dds的纹理操作
         osg::ref_ptr<osgDB::Options>		m_pDDSOptions;
         //!< 动画管理器
-        CGMAnimation*						m_pAnimationManager;
+        CGMAnimation*						m_pAnimationManager = nullptr;
         //!< 材质管理器
-        CGMMaterial*						m_pMaterial;
+        CGMMaterial*						m_pMaterial = nullptr;
     };
 }	// GM

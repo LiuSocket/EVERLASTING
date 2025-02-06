@@ -30,7 +30,6 @@ namespace GM
      Class
     *************************************************************************/
 
-    class CGMAnimation;
     class CGMMaterial;
 
     /*!
@@ -75,74 +74,6 @@ namespace GM
         */
         bool GetAnimationEnable(const std::string& strName);
 
-        /**
-        * @brief 设置动画播放时长
-        * @param strModelName 模型名称
-        * @param fDuration 动画时长，单位：秒
-        * @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-        * @return bool 成功返回 true，失败返回 false
-        */
-        bool SetAnimationDuration(const std::string& strModelName, const float fDuration, const std::string& strAnimationName = "");
-        /**
-        * @brief 获取动画播放时长
-        * @param strModelName 模型名称
-        * @param strAnimationName 动画名称
-        * @return float 动画时长，单位：秒
-        */
-        float GetAnimationDuration(const std::string& strModelName, const std::string& strAnimationName);
-        /**
-        * @brief 设置动画播放模式
-        * @param strModelName 模型名称
-        * @param ePlayMode 播放模式
-        * @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-        * @return bool 成功返回 true，失败返回 false
-        */
-        bool SetAnimationMode(const std::string& strModelName, EGMPlayMode ePlayMode, const std::string& strAnimationName = "");
-        /**
-        * @brief 获取动画播放模式
-        * @param strModelName 模型名称
-        * @param strAnimationName 动画名称
-        * @return EGMPlayMode 播放模式
-        */
-        EGMPlayMode GetAnimationMode(const std::string& strModelName, const std::string& strAnimationName);
-        /**
-        * @brief 设置动画优先级
-        * @param strModelName 模型名称
-        * @param iPriority 动画优先级，[0,100]，数值越大优先级越高
-        * @param strAnimationName 动画名称，不输入动画名称就只修改第一个或者上一个控制的动画
-        * @return bool 成功返回 true，失败返回 false
-        */
-        bool SetAnimationPriority(const std::string& strModelName, const int iPriority, const std::string& strAnimationName = "");
-        /**
-        * @brief 获取动画优先级
-        * @param strModelName 模型名称
-        * @param strAnimationName 动画名称
-        * @return int 动画优先级
-        */
-        int GetAnimationPriority(const std::string& strModelName, const std::string& strAnimationName);
-        /**
-        * @brief 播放动画，如果不输入动画名称且输入权重为0.0，就停止所有动画
-        * @param strModelName 模型名称
-        * @param fWeight 动画混合权重，[0.0,1.0]，0.0表示停止，1.0表示播放，动画可根据权重混合
-        * @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
-        * @return bool 成功返回 true，失败返回 false
-        */
-        bool SetAnimationPlay(const std::string& strModelName, const float fWeight, const std::string& strAnimationName = "");
-        /**
-        * @brief 暂停动画
-        * @param strModelName 模型名称
-        * @param strAnimationName 动画名称，不输入动画名称就暂停所有动画
-        * @return bool 成功返回 true，失败返回 false
-        */
-        bool SetAnimationPause(const std::string& strModelName, const std::string& strAnimationName = "");
-        /**
-        * @brief 继续播放动画
-        * @param strModelName 模型名称
-        * @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
-        * @return bool 成功返回 true，失败返回 false
-        */
-        bool SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName = "");
-
     private:
         /**
         * @brief 加载材质
@@ -176,8 +107,6 @@ namespace GM
         std::string							m_strDefModelPath = "Models/";
         //!< dds的纹理操作
         osg::ref_ptr<osgDB::Options>		m_pDDSOptions;
-        //!< 动画管理器
-        CGMAnimation*						m_pAnimationManager = nullptr;
         //!< 材质管理器
         CGMMaterial*						m_pMaterial = nullptr;
     };

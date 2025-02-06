@@ -41,7 +41,6 @@ namespace GM
 
     class CGMPost;
     class CGMModel;
-    class CGMLight;
     class CGMBaseManipulator;
 
     /*!

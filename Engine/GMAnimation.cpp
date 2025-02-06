@@ -362,12 +362,29 @@ namespace GM
 CGMAnimation Methods
 *************************************************************************/
 
+template<> CGMAnimation* CGMSingleton<CGMAnimation>::msSingleton = nullptr;
+
+/** @brief »ñÈ¡µ¥Àý */
+CGMAnimation& CGMAnimation::getSingleton(void)
+{
+	if (!msSingleton)
+		msSingleton = GM_NEW(CGMAnimation);
+	assert(msSingleton);
+	return (*msSingleton);
+}
+
 CGMAnimation::CGMAnimation()
 {
 }
 
 CGMAnimation::~CGMAnimation()
 {
+}
+
+void CGMAnimation::Release()
+{
+	_ClearPlayer();
+	GM_DELETE(msSingleton);
 }
 
 bool CGMAnimation::Reset()

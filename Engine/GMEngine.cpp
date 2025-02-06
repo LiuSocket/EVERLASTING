@@ -17,6 +17,7 @@
 #include "GMXml.h"
 #include "GMPost.h"
 #include "GMModel.h"
+#include "GMAnimation.h"
 #include "GMLight.h"
 #include "osgQt/GraphicsWindowQt.h"
 #include <osgViewer/ViewerEventHandlers>
@@ -143,6 +144,32 @@ bool CGMEngine::Init()
     sMainLight.bShadow = true;
     GM_LIGHT.Add(sMainLight);
 
+    // 加载背景模型
+    SGMModelData sData = SGMModelData();
+    sData.strName = "Bacdground";
+    sData.strFilePath = "Background.FBX";
+    sData.iEntRenderBin = 0;
+    sData.eMaterial = EGM_MATERIAL_Background;
+    sData.bCastShadow = false;
+    m_pModel->Add(sData);
+
+    // 加载角色模型
+    SGMModelData sData1 = SGMModelData();
+    sData1.strName = "MIGI";
+    sData1.strFilePath = "MIGI.FBX";
+    sData1.eMaterial = EGM_MATERIAL_Human;
+    m_pModel->Add(sData1);
+
+    m_pModel->SetAnimationEnable("MIGI", true);
+
+    GM_ANIMATION.SetAnimationMode("MIGI", EGM_PLAY_LOOP, "bone_idle");
+    GM_ANIMATION.SetAnimationPriority("MIGI", 200, "bone_idle");
+    GM_ANIMATION.SetAnimationPlay("MIGI", 1.0f, "bone_idle");
+
+    GM_ANIMATION.SetAnimationMode("MIGI", EGM_PLAY_LOOP, "eye_blink");
+    GM_ANIMATION.SetAnimationPriority("MIGI", 100, "eye_blink");
+    GM_ANIMATION.SetAnimationPlay("MIGI", 1.0f, "eye_blink");
+
     return true;
 }
 
@@ -158,6 +185,7 @@ void CGMEngine::Release()
 
     GM_LIGHT.Release();
     GM_UNIFORM.Release();
+    GM_ANIMATION.Release();
 
     GM_DELETE(m_pConfigData);
     GM_DELETE(m_pKernelData);

@@ -96,7 +96,7 @@ void main()
 	vec3 diffuseFact = (1-metallic)*diffuseL*gl_FrontMaterial.diffuse.rgb;
 
 	/* Microfacet Specular BRDF */
-	vec4 specularBRDF = vec4(mainlightColor,1)*smoothstep(-0.01,0.1, dotNL)*(0.1+0.9*ambientOcc)
+	vec4 specularBRDF = vec4(mainlightColor,1)*smoothstep(-0.01,0.1, dotNL)
 		*specD(roughness,dotNH)
 		*specG(roughness, dotNL_1, dotVN)
 		*specF(colorMin, dotVH)

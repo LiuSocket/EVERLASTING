@@ -67,8 +67,6 @@ CGMModel Methods
 /** @brief 构造 */
 CGMModel::CGMModel()
 {
-    // 创建动画管理器
-    m_pAnimationManager = new CGMAnimation();
     // 创建材质管理器
     m_pMaterial = new CGMMaterial();
 }
@@ -76,7 +74,6 @@ CGMModel::CGMModel()
 /** @brief 析构 */
 CGMModel::~CGMModel()
 {
-    delete m_pAnimationManager;
     delete m_pMaterial;
 }
 
@@ -101,35 +98,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
     pStateset->setAttributeAndModes(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),iValue);
 
     m_pMaterial->Init(pKernelData, pConfigData);
-
     m_pDDSOptions = new osgDB::Options("dds_flip");
-
-    // 加载背景模型
-    SGMModelData sData = SGMModelData();
-    sData.strName = "Bacdground";
-    sData.strFilePath = "Background.FBX";
-    sData.iEntRenderBin = 0;
-    sData.eMaterial = EGM_MATERIAL_Background;
-    sData.bCastShadow = false;
-    Add(sData);
-
-    // 加载角色模型
-    SGMModelData sData1 = SGMModelData();
-    sData1.strName = "MIGI";
-    sData1.strFilePath = "MIGI.FBX";
-    sData1.eMaterial = EGM_MATERIAL_Human;
-    Add(sData1);
-
-    SetAnimationEnable("MIGI", true);
-
-    SetAnimationMode("MIGI", EGM_PLAY_LOOP, "bone_idle");
-    SetAnimationPriority("MIGI", 200, "bone_idle");
-    SetAnimationPlay("MIGI", 1.0f, "bone_idle");
-
-    SetAnimationMode("MIGI", EGM_PLAY_LOOP, "eye_blink");
-    SetAnimationPriority("MIGI", 100, "eye_blink");
-    SetAnimationPlay("MIGI", 1.0f, "eye_blink");
-
     return true;
 }
 
@@ -153,7 +122,7 @@ bool CGMModel::Save()
 /** @brief 重置 */
 bool CGMModel::Reset()
 {
-    m_pAnimationManager->Reset();
+    GM_ANIMATION.Reset();
     return true;
 }
 
@@ -297,9 +266,9 @@ bool CGMModel::SetAnimationEnable(const std::string& strName, const bool bEnable
     if (!pNode) return false;
 
     if(bEnable)
-        return m_pAnimationManager->AddAnimation(strName, pNode);
+        return GM_ANIMATION.AddAnimation(strName, pNode);
     else
-        return m_pAnimationManager->RemoveAnimation(strName);
+        return GM_ANIMATION.RemoveAnimation(strName);
 }
 
 bool CGMModel::GetAnimationEnable(const std::string& strName)
@@ -307,50 +276,5 @@ bool CGMModel::GetAnimationEnable(const std::string& strName)
     osg::Node* pNode = _GetNode(strName);
     if (!pNode) return false;
 
-    return m_pAnimationManager->GetAnimationEnable(strName);
-}
-
-bool CGMModel::SetAnimationDuration(const std::string& strModelName, const float fDuration, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->SetAnimationDuration(strModelName, fDuration, strAnimationName);
-}
-
-float CGMModel::GetAnimationDuration(const std::string& strModelName, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->GetAnimationDuration(strModelName, strAnimationName);
-}
-
-bool CGMModel::SetAnimationMode(const std::string& strModelName, EGMPlayMode ePlayMode, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->SetAnimationMode(strModelName, ePlayMode, strAnimationName);
-}
-
-EGMPlayMode CGMModel::GetAnimationMode(const std::string& strModelName, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->GetAnimationMode(strModelName, strAnimationName);
-}
-
-bool CGMModel::SetAnimationPriority(const std::string& strModelName, const int iPriority, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->SetAnimationPriority(strModelName, iPriority, strAnimationName);
-}
-
-int CGMModel::GetAnimationPriority(const std::string& strModelName, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->GetAnimationPriority(strModelName, strAnimationName);
-}
-
-bool CGMModel::SetAnimationPlay(const std::string& strModelName, const float fWeight, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->SetAnimationPlay(strModelName, fWeight, strAnimationName);
-}
-
-bool CGMModel::SetAnimationPause(const std::string& strModelName, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->SetAnimationPause(strModelName, strAnimationName);
-}
-
-bool CGMModel::SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName)
-{
-    return m_pAnimationManager->SetAnimationResume(strModelName, strAnimationName);
+    return GM_ANIMATION.GetAnimationEnable(strName);
 }

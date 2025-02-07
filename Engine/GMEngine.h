@@ -41,6 +41,7 @@ namespace GM
 
     class CGMPost;
     class CGMModel;
+    class CGMCharacter;
     class CGMBaseManipulator;
 
     /*!
@@ -143,6 +144,7 @@ namespace GM
 
         CGMPost*							m_pPost = nullptr;				//!< 后期模块
         CGMModel*							m_pModel = nullptr;				//!< 模型模块
+        CGMCharacter*						m_pCharacter = nullptr;			//!< 角色模块
 
         osg::ref_ptr<osg::Texture2D>		m_pSceneTex = nullptr;			//!< 主场景颜色图
         osg::ref_ptr<osg::Texture2D>		m_pBackgroundTex = nullptr;		//!< 背景颜色图

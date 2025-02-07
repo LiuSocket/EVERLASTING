@@ -104,6 +104,9 @@
     <ClCompile Include="..\Engine\osgQt\GraphicsWindowQt.cpp">
       <Filter>GMEngine\osgQt</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\GMCharacter.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -174,6 +177,9 @@
     </ClInclude>
     <ClInclude Include="..\Engine\osgQt\GraphicsWindowQt.h">
       <Filter>GMEngine\osgQt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMCharacter.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

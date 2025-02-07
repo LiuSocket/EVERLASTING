@@ -17,6 +17,7 @@
 #include "GMXml.h"
 #include "GMPost.h"
 #include "GMModel.h"
+#include "GMCharacter.h"
 #include "GMAnimation.h"
 #include "GMLight.h"
 #include "osgQt/GraphicsWindowQt.h"
@@ -118,10 +119,12 @@ bool CGMEngine::Init()
 
     m_pManipulator = new CGMBaseManipulator();
     m_pModel = new CGMModel();
+    m_pCharacter = new CGMCharacter();
     m_pPost = new CGMPost();
 
     GM_UNIFORM.Init(m_pKernelData, m_pConfigData);
     m_pModel->Init(m_pKernelData, m_pConfigData);
+    m_pCharacter->Init(m_pKernelData, m_pConfigData);
     m_pPost->Init(m_pKernelData, m_pConfigData);
 
     GM_View->getCamera()->setCullMask(GM_MAIN_MASK);
@@ -161,14 +164,8 @@ bool CGMEngine::Init()
     m_pModel->Add(sData1);
 
     m_pModel->SetAnimationEnable("MIGI", true);
-
-    GM_ANIMATION.SetAnimationMode("MIGI", EGM_PLAY_LOOP, "bone_idle");
-    GM_ANIMATION.SetAnimationPriority("MIGI", 200, "bone_idle");
-    GM_ANIMATION.SetAnimationPlay("MIGI", 1.0f, "bone_idle");
-
-    GM_ANIMATION.SetAnimationMode("MIGI", EGM_PLAY_LOOP, "eye_blink");
-    GM_ANIMATION.SetAnimationPriority("MIGI", 100, "eye_blink");
-    GM_ANIMATION.SetAnimationPlay("MIGI", 1.0f, "eye_blink");
+    m_pCharacter->SetIdleAnimation(1.0f);
+    m_pCharacter->SetBlinkAnimation(1.0f);
 
     return true;
 }
@@ -225,6 +222,7 @@ bool CGMEngine::Update()
             GM_UNIFORM.Update(deltaTime);
             m_pPost->Update(deltaTime);
             m_pModel->Update(deltaTime);
+            m_pCharacter->Update(deltaTime);
 
             GM_Viewer->advance(USE_REFERENCE_TIME);
             GM_Viewer->eventTraversal();
@@ -401,6 +399,7 @@ bool CGMEngine::_UpdateLater(const double dDeltaTime)
 
     m_pPost->UpdatePost(dDeltaTime);
     m_pModel->UpdatePost(dDeltaTime);
+    m_pCharacter->UpdatePost(dDeltaTime);
 
     return true;
 }

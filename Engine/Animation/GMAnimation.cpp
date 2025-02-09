@@ -11,8 +11,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GMAnimation.h"
-#include "GMNodeVisitor.h"
-#include "GMCommon.h"
+#include "../GMNodeVisitor.h"
+#include "../GMCommon.h"
 
 using namespace GM;
 

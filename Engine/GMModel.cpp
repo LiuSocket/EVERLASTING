@@ -14,8 +14,8 @@
 #include "GMCommonUniform.h"
 #include "GMLight.h"
 #include "GMKit.h"
-#include "GMAnimation.h"
 #include "GMTangentSpaceGenerator.h"
+#include "Animation/GMAnimation.h"
 
 #include <osg/StateSet>
 #include <osg/Texture3D>
@@ -191,7 +191,7 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
     ComputeTangentVisitor ctv;
     pNode->accept(ctv);
 
-    // 设置材质、
+    // 设置材质
     switch (sData.eMaterial)
     {
     case EGM_MATERIAL_PBR:

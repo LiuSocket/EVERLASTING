@@ -18,8 +18,8 @@
 #include "GMPost.h"
 #include "GMModel.h"
 #include "GMCharacter.h"
-#include "GMAnimation.h"
 #include "GMLight.h"
+#include "Animation/GMAnimation.h"
 #include "osgQt/GraphicsWindowQt.h"
 #include <osgViewer/ViewerEventHandlers>
 #include <QtCore/QTimer>

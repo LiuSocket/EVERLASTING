@@ -11,7 +11,7 @@
 //////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include "GMStructs.h"
+#include "../GMStructs.h"
 
 #include <osg/Node>
 #include <osgAnimation/BasicAnimationManager>

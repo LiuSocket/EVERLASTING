@@ -137,8 +137,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Engine\Animation\GMAnimation.cpp" />
-    <ClCompile Include="..\Engine\Animation\GMSoftBone.cpp" />
-    <ClCompile Include="..\Engine\Animation\UpdateSoftBone.cpp" />
     <ClCompile Include="..\Engine\Assist\mikktspace.cpp" />
     <ClCompile Include="..\Engine\Assist\tinystr.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxml.cpp" />
@@ -165,8 +163,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Animation\GMAnimation.h" />
-    <ClInclude Include="..\Engine\Animation\GMSoftBone.h" />
-    <ClInclude Include="..\Engine\Animation\UpdateSoftBone.h" />
     <ClInclude Include="..\Engine\Assist\mikktspace.h" />
     <ClInclude Include="..\Engine\Assist\tinystr.h" />
     <ClInclude Include="..\Engine\Assist\tinyxml.h" />

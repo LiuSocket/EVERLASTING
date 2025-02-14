@@ -110,12 +110,6 @@
     <ClCompile Include="..\Engine\Animation\GMAnimation.cpp">
       <Filter>GMEngine\Animation</Filter>
     </ClCompile>
-    <ClCompile Include="..\Engine\Animation\GMSoftBone.cpp">
-      <Filter>GMEngine\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Engine\Animation\UpdateSoftBone.cpp">
-      <Filter>GMEngine\Animation</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -188,12 +182,6 @@
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\Animation\GMAnimation.h">
-      <Filter>GMEngine\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Engine\Animation\GMSoftBone.h">
-      <Filter>GMEngine\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Engine\Animation\UpdateSoftBone.h">
       <Filter>GMEngine\Animation</Filter>
     </ClInclude>
   </ItemGroup>

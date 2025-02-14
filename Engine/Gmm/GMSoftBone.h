@@ -31,6 +31,9 @@ namespace GM
 
         void setDefaultUpdateCallback(const std::string& name = "");
 
+        CGMSoftBone* getBoneParent();
+        const CGMSoftBone* getBoneParent() const;
+
         /**
         * @brief 设置旋转矩阵，用于软化骨骼
         * @param matrix: 骨骼空间的旋转矩阵
@@ -43,4 +46,5 @@ namespace GM
         osg::Matrix _softInBoneSpace = osg::Matrix::identity();
     };
 
+    typedef std::map<std::string, osg::ref_ptr<CGMSoftBone> > SoftBoneMap;
 } // namespace GM

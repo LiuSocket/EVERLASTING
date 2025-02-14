@@ -84,7 +84,7 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
     {
         GM_ANIMATION.SetAnimationPlay("MIGI", m_fBlinkAnimationWeight, "eye_blink");
         s_fBlinkTime = 0.0;
-        s_fNextTime = m_iPseudoNoise(m_iRandom) * 0.15 + 0.5;
+        s_fNextTime = m_iPseudoNoise(m_iRandom) * 0.1 + 0.5;
     }
     s_fBlinkTime += dDeltaTime;
 

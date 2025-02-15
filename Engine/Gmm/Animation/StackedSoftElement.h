@@ -21,11 +21,15 @@ namespace GM
     public:
         StackedSoftElement();
         StackedSoftElement(const StackedSoftElement&, const osg::CopyOp&);
-        StackedSoftElement(const std::string&, const osg::Vec3& translate = osg::Vec3(0,0,0));
+        StackedSoftElement(const std::string& name, const osg::Vec3& translate = osg::Vec3(0,0,0));
         StackedSoftElement(const osg::Vec3& translate);
+        StackedSoftElement(const std::string& name, const osg::Vec3& translate, const osg::Vec3& vLimit);
 
         void Init();
         void update(float t = 0.0);
+
+        // 设置弹性限制
+        inline void SetSoftLimit(const osg::Vec3& vLimit) { _vSoftLimit = vLimit; }
 
     protected:
         bool    _bInit = false;

@@ -38,11 +38,18 @@ StackedSoftElement::StackedSoftElement(const osg::Vec3& translate)
     Init();
 }
 
+StackedSoftElement::StackedSoftElement(const std::string& name, const osg::Vec3& translate, const osg::Vec3& vLimit)
+    : osgAnimation::StackedTranslateElement(name, translate)
+{
+    _vSoftLimit = vLimit;
+    Init();
+}
+
 void StackedSoftElement::Init()
 {
     if (_bInit) return;
 
-    // 以后会根据每个骨骼的特殊标志生成不同的随机种子
+    // 根据每个骨骼的位置生成不同的随机种子
     m_iRandom.seed(10000 * std::abs(_translate.x() + _translate.y() + _translate.z()));
     std::uniform_int_distribution<> iPseudoNoise(0, 9999);
     // 生成随机相位

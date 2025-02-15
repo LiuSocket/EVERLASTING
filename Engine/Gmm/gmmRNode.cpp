@@ -185,7 +185,8 @@ void makeLocalMatrix(const FbxNode* pNode, osg::Matrix& m)
 void readTranslationElement(FbxPropertyT<FbxDouble3>& prop,
                             osgAnimation::UpdateMatrixTransform* pUpdate,
                             osg::Matrix& staticTransform,
-                            FbxScene& gmmScene)
+                            FbxScene& gmmScene,
+                            osg::Vec3& vSoftLimit)
 {
     FbxDouble3 gmmPropValue = prop.Get();
     osg::Vec3d val(
@@ -200,7 +201,7 @@ void readTranslationElement(FbxPropertyT<FbxDouble3>& prop,
             pUpdate->getStackedTransforms().push_back(new osgAnimation::StackedMatrixElement(staticTransform));
             staticTransform.makeIdentity();
         }
-        pUpdate->getStackedTransforms().push_back(new GM::StackedSoftElement("translate", val));
+        pUpdate->getStackedTransforms().push_back(new GM::StackedSoftElement("translate", val, vSoftLimit));
         //pUpdate->getStackedTransforms().push_back(new osgAnimation::StackedTranslateElement("translate", val));
     }
     else
@@ -323,7 +324,12 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
 {
     osg::Matrix staticTransform;
 
-    readTranslationElement(pNode->LclTranslation, pUpdate, staticTransform, gmmScene);
+    osg::Vec3 vSoftLimit = osg::Vec3(0.0f, 0.0f, 0.0f);
+    if ("MIGI_Spine" == pUpdate->getName() || "MIGI_Ribcage" == pUpdate->getName())
+    {
+        vSoftLimit = osg::Vec3(-0.2f, 0.005f, 0.005f);
+    }
+    readTranslationElement(pNode->LclTranslation, pUpdate, staticTransform, gmmScene, vSoftLimit);
 
     FbxDouble3 gmmRotOffset = pNode->RotationOffset.Get();
     FbxDouble3 gmmRotPiv = pNode->RotationPivot.Get();

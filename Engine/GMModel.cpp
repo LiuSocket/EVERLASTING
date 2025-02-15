@@ -24,6 +24,7 @@
 #include <osg/PolygonOffset>
 #include <osg/AlphaFunc>
 #include <osg/BlendFunc>
+#include <osg/CullFace>
 #include <osgDB/ReadFile>
 
 using namespace GM;
@@ -253,7 +254,7 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
         break;
     }
     pStateSet->setRenderBinDetails(sData.iEntRenderBin, "RenderBin");
-
+    pStateSet->setAttributeAndModes(new osg::CullFace(), osg::StateAttribute::ON);
     // ÉèÖÃÒõÓ°
     pStateSet->setDefine("SHADOW_RECEIVE", osg::StateAttribute::ON);
 

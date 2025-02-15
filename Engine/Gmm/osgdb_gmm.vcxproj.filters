@@ -28,26 +28,11 @@
     <ClCompile Include="D:\Gitee\EVERLASTING\Engine\Gmm\gmmMaterialToOsgStateSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GMSoftBone.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Animation\StackedSoftElement.cpp">
+      <Filter>Animation</Filter>
     </ClCompile>
-    <ClCompile Include="GMSoftRigGeometry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GMSoftSkeleton.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UpdateSoftBone.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GMSoftRigTransformSoftware.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SoftBoneMapVisitor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SoftVertexInfluence.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Animation\UpdateSoftBone.cpp">
+      <Filter>Animation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -66,29 +51,11 @@
     <ClInclude Include="D:\Gitee\EVERLASTING\Engine\Gmm\WriterNodeVisitor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GMSoftSkeleton.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Animation\StackedSoftElement.h">
+      <Filter>Animation</Filter>
     </ClInclude>
-    <ClInclude Include="GMSoftBone.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GMSoftRigGeometry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UpdateSoftBone.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GMSoftRigTransformSoftware.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftBoneMapVisitor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoftVertexInfluence.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GMSoftRigTransform.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Animation\UpdateSoftBone.h">
+      <Filter>Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +72,9 @@
     </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{3681CFC8-D452-38AC-BE23-4158378D6739}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Animation">
+      <UniqueIdentifier>{53ee1a8b-3dbc-4c8d-a1df-cbcf782f8766}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

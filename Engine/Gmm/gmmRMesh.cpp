@@ -13,8 +13,8 @@
 
 #include <osgDB/ReadFile>
 
-#include "GMSoftRigGeometry.h"
-#include "SoftVertexInfluence.h"
+#include <osgAnimation/RigGeometry>
+#include <osgAnimation/VertexInfluence>
 #include <osgAnimation/MorphGeometry>
 #include <osgAnimation/BasicAnimationManager>
 
@@ -318,12 +318,12 @@ osg::Geometry* getGeometry(osg::Geode* pGeode, GeometryMap& geometryMap,
 }
 
 osgAnimation::VertexInfluence& getVertexInfluence(
-    GM::SoftVertexInfluenceMap& vim, const std::string& name)
+    osgAnimation::VertexInfluenceMap& vim, const std::string& name)
 {
-    GM::SoftVertexInfluenceMap::iterator it = vim.lower_bound(name);
+    osgAnimation::VertexInfluenceMap::iterator it = vim.lower_bound(name);
     if (it == vim.end() || name != it->first)
     {
-        it = vim.insert(it, GM::SoftVertexInfluenceMap::value_type(
+        it = vim.insert(it, osgAnimation::VertexInfluenceMap::value_type(
             name, osgAnimation::VertexInfluence()));
         it->second.setName(name);
     }
@@ -418,7 +418,7 @@ void addBindMatrix(
     BindMatrixMap& boneBindMatrices,
     FbxNode* pBone,
     const osg::Matrix& bindMatrix,
-    GM::CGMSoftRigGeometry* pRigGeometry)
+    osgAnimation::RigGeometry* pRigGeometry)
 {
     boneBindMatrices[pBone][bindMatrix].insert(pRigGeometry);
 }
@@ -1128,14 +1128,14 @@ osgDB::ReaderWriter::ReadResult OsgFbxReader::readMesh(
     if (geomType & GEOMETRY_RIG)
     {
         typedef std::map<osg::ref_ptr<osg::Geometry>,
-            osg::ref_ptr<GM::CGMSoftRigGeometry> > GeometryRigGeometryMap;
+            osg::ref_ptr<osgAnimation::RigGeometry> > GeometryRigGeometryMap;
         GeometryRigGeometryMap old2newGeometryMap;
 
         for (unsigned i = 0; i < pGeode->getNumDrawables(); ++i)
         {
             osg::Geometry* pGeometry = pGeode->getDrawable(i)->asGeometry();
 
-            GM::CGMSoftRigGeometry* pRig = new GM::CGMSoftRigGeometry;
+            osgAnimation::RigGeometry* pRig = new osgAnimation::RigGeometry;
             pRig->setSourceGeometry(pGeometry);
             pRig->copyFrom(*pGeometry);
             old2newGeometryMap.insert(GeometryRigGeometryMap::value_type(
@@ -1144,7 +1144,7 @@ osgDB::ReaderWriter::ReadResult OsgFbxReader::readMesh(
             pRig->setUseDisplayList( false );
             pGeode->setDrawable(i, pRig);
 
-            pRig->setInfluenceMap(new GM::SoftVertexInfluenceMap);
+            pRig->setInfluenceMap(new osgAnimation::VertexInfluenceMap);
             pGeometry = pRig;
         }
 
@@ -1179,11 +1179,11 @@ osgDB::ReaderWriter::ReadResult OsgFbxReader::readMesh(
                         it->first == gmmIndex; ++it)
                     {
                         GIPair gi = it->second;
-                        GM::CGMSoftRigGeometry& rig =
-                            dynamic_cast<GM::CGMSoftRigGeometry&>(
+                        osgAnimation::RigGeometry& rig =
+                            dynamic_cast<osgAnimation::RigGeometry&>(
                             *old2newGeometryMap[gi.first]);
                         addBindMatrix(boneBindMatrices, pBone, bindMatrix, &rig);
-                        GM::SoftVertexInfluenceMap& vim =
+                        osgAnimation::VertexInfluenceMap& vim =
                             *rig.getInfluenceMap();
                         osgAnimation::VertexInfluence& vi =
                             getVertexInfluence(vim, pBone->GetName());
@@ -1230,7 +1230,7 @@ osgDB::ReaderWriter::ReadResult OsgFbxReader::readMesh(
         FbxSkin* pSkin = (FbxSkin*)fbxMesh->GetDeformer(0, FbxDeformer::eSkin);
         if (pSkin->GetClusterCount())
         {
-            GM::CGMSoftSkeleton* pSkeleton = getSkeleton(
+            osgAnimation::Skeleton* pSkeleton = getSkeleton(
                 pSkin->GetCluster(0)->GetLink(), gmmSkeletons, skeletonMap);
             pSkeleton->addChild(pResult);
             return osgDB::ReaderWriter::ReadResult::FILE_LOADED;

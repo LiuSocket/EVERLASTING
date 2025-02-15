@@ -159,7 +159,7 @@ bool CGMEngine::Init()
     // 加载角色模型
     SGMModelData sData1 = SGMModelData();
     sData1.strName = "MIGI";
-    sData1.strFilePath = "MIGI.GMM"; //"MIGI.FBX"; //
+    sData1.strFilePath = "MIGI.GMM";
     sData1.eMaterial = EGM_MATERIAL_Human;
     m_pModel->Add(sData1);
 

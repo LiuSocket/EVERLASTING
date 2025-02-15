@@ -9,14 +9,11 @@
 namespace osgAnimation
 {
     class AnimationManagerBase;
-}
-namespace GM
-{
-    class CGMSoftRigGeometry;
-    class CGMSoftSkeleton;
+    class RigGeometry;
+    class Skeleton;
 }
 
-typedef std::map< osg::Matrix, std::set<GM::CGMSoftRigGeometry*> > BindMatrixGeometryMap;
+typedef std::map< osg::Matrix, std::set<osgAnimation::RigGeometry*> > BindMatrixGeometryMap;
 typedef std::map< FbxNode* , BindMatrixGeometryMap > BindMatrixMap;
 
 class OsgFbxReader
@@ -29,7 +26,7 @@ public:
     std::map<FbxNode*, osg::Node*> nodeMap;
     BindMatrixMap boneBindMatrices;
     const std::set<const FbxNode*>& gmmSkeletons;
-    std::map<FbxNode*, GM::CGMSoftSkeleton*> skeletonMap;
+    std::map<FbxNode*, osgAnimation::Skeleton*> skeletonMap;
     const osgDB::Options& options;
     bool lightmapTextures, tessellatePolygons;
 
@@ -81,8 +78,8 @@ public:
         std::vector<StateSetContent>&);
 };
 
-GM::CGMSoftSkeleton* getSkeleton(FbxNode*,
+osgAnimation::Skeleton* getSkeleton(FbxNode*,
     const std::set<const FbxNode*>& gmmSkeletons,
-    std::map<FbxNode*, GM::CGMSoftSkeleton*>&);
+    std::map<FbxNode*, osgAnimation::Skeleton*>&);
 
 #endif

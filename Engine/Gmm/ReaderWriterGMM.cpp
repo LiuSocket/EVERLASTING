@@ -4,11 +4,6 @@
 #include <strings.h>//for strncasecmp
 #endif
 
-#include "GMSoftBone.h"
-#include "GMSoftSkeleton.h"
-#include "GMSoftRigGeometry.h"
-#include "SoftVertexInfluence.h"
-
 #include <osg/Notify>
 #include <osg/MatrixTransform>
 #include <osg/Material>
@@ -20,6 +15,10 @@
 #include <osgDB/FileUtils>
 #include <osgDB/ReadFile>
 #include <osgDB/Registry>
+#include <osgAnimation/Bone>
+#include <osgAnimation/Skeleton>
+#include <osgAnimation/RigGeometry>
+#include <osgAnimation/VertexInfluence>
 #include <osgAnimation/AnimationManagerBase>
 
 #if defined(_MSC_VER)
@@ -142,7 +141,7 @@ void resolveBindMatrices(
         std::map<FbxNode*, osg::Node*>::const_iterator nodeIt = nodeMap.find(gmmBone);
         if (nodeIt != nodeMap.end())
         {
-            GM::CGMSoftBone* originalBone = dynamic_cast<GM::CGMSoftBone*>(nodeIt->second);
+            osgAnimation::Bone* originalBone = dynamic_cast<osgAnimation::Bone*>(nodeIt->second);
 
             // Iterate bind matrices and create new bones if needed
             const BindMatrixGeometryMap& bindMatrixGeom = it->second;
@@ -167,17 +166,17 @@ void resolveBindMatrices(
                             break;
                         }
                     }
-                    GM::CGMSoftBone* newBone = new GM::CGMSoftBone(name);
+                    osgAnimation::Bone* newBone = new osgAnimation::Bone(name);
                     newBone->setDefaultUpdateCallback();
                     newBone->setInvBindMatrixInSkeletonSpace(bindIt->first);
                     originalBone->addChild(newBone);
 
                     // Update rig geometry with new bone names
-                    for (std::set<GM::CGMSoftRigGeometry*>::const_iterator rigIt = bindIt->second.begin();
+                    for (std::set<osgAnimation::RigGeometry*>::const_iterator rigIt = bindIt->second.begin();
                          rigIt != bindIt->second.end();
                          ++rigIt)
                     {
-                        GM::CGMSoftRigGeometry* pRigGeometry = (*rigIt);
+                        osgAnimation::RigGeometry* pRigGeometry = (*rigIt);
 
                         osgAnimation::VertexInfluenceMap* vertexInfluences = pRigGeometry->getInfluenceMap();
 

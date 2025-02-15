@@ -27,7 +27,7 @@ namespace GM
     {
     public:
         UpdateSoftBone(const std::string& name = "");
-        UpdateSoftBone(const UpdateSoftBone&,const osg::CopyOp&);
+        UpdateSoftBone(const osgAnimation::UpdateBone& , const osg::CopyOp&);
         void operator()(osg::Node* node, osg::NodeVisitor* nv);
     };
 

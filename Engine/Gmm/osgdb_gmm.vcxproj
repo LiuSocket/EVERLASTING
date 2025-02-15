@@ -185,6 +185,8 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Animation\StackedSoftElement.cpp" />
+    <ClCompile Include="Animation\UpdateSoftBone.cpp" />
     <ClCompile Include="D:\Gitee\EVERLASTING\Engine\Gmm\gmmRAnimation.cpp" />
     <ClCompile Include="D:\Gitee\EVERLASTING\Engine\Gmm\gmmRCamera.cpp" />
     <ClCompile Include="D:\Gitee\EVERLASTING\Engine\Gmm\gmmRLight.cpp" />
@@ -194,22 +196,9 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="D:\Gitee\EVERLASTING\Engine\Gmm\WriterCompareTriangle.cpp" />
     <ClCompile Include="D:\Gitee\EVERLASTING\Engine\Gmm\WriterNodeVisitor.cpp" />
     <ClCompile Include="D:\Gitee\EVERLASTING\Engine\Gmm\gmmMaterialToOsgStateSet.cpp" />
-    <ClCompile Include="GMSoftBone.cpp" />
-    <ClCompile Include="GMSoftRigGeometry.cpp" />
-    <ClCompile Include="GMSoftRigTransformSoftware.cpp" />
-    <ClCompile Include="GMSoftSkeleton.cpp" />
-    <ClCompile Include="SoftBoneMapVisitor.cpp" />
-    <ClCompile Include="SoftVertexInfluence.cpp" />
-    <ClCompile Include="UpdateSoftBone.cpp" />
-    <ClInclude Include="GMSoftBone.h" />
-    <ClInclude Include="GMSoftRigGeometry.h" />
-    <ClInclude Include="GMSoftRigTransform.h" />
-    <ClInclude Include="GMSoftRigTransformSoftware.h" />
-    <ClInclude Include="GMSoftSkeleton.h" />
-    <ClInclude Include="SoftBoneMapVisitor.h" />
-    <ClInclude Include="SoftVertexInfluence.h" />
-    <ClInclude Include="UpdateSoftBone.h" />
     <ResourceCompile Include="D:\Gitee\EVERLASTING\OSG\PlatformSpecifics\Windows\OpenSceneGraphVersionInfo.rc" />
+    <ClInclude Include="Animation\StackedSoftElement.h" />
+    <ClInclude Include="Animation\UpdateSoftBone.h" />
     <ClInclude Include="D:\Gitee\EVERLASTING\Engine\Gmm\gmmMaterialToOsgStateSet.h" />
     <ClInclude Include="D:\Gitee\EVERLASTING\Engine\Gmm\gmmReader.h" />
     <ClInclude Include="D:\Gitee\EVERLASTING\Engine\Gmm\ReaderWriterGMM.h" />

@@ -11,16 +11,16 @@
 #include <osgDB/FileNameUtils>
 #include <osgDB/ReadFile>
 
-#include "GMSoftBone.h"
-#include "GMSoftSkeleton.h"
-#include "UpdateSoftBone.h"
+#include "Animation/StackedSoftElement.h"
+#include "Animation/UpdateSoftBone.h"
 
+#include <osgAnimation/Bone>
+#include <osgAnimation/Skeleton>
 #include <osgAnimation/AnimationManagerBase>
 #include <osgAnimation/StackedMatrixElement>
 #include <osgAnimation/StackedQuaternionElement>
 #include <osgAnimation/StackedRotateAxisElement>
 #include <osgAnimation/StackedScaleElement>
-#include <osgAnimation/StackedTranslateElement>
 
 #if defined(_MSC_VER)
     #pragma warning( disable : 4505 )
@@ -200,7 +200,8 @@ void readTranslationElement(FbxPropertyT<FbxDouble3>& prop,
             pUpdate->getStackedTransforms().push_back(new osgAnimation::StackedMatrixElement(staticTransform));
             staticTransform.makeIdentity();
         }
-        pUpdate->getStackedTransforms().push_back(new osgAnimation::StackedTranslateElement("translate", val));
+        pUpdate->getStackedTransforms().push_back(new GM::StackedSoftElement("translate", val));
+        //pUpdate->getStackedTransforms().push_back(new osgAnimation::StackedTranslateElement("translate", val));
     }
     else
     {
@@ -378,7 +379,7 @@ osg::Group* createGroupNode(FbxManager& pSdkManager, FbxNode* pNode,
 {
     if (bNeedSkeleton)
     {
-        GM::CGMSoftBone* osgBone = new GM::CGMSoftBone;
+        osgAnimation::Bone* osgBone = new osgAnimation::Bone;
         osgBone->setDataVariance(osg::Object::DYNAMIC);
         osgBone->setName(pNode->GetName());
         GM::UpdateSoftBone* pUpdate = new GM::UpdateSoftBone(animName);
@@ -587,7 +588,7 @@ osgDB::ReaderWriter::ReadResult OsgFbxReader::readFbxNode(
     osg::Group* pAddChildrenTo = osgGroup.get();
     if (bCreateSkeleton)
     {
-        GM::CGMSoftSkeleton* osgSkeleton = getSkeleton(pNode, gmmSkeletons, skeletonMap);
+        osgAnimation::Skeleton* osgSkeleton = getSkeleton(pNode, gmmSkeletons, skeletonMap);
         osgSkeleton->setDefaultUpdateCallback();
         pAddChildrenTo->addChild(osgSkeleton);
         pAddChildrenTo = osgSkeleton;
@@ -606,9 +607,9 @@ osgDB::ReaderWriter::ReadResult OsgFbxReader::readFbxNode(
     return osgDB::ReaderWriter::ReadResult(osgGroup.get());
 }
 
-GM::CGMSoftSkeleton* getSkeleton(FbxNode* gmmNode,
+osgAnimation::Skeleton* getSkeleton(FbxNode* gmmNode,
     const std::set<const FbxNode*>& gmmSkeletons,
-    std::map<FbxNode*, GM::CGMSoftSkeleton*>& skeletonMap)
+    std::map<FbxNode*, osgAnimation::Skeleton*>& skeletonMap)
 {
     //Find the first non-skeleton ancestor of the node.
     while (gmmNode &&
@@ -619,12 +620,12 @@ GM::CGMSoftSkeleton* getSkeleton(FbxNode* gmmNode,
         gmmNode = gmmNode->GetParent();
     }
 
-    std::map<FbxNode*, GM::CGMSoftSkeleton*>::const_iterator it = skeletonMap.find(gmmNode);
+    std::map<FbxNode*, osgAnimation::Skeleton*>::const_iterator it = skeletonMap.find(gmmNode);
     if (it == skeletonMap.end())
     {
-        GM::CGMSoftSkeleton* skel = new GM::CGMSoftSkeleton;
+        osgAnimation::Skeleton* skel = new osgAnimation::Skeleton;
         skel->setDefaultUpdateCallback();
-        skeletonMap.insert(std::pair<FbxNode*, GM::CGMSoftSkeleton*>(gmmNode, skel));
+        skeletonMap.insert(std::pair<FbxNode*, osgAnimation::Skeleton*>(gmmNode, skel));
         return skel;
     }
     else

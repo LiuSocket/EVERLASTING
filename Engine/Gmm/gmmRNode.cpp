@@ -327,7 +327,7 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
     osg::Vec3 vSoftLimit = osg::Vec3(0.0f, 0.0f, 0.0f);
     if ("MIGI_Spine" == pUpdate->getName() || "MIGI_Ribcage" == pUpdate->getName())
     {
-        vSoftLimit = osg::Vec3(-0.2f, 0.005f, 0.005f);
+        vSoftLimit = osg::Vec3(-0.2f, 0.002f, 0.002f);
     }
     readTranslationElement(pNode->LclTranslation, pUpdate, staticTransform, gmmScene, vSoftLimit);
 

@@ -66,7 +66,7 @@ void StackedSoftElement::update(float t)
     StackedTranslateElement::update(t);
 
     osg::Vec3 _vSoftOffset = osg::Vec3(
-        _vSoftLimit.x() * (std::sin(t * 10 + _vSoftPhase.x()) * 0.1 + 1.8),
+        _vSoftLimit.x() * (std::sin(t * 5.3 + _vSoftPhase.x()) * 0.1 + 1.8),
         _vSoftLimit.y() * std::sin(t * 19.5 + _vSoftPhase.y()),
         _vSoftLimit.z() * std::sin(t * 19.1 + _vSoftPhase.z()));
     _translate += _vSoftOffset;

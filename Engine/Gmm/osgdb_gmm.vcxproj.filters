@@ -7,15 +7,33 @@
     <ClCompile Include="Animation\UpdateSoftBone.cpp">
       <Filter>Animation</Filter>
     </ClCompile>
-    <ClCompile Include="gmmRAnimation.cpp" />
-    <ClCompile Include="gmmRCamera.cpp" />
-    <ClCompile Include="gmmRLight.cpp" />
-    <ClCompile Include="gmmRMesh.cpp" />
-    <ClCompile Include="gmmRNode.cpp" />
-    <ClCompile Include="ReaderWriterGMM.cpp" />
-    <ClCompile Include="WriterCompareTriangle.cpp" />
-    <ClCompile Include="WriterNodeVisitor.cpp" />
-    <ClCompile Include="gmmMaterialToOsgStateSet.cpp" />
+    <ClCompile Include="gmmMaterialToOsgStateSet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gmmRAnimation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gmmRCamera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gmmRLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gmmRMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gmmRNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReaderWriterGMM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WriterCompareTriangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WriterNodeVisitor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation\StackedSoftElement.h">
@@ -24,11 +42,21 @@
     <ClInclude Include="Animation\UpdateSoftBone.h">
       <Filter>Animation</Filter>
     </ClInclude>
-    <ClInclude Include="gmmMaterialToOsgStateSet.h" />
-    <ClInclude Include="gmmReader.h" />
-    <ClInclude Include="ReaderWriterGMM.h" />
-    <ClInclude Include="WriterCompareTriangle.h" />
-    <ClInclude Include="WriterNodeVisitor.h" />
+    <ClInclude Include="gmmMaterialToOsgStateSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gmmReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReaderWriterGMM.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WriterCompareTriangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WriterNodeVisitor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="$(SolutionDir)Engine\Gmm\CMakeLists.txt" />

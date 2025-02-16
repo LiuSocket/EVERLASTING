@@ -34,7 +34,9 @@ namespace GM
     protected:
         bool    _bInit = false;
         std::default_random_engine  m_iRandom;						//!< Ëæ»úÖµ
-        osg::Vec3 _vSoftLimit = osg::Vec3(-0.01f, 0.002f, 0.002f);
+        osg::Vec3 _vSoftLimit = osg::Vec3(-0.01f, 0.01f, 0.01f);
         osg::Vec3 _vSoftPhase = osg::Vec3(0.0f, 0.0f, 0.0f);
+
+        osg::Vec3 _vSoftTrans = osg::Vec3(0.0f, 0.0f, 0.0f);
     };
 } // namespace GM

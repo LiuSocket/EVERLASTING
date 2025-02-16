@@ -95,8 +95,8 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>D:/Gitee/EVERLASTING/Lib/Debug/osgPlugins-3.6.5/osgdb_gmmd.lib</ImportLibrary>
-      <ProgramDataBaseFile>D:/Gitee/EVERLASTING/Bin/Debug/osgPlugins-3.6.5/osgdb_gmmd.pdb</ProgramDataBaseFile>
+      <ImportLibrary>$(SolutionDir)Lib/Debug/osgPlugins-3.6.5/osgdb_gmmd.lib</ImportLibrary>
+      <ProgramDataBaseFile>$(SolutionDir)Bin/Debug/osgPlugins-3.6.5/osgdb_gmmd.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
@@ -145,45 +145,14 @@
       <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <ImportLibrary>D:/Gitee/EVERLASTING/Lib/Release/osgPlugins-3.6.5/osgdb_gmm.lib</ImportLibrary>
-      <ProgramDataBaseFile>D:/Gitee/EVERLASTING/Bin/Release/osgPlugins-3.6.5/osgdb_gmm.pdb</ProgramDataBaseFile>
+      <ImportLibrary>$(SolutionDir)Lib/Release/osgPlugins-3.6.5/osgdb_gmm.lib</ImportLibrary>
+      <ProgramDataBaseFile>$(SolutionDir)Bin/Release/osgPlugins-3.6.5/osgdb_gmm.pdb</ProgramDataBaseFile>
       <SubSystem>Console</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <CustomBuild Include="$(SolutionDir)Engine\Gmm\CMakeLists.txt">
-      <UseUtf8Encoding>Always</UseUtf8Encoding>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/Gitee/EVERLASTING/Engine/Gmm/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/Gitee/EVERLASTING/Engine -BD:/Gitee/EVERLASTING/Engine --check-stamp-file D:/Gitee/EVERLASTING/Engine/Gmm/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)Engine\Gmm\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/Gitee/EVERLASTING/Engine/Gmm/CMakeLists.txt</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
-"C:\Program Files\CMake\bin\cmake.exe" -SD:/Gitee/EVERLASTING/OSG -BD:/Gitee/EVERLASTING/OSG --check-stamp-file D:/Gitee/EVERLASTING/Engine/Gmm/CMakeFiles/generate.stamp
-if %errorlevel% neq 0 goto :cmEnd
-:cmEnd
-endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
-:cmErrorLevel
-exit /b %1
-:cmDone
-if %errorlevel% neq 0 goto :VCEnd</Command>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalInputs)</AdditionalInputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Engine\Gmm\CMakeFiles\generate.stamp</Outputs>
-      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
-    </CustomBuild>
-  </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animation\StackedSoftElement.cpp" />
     <ClCompile Include="Animation\UpdateSoftBone.cpp" />
@@ -204,46 +173,6 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClInclude Include="ReaderWriterGMM.h" />
     <ClInclude Include="WriterCompareTriangle.h" />
     <ClInclude Include="WriterNodeVisitor.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)OSG\ZERO_CHECK.vcxproj">
-      <Project>{93C5C9B9-6C61-3414-96EC-6F203A8A68C9}</Project>
-      <Name>ZERO_CHECK</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\OpenThreads\win32\OpenThreads.vcxproj">
-      <Project>{D1065C35-20CE-38DC-8FAE-66BB4251DFEA}</Project>
-      <Name>OpenThreads</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\osg\osg.vcxproj">
-      <Project>{4A6A5E6E-FBE6-355E-91E3-23BF08F5F092}</Project>
-      <Name>osg</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\osgAnimation\osgAnimation.vcxproj">
-      <Project>{C8A93E63-98E3-33D4-B561-F7E5513AA3A8}</Project>
-      <Name>osgAnimation</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\osgDB\osgDB.vcxproj">
-      <Project>{1CAD8450-2D66-3B5E-A3C3-3BF390E19FE1}</Project>
-      <Name>osgDB</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\osgGA\osgGA.vcxproj">
-      <Project>{260C2085-EA01-3DE2-8F3A-584756799EC7}</Project>
-      <Name>osgGA</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\osgText\osgText.vcxproj">
-      <Project>{0E75CACF-787E-359D-9F74-E46BB632E1A1}</Project>
-      <Name>osgText</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\osgUtil\osgUtil.vcxproj">
-      <Project>{DBD005C9-5EA6-3120-B0D5-AF92F73E0C94}</Project>
-      <Name>osgUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(SolutionDir)OSG\src\osgViewer\osgViewer.vcxproj">
-      <Project>{24250EFB-6F14-3E27-A01A-464204A62CF2}</Project>
-      <Name>osgViewer</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -59,12 +59,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="$(SolutionDir)Engine\Gmm\CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="$(SolutionDir)OSG\PlatformSpecifics\Windows\OpenSceneGraphVersionInfo.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="Header Files">
       <UniqueIdentifier>{C88E639A-8533-3AB1-A98F-055A93D57BD4}</UniqueIdentifier>
     </Filter>
@@ -74,5 +68,10 @@
     <Filter Include="Animation">
       <UniqueIdentifier>{53ee1a8b-3dbc-4c8d-a1df-cbcf782f8766}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="$(SolutionDir)OSG\PlatformSpecifics\Windows\OpenSceneGraphVersionInfo.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

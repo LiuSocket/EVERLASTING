@@ -38,10 +38,12 @@ StackedSoftElement::StackedSoftElement(const osg::Vec3& translate)
     Init();
 }
 
-StackedSoftElement::StackedSoftElement(const std::string& name, const osg::Vec3& translate, const osg::Vec3& vLimit)
+StackedSoftElement::StackedSoftElement(const std::string& name, const osg::Vec3& translate,
+    const osg::Vec3& vSoftRange, const osg::Vec3& vSoftCenter)
     : osgAnimation::StackedTranslateElement(name, translate)
 {
-    _vSoftLimit = vLimit;
+    _vSoftRange = vSoftRange;
+    _vSoftCenter = vSoftCenter;
     Init();
 }
 
@@ -64,17 +66,25 @@ void StackedSoftElement::Init()
 void StackedSoftElement::update(float t)
 {
     StackedTranslateElement::update(t);
+    _vRigTranslate = _translate;
+    osg::Vec3 _vDeltaPos = _vRigTranslate - _vLastRigTranslate;
+    if (_vDeltaPos.length2() > (_vLastDeltaPos.length2() + 1e-5))
+    {
+        _vSoftTrans = _vSoftRange;
 
-    if (0.0001f > _vSoftTrans.length2())
-	{
-        //_vSoftTrans = _vSoftLimit;
-	}
+		//OSG_WARN << "_vDeltaPos: "
+		//	<< ((abs(_vDeltaPos.x()) > 1e-3f) ? _vDeltaPos.x() : 0.0f) << ", "
+		//	<< ((abs(_vDeltaPos.y()) > 1e-3f) ? _vDeltaPos.y() : 0.0f) << ", "
+		//	<< ((abs(_vDeltaPos.z()) > 1e-3f) ? _vDeltaPos.z() : 0.0f) << std::endl;
+    }
+    _vLastRigTranslate = _vRigTranslate;
+    _vLastDeltaPos = _vDeltaPos;
 
     osg::Vec3 _vSoftOffset = osg::Vec3(
-        _vSoftTrans.x() * std::sin(t * 10.0 + _vSoftPhase.x()) * 0.5 + _vSoftLimit.x()*0.5,
-        _vSoftTrans.y() * std::sin(t * 10.49 + _vSoftPhase.y()),
-        _vSoftTrans.z() * std::sin(t * 10.31 + _vSoftPhase.z()));
+        _vSoftTrans.x() * sin(t * 30.0 + _vSoftPhase.x()) + _vSoftCenter.x(),
+        _vSoftTrans.y() * sin(t * 81.0 + _vSoftPhase.y()) + _vSoftCenter.y(),
+        _vSoftTrans.z() * sin(t * 77.0 + _vSoftPhase.z()) + _vSoftCenter.z());
     _translate += _vSoftOffset;
 
-    _vSoftTrans *= 0.99f;
+    _vSoftTrans *= 0.98f;
 }

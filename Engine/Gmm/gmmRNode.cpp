@@ -186,7 +186,7 @@ void readTranslationElement(FbxPropertyT<FbxDouble3>& prop,
                             osgAnimation::UpdateMatrixTransform* pUpdate,
                             osg::Matrix& staticTransform,
                             FbxScene& gmmScene,
-                            osg::Vec3& vSoftLimit)
+                            const osg::Vec3& vSoftRange, const osg::Vec3& vSoftCenter )
 {
     FbxDouble3 gmmPropValue = prop.Get();
     osg::Vec3d val(
@@ -201,7 +201,7 @@ void readTranslationElement(FbxPropertyT<FbxDouble3>& prop,
             pUpdate->getStackedTransforms().push_back(new osgAnimation::StackedMatrixElement(staticTransform));
             staticTransform.makeIdentity();
         }
-        pUpdate->getStackedTransforms().push_back(new GM::StackedSoftElement("translate", val, vSoftLimit));
+        pUpdate->getStackedTransforms().push_back(new GM::StackedSoftElement("translate", val, vSoftRange, vSoftCenter));
         //pUpdate->getStackedTransforms().push_back(new osgAnimation::StackedTranslateElement("translate", val));
     }
     else
@@ -324,12 +324,22 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
 {
     osg::Matrix staticTransform;
 
-    osg::Vec3 vSoftLimit = osg::Vec3(0.0f, 0.0f, 0.0f);
-    if ("MIGI_Spine" == pUpdate->getName() || "MIGI_Ribcage" == pUpdate->getName())
+    osg::Vec3 vSoftRange = osg::Vec3(0.0f, 0.0f, 0.0f);
+    osg::Vec3 vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
+	std::string name = pUpdate->getName();
+    if (std::string::npos != name.find("Ribcage") ||
+		std::string::npos != name.find("Spine"))
     {
-        vSoftLimit = osg::Vec3(-0.5f, 0.01f, 0.01f);
+        vSoftRange = osg::Vec3(0.4f, 0.01f, 0.01f);
+        vSoftCenter = osg::Vec3(-0.4f, 0.0f, 0.0f);
     }
-    readTranslationElement(pNode->LclTranslation, pUpdate, staticTransform, gmmScene, vSoftLimit);
+    else if (std::string::npos != name.find("Neck"))
+    {
+        vSoftRange = osg::Vec3(0.15f, 0.01f, 0.01f);
+        vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
+    }
+    else{}
+    readTranslationElement(pNode->LclTranslation, pUpdate, staticTransform, gmmScene, vSoftRange, vSoftCenter);
 
     FbxDouble3 gmmRotOffset = pNode->RotationOffset.Get();
     FbxDouble3 gmmRotPiv = pNode->RotationPivot.Get();

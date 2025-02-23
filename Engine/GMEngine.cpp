@@ -164,8 +164,7 @@ bool CGMEngine::Init()
     m_pModel->Add(sData1);
 
     m_pModel->SetAnimationEnable("MIGI", true);
-    m_pCharacter->SetIdleAnimation(1.0f);
-    m_pCharacter->SetBlinkAnimation(1.0f);
+	m_pCharacter->InitAnimation("MIGI", m_pModel->GetNode("MIGI"));
 
     return true;
 }

@@ -37,8 +37,7 @@ void UpdateSoftBone::operator()(osg::Node* node, osg::NodeVisitor* nv)
             return;
         }
 
-        // 这里时间不准确，临时这么写
-        float time = (nv->getFrameStamp()->getFrameNumber()) / 60.0f;
+        float time = nv->getFrameStamp()->getReferenceTime();
         // here we would prefer to have a flag inside transform stack in order to avoid update and a dirty state in matrixTransform if it's not require.
         _transforms.update(time);
         const osg::Matrix& matrix = _transforms.getMatrix();

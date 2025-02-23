@@ -338,6 +338,11 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
         vSoftRange = osg::Vec3(0.15f, 0.01f, 0.01f);
         vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
     }
+    else if (std::string::npos != name.find("arm"))
+    {
+        vSoftRange = osg::Vec3(0.2f, 0.03f, 0.03f);
+        vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
+    }
     else{}
     readTranslationElement(pNode->LclTranslation, pUpdate, staticTransform, gmmScene, vSoftRange, vSoftCenter);
 

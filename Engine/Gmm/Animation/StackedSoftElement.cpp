@@ -52,7 +52,8 @@ void StackedSoftElement::Init()
     if (_bInit) return;
 
     // 根据每个骨骼的位置生成不同的随机种子
-    m_iRandom.seed(10000 * std::abs(_translate.x() + _translate.y() + _translate.z()));
+	int seed = 10000 * std::abs(_translate.x() + _translate.y() + _translate.z());
+    m_iRandom.seed(seed);
     std::uniform_int_distribution<> iPseudoNoise(0, 9999);
     // 生成随机相位
     _vSoftPhase = osg::Vec3(

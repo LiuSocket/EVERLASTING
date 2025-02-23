@@ -199,24 +199,24 @@ namespace GM
 		}
 
 		/* @brief 继续播放当前聚焦的动画 */
-		bool resume()
+		bool resume(float fWeight = 1.0f)
 		{
 			if (_focus < ANIM_LIST.size())
 			{
-				_manager->resumeAnimation(ANIM_LIST.at(_focus).get(), _animPriorityVec[_focus], 1.0);
+				_manager->resumeAnimation(ANIM_LIST.at(_focus).get(), _animPriorityVec[_focus], fWeight);
 				return true;
 			}
 			return false;
 		}
 		/* @brief 继续播放指定的动画 */
-		bool resume(const std::string& name)
+		bool resume(const std::string& name, float fWeight = 1.0f)
 		{
 			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
 			{
 				if (ANIM_LIST.at(i)->getName() == name)
 					_focus = i;
 			}
-			_manager->resumeAnimation(ANIM_LIST.at(_focus).get(), _animPriorityVec[_focus], 1.0);
+			_manager->resumeAnimation(ANIM_LIST.at(_focus).get(), _animPriorityVec[_focus], fWeight);
 
 			return true;
 		}
@@ -336,9 +336,40 @@ namespace GM
 			return true;
 		}
 
+		/* @brief 设置指定动画的权重 */
+		bool setWeight(const std::string& name, float fWeight)
+		{
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+				{
+					ANIM_LIST.at(i)->setWeight(fWeight);
+					return true;
+				}
+			}
+			return false;
+		}
+		/* @brief 获取指定动画的权重 */
+		float getWeight(const std::string& name)
+		{
+			for (unsigned int i = 0; i < ANIM_LIST.size(); i++)
+			{
+				if (ANIM_LIST.at(i)->getName() == name)
+				{
+					return ANIM_LIST.at(i)->getWeight();
+				}
+			}
+			return 0.0f;
+		}
+
 		const std::string& getCurrentAnimationName() const
 		{
 			return ANIM_LIST.at(_focus)->getName();
+		}
+
+		bool isAnimationPlaying(const std::string& name) const
+		{
+			return _manager->isPlaying(name);
 		}
 
 		void getAnimationList(std::vector<std::string>& vAnimationList) const
@@ -522,7 +553,25 @@ int CGMAnimation::GetAnimationPriority(const std::string& strModelName, const st
 	return priority;
 }
 
-bool CGMAnimation::SetAnimationPlay(const std::string& strModelName, const float fWeight, const std::string& strAnimationName)
+bool CGMAnimation::SetAnimationWeight(const std::string& strModelName, const std::string& strAnimationName, float fWeight)
+{
+	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
+	if (pAniPlayer)
+	{
+		pAniPlayer->setWeight(strAnimationName, fWeight);
+		return true;
+	}
+	return false;
+}
+
+float CGMAnimation::GetAnimationWeight(const std::string& strModelName, const std::string& strAnimationName)
+{
+	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
+	if (!pAniPlayer) return 0.0;
+	return pAniPlayer->getWeight(strAnimationName);
+}
+
+bool CGMAnimation::SetAnimationPlay(const std::string& strModelName, const std::string& strAnimationName, float fWeight)
 {
 	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
 	if (pAniPlayer)
@@ -572,14 +621,18 @@ bool CGMAnimation::SetAnimationPause(const std::string& strModelName, const std:
 	}
 }
 
-bool CGMAnimation::SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName)
+bool CGMAnimation::SetAnimationResume(const std::string& strModelName, const std::string& strAnimationName, float fWeight)
 {
 	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
 	if (pAniPlayer)
 	{
 		if ("" != strAnimationName) // 动画名称不能为空
 		{
-			pAniPlayer->resume(strAnimationName);
+			if(0.0f == fWeight)
+				pAniPlayer->pause(strAnimationName);
+			else
+				pAniPlayer->resume(strAnimationName, fWeight);
+
 			return true;
 		}
 	}
@@ -594,6 +647,13 @@ bool CGMAnimation::GetAnimationList(const std::string& strModelName, std::vector
 
 	pAniPlayer->getAnimationList(vAnimationList);
 	return true;
+}
+
+bool CGMAnimation::IsAnimationPlaying(const std::string& strModelName, const std::string& strAnimationName)
+{
+	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
+	if (!pAniPlayer) return false;
+	return pAniPlayer->isAnimationPlaying(strAnimationName);
 }
 
 CAnimationPlayer* CGMAnimation::_GetPlayerByModelName(const std::string& strModelName)

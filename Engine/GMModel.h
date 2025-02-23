@@ -73,6 +73,12 @@ namespace GM
         * @return bool: 是否启用动画
         */
         bool GetAnimationEnable(const std::string& strName);
+        /**
+        * @brief 根据名称获取模型
+        * @param strModelName 模型名称
+        * @return osg::Node* 模型节点指针
+        */
+        osg::Node* GetNode(const std::string& strModelName);
 
     private:
         /**

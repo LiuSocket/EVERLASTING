@@ -324,6 +324,8 @@ void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
 	CGMKit::AddTexture(pStateSet.get(), m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);
 	_PlusUnitUsed(iChannel);
 
+	pStateSet->addUniform(GM_UNIFORM.GetScreenSize());
+
 	// Ìí¼Óshader
 	SetShader(pStateSet.get(), EGM_MATERIAL_SSS);
 

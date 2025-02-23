@@ -175,6 +175,10 @@ namespace GM
         {
             return fA * (1 - fX) + fB * fX;
         }
+        inline static osg::Vec2f Mix(const osg::Vec2f& vA, const osg::Vec2f& vB, const float fX)
+        {
+            return vA * (1 - fX) + vB * fX;
+        }
         inline static osg::Vec3f Mix(const osg::Vec3f& vA, const osg::Vec3f& vB, const float fX)
         {
             return vA * (1 - fX) + vB * fX;

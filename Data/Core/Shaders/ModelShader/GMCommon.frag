@@ -5,6 +5,7 @@
 #pragma import_defines(GM_MAX_LIGHTNUM)
 
 #define M_PI 3.14159265358979
+const float NOISE_GRANULARITY = 0.5/255.0;
 
 #ifdef GM_MAX_LIGHTNUM
 layout(std140) uniform LightDataBlock
@@ -76,16 +77,16 @@ float Shadow(vec3 shadowPos)
 	const vec2 shadowTexSize = vec2(1024.0);
 	const vec2 pixUnit2 = 2.0/shadowTexSize;
 
-	vec4 shadow11 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(2,2)*pixUnit2, 0)-shadowPos.z);
-	vec4 shadow14 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(-1,2)*pixUnit2, 0)-shadowPos.z);
+	vec4 shadow00 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(3,3)*pixUnit2, 0)-shadowPos.z);
+	vec4 shadow05 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(-2,3)*pixUnit2, 0)-shadowPos.z);
 	vec4 shadow22 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(1,1)*pixUnit2, 0)-shadowPos.z);
 	vec4 shadow23 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(0,1)*pixUnit2, 0)-shadowPos.z);
 	vec4 shadow32 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy-vec2(1,0)*pixUnit2, 0)-shadowPos.z);
 	vec4 shadow33 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy, 0)-shadowPos.z);
-	vec4 shadow41 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(-2,1)*pixUnit2, 0)-shadowPos.z);
-	vec4 shadow44 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(1,1)*pixUnit2, 0)-shadowPos.z);
+	vec4 shadow50 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(-3,2)*pixUnit2, 0)-shadowPos.z);
+	vec4 shadow55 = step(vec4(0.0), textureGather(texShadow, shadowPos.xy+vec2(2,2)*pixUnit2, 0)-shadowPos.z);
 
-	vec4 shadowSum = shadow11 + shadow14 + shadow22 + shadow23 + shadow32 + shadow33 + shadow41 + shadow44;
+	vec4 shadowSum = shadow00 + shadow05 + shadow22 + shadow23 + shadow32 + shadow33 + shadow50 + shadow55;
 	float sampleCount = 32.0;
 
 	float shadow = (shadowSum.x + shadowSum.y + shadowSum.z + shadowSum.w)/sampleCount;

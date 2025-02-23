@@ -171,20 +171,6 @@ bool CGMModel::Add(const SGMModelData& sData)
     return false;
 }
 
-osg::Node* CGMModel::_GetNode(const std::string& strModelName)
-{
-    if (m_pNodeMap.end() != m_pNodeMap.find(strModelName))
-    {
-        return m_pNodeMap.at(strModelName).get();
-    }
-    return nullptr;
-}
-
-void CGMModel::_InnerUpdate(const double dDeltaTime)
-{
-}
-
-
 bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
 {
     if (!pNode) return false;
@@ -278,4 +264,22 @@ bool CGMModel::GetAnimationEnable(const std::string& strName)
     if (!pNode) return false;
 
     return GM_ANIMATION.GetAnimationEnable(strName);
+}
+
+osg::Node* CGMModel::GetNode(const std::string& strModelName)
+{
+    return _GetNode(strModelName);
+}
+
+osg::Node* CGMModel::_GetNode(const std::string& strModelName)
+{
+    if (m_pNodeMap.end() != m_pNodeMap.find(strModelName))
+    {
+        return m_pNodeMap.at(strModelName).get();
+    }
+    return nullptr;
+}
+
+void CGMModel::_InnerUpdate(const double dDeltaTime)
+{
 }

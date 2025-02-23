@@ -9,6 +9,7 @@ void main()
 
 #else // not SHADOW_CAST
 
+uniform vec3			screenSize;
 uniform mat4			osg_ViewMatrixInverse;
 uniform sampler2D		texBaseColor;
 uniform sampler2D		texMRAT;
@@ -91,7 +92,8 @@ void main()
 	/* shadow */
 	float shadow = 1.0;
 #ifdef SHADOW_RECEIVE
-	shadow = Shadow(vertOut.shadowPos);
+	float fragmentNoise = mix(-NOISE_GRANULARITY, NOISE_GRANULARITY, Noise(gl_FragCoord.xy / screenSize.xy));
+	shadow = clamp(Shadow(vertOut.shadowPos) + fragmentNoise, 0, 1);
 #endif // SHADOW_RECEIVE
 
 	/* Reflect Environment BRDF */

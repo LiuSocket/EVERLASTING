@@ -40,5 +40,6 @@ namespace GM
         osg::Vec3 _vRigTranslate = osg::Vec3(0.0f, 0.0f, 0.0f);
 		osg::Vec3 _vLastRigTranslate = osg::Vec3(0.0f, 0.0f, 0.0f);
         osg::Vec3 _vLastDeltaPos = osg::Vec3(0.0f, 0.0f, 0.0f);
+        float _fLastTime = 0;
     };
 } // namespace GM

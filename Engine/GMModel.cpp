@@ -189,6 +189,7 @@ bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)
     case EGM_MATERIAL_Human:
     {
         m_pMaterial->SetHumanMaterial(pNode);
+        m_pMaterial->GetEyeTransform(m_pEyeTransVector);
     }
     break;
     case EGM_MATERIAL_SSS:

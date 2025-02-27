@@ -79,7 +79,14 @@ namespace GM
         * @return osg::Node* 模型节点指针
         */
         osg::Node* GetNode(const std::string& strModelName);
-
+        /**
+        * @brief 获取眼睛的变幻节点的vector
+        * @param v: 有则返回节点指针的vector
+        */
+        void GetEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v) const
+        {
+            v = m_pEyeTransVector;
+        }
     private:
         /**
         * @brief 加载材质
@@ -115,5 +122,7 @@ namespace GM
         osg::ref_ptr<osgDB::Options>		m_pDDSOptions;
         //!< 材质管理器
         CGMMaterial*						m_pMaterial = nullptr;
+        //!< 人类材质的模型上的所有眼睛的变幻节点
+        std::vector<osg::ref_ptr<osg::Transform>> m_pEyeTransVector;
     };
 }	// GM

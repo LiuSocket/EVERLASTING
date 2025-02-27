@@ -166,6 +166,10 @@ bool CGMEngine::Init()
     m_pModel->SetAnimationEnable("MIGI", true);
 	m_pCharacter->InitAnimation("MIGI", m_pModel->GetNode("MIGI"));
 
+    std::vector<osg::ref_ptr<osg::Transform>> pEyeVector;
+    m_pModel->GetEyeTransform(pEyeVector);
+    m_pCharacter->InitEyeTransform(pEyeVector);
+
     return true;
 }
 

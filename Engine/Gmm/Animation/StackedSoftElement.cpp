@@ -87,5 +87,9 @@ void StackedSoftElement::update(float t)
         _vSoftTrans.z() * sin(t * 77.0 + _vSoftPhase.z()) + _vSoftCenter.z());
     _translate += _vSoftOffset;
 
-    _vSoftTrans *= 0.98f;
+    float fDeltaTime = t - _fLastTime;
+    //防止第一帧间隔时间不正确
+    if(0.0f != _fLastTime) _vSoftTrans *= std::exp2(-fDeltaTime * 5.0f);
+    // 更新上一帧时间
+    _fLastTime = t;
 }

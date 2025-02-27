@@ -103,7 +103,6 @@ namespace GM
 			: osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), _pMaterial(pMaterial){}
 
 		void apply(osg::Node& node) { traverse(node); }
-
 		void apply(osg::Geode& node)
 		{
 			if (node.getName().find("_skin") != std::string::npos)
@@ -112,7 +111,7 @@ namespace GM
 				_pMaterial->SetSSSMaterial(&node);
 			}
 			else if (node.getName().find("_eye") != std::string::npos)
-			{
+			{	
 				// 根据节点名称找到眼睛模型，设置眼睛材质
 				_pMaterial->SetEyeMaterial(&node);
 			}
@@ -352,6 +351,13 @@ void CGMMaterial::SetEyeMaterial(osg::Node* pNode)
 
 	// 设置光照
 	GM_LIGHT.SetLightEnable(pNode, true);
+
+	// 将眼睛的位置变换节点保存下来
+	osg::Transform* pTrans = dynamic_cast<osg::Transform*>(pNode->getParent(0));
+	if (pTrans)
+	{
+		m_pEyeTransVector.push_back(pTrans);
+	}
 }
 
 void CGMMaterial::SetBackgroundMaterial(osg::Node* pNode)

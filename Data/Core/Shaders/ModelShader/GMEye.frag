@@ -53,7 +53,7 @@ void main()
 	float dotVN = max(dot(-viewVertDir, viewNorm),minFact);
 	float dotVH = max(dot(-viewVertDir, viewHalf),minFact);
 
-	const float eyeRadius = 1.09;
+	const float eyeRadius = 1.12;
 	const float modelIrisPosZ = 0.97;
 	const float eyeRefractRatio = 1.0/1.3;
 	vec3 modelVertDir = normalize(vertOut.modelPos - vertOut.modelCameraPos);

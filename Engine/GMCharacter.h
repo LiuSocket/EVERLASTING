@@ -81,16 +81,33 @@ namespace GM
 		* @return bool 成功OK，失败Fail，角色不存在返回NotExist
 		*/
 		bool InitAnimation(const std::string& strName, osg::Node* pNode);
+		/** @brief 传入眼睛的变幻节点的vector */
+		void InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v);
 
 	private:
 		void _InnerUpdate(const double dDeltaTime);
 		/** @brief 定时更新眨眼状态 */
 		void _InnerUpdateBlink(const double dDeltaTime);
+		/** @brief 定时更新嘴唇状态 */
+		void _InnerUpdateLip(const double dDeltaTime);
 		/** @brief 改变注视方向 */
 		void _ChangeLookDir(const double dDeltaTime);
 
 		/** @brief 每帧更新转头动画的过渡状态 */
-		void _UpdateLookDir(const double dDeltaTime);
+		void _UpdateLookAnimation(const double dDeltaTime);
+		/** @brief 每帧更新眼球方向 */
+		void _UpdateEye(const double dDeltaTime);
+
+		/**
+		* @brief 设置眼球相对于眼睛的方向
+		* @param fHeading: 眼球偏航角，左正右负，单位：°
+		* @param fPitch: 眼球俯仰角，上正下负，单位：°
+		*/
+		inline void _SetEyeFinalDir(float fHeading, float fPitch)
+		{
+			m_fEyeBallFinalHeading = osg::DegreesToRadians(fHeading);
+			m_fEyeBallFinalPitch = osg::DegreesToRadians(fPitch);
+		}
 
 		/**
 		* @brief 平滑过渡函数
@@ -114,10 +131,11 @@ namespace GM
 		std::uniform_int_distribution<> m_iRandomAngle;			//!< 随机角度分布，[0,360]
 
 		std::string m_strName = "";								//!< 角色名称
-		float m_fLookDuration = 10.0;							//!< 注视持续时间，单位：秒
+		float m_fLookDuration = 2.0f;							//!< 注视持续时间，单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头耗时，单位：秒
 		float m_fMixTime = 1.0f;								//!< 当前混合所经过的时间，单位：秒
-
+		float m_fHeading = 0.0f;								//!< 眼睛偏航角，左正右负，单位：°
+		float m_fPitch = 0.0f;									//!< 眼睛俯仰角，上正下负，单位：°
 		float m_fHeadingTargetWeight = 0;						//!< 转向动画的目标权重
 		float m_fPitchTargetWeight = 0;							//!< 俯仰动画的目标权重
 		float m_fHeadingSourceWeight = 0;						//!< 转向动画的起始权重
@@ -132,5 +150,12 @@ namespace GM
 
 		std::vector<std::string> m_strBoneAnimNameVec;			//!< 骨骼动画名称vector
 		std::vector<std::string> m_strMorphAnimNameVec;			//!< 变形动画名称vector
+
+		std::vector<osg::ref_ptr<osg::Transform>> m_pEyeTransVector; //!< 眼球的变幻节点
+		std::vector<osg::Matrix> m_mEyeTransVector;				//!< 眼球的变幻矩阵
+		float m_fEyeBallFinalHeading = 0.0f;					//!< 眼球的最终偏航角，左正右负，单位：弧度
+		float m_fEyeBallFinalPitch = 0.0f;						//!< 眼球俯最终仰角，上正下负，单位：弧度
+		float m_fEyeBallHeading = 0.0f;							//!< 眼球当前偏航角，左正右负，单位：弧度
+		float m_fEyeBallPitch = 0.0f;							//!< 眼球当前俯仰角，上正下负，单位：弧度
 	};
 }	// GM

@@ -78,6 +78,15 @@ namespace GM
 		*/
 		void SetShader(osg::StateSet* pStateSet, EGMMaterial eMaterial);
 
+		/**
+		* @brief 获取眼睛的变幻节点的vector
+		* @param v: 有则返回节点指针的vector
+		*/
+		void GetEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v) const
+		{
+			v = m_pEyeTransVector;
+		}
+
 	private:
 		/**
 		* @brief 判断当前纹理单元是否已经被占用，如果被占用，则++（跳过被占用的纹理单元）
@@ -97,7 +106,6 @@ namespace GM
 		osg::ref_ptr<osgDB::Options>			m_pDDSOptions;							//!< dds的纹理操作
 		// 默认的各个材质的贴图，用于补齐纹理单元
 		std::vector<osg::ref_ptr<osg::Texture2D>> m_pPBRTexVector;						//!< PBR模型的纹理单元默认贴图
-
 		// 共用贴图
 		osg::ref_ptr<osg::Texture2D>			m_pRainRippleTex;						//!< 水面涟漪
 		osg::ref_ptr<osg::Texture2D>			m_pWetNormalTex;						//!< 潮湿表面法线贴图
@@ -108,6 +116,8 @@ namespace GM
 
 		std::vector<osg::ref_ptr<osg::TextureCubeMap>> m_pCubeMapVector; //!< cubemap数组，6个方向6层level
 		std::vector<osg::ref_ptr<CGMDispatchCompute>> m_pMipmapComputeVec; // 生成自定义mipmap的计算着色器节点
+
+		std::vector<osg::ref_ptr<osg::Transform>>	m_pEyeTransVector;					//!< 眼睛的变幻节点
 	};
 
 }	// GM

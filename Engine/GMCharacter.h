@@ -41,6 +41,8 @@ namespace GM
 	{
 		/** 眨眼 */
 		EA_MORPH_BLINK,
+		/** 口型的idle动画 */
+		EA_MORPH_IDLE,
 		/** 口型“啊” */
 		EA_MORPH_AA,
 		/** 口型“哦” */

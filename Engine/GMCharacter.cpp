@@ -46,6 +46,7 @@ CGMCharacter::CGMCharacter()
 	m_strBoneAnimNameVec.push_back("bone_head_D");
 
 	m_strMorphAnimNameVec.push_back("eye_blink");
+	m_strMorphAnimNameVec.push_back("mouth_idle");
 	m_strMorphAnimNameVec.push_back("mouth_aa");
 	m_strMorphAnimNameVec.push_back("mouth_oo");
 }
@@ -111,8 +112,8 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_AA));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 }
 
 void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v)
@@ -149,15 +150,18 @@ void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
 
 void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 {
-	//static double s_fAATime = 0.0;
-	//static double s_fDeltaAATime = 2.0;
-	//if (s_fAATime > s_fDeltaAATime)
-	//{
-	//	GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_AA));
-	//	s_fAATime = 0.0;
-	//	s_fDeltaAATime = m_iPseudoNoise(m_iRandom) * 0.1 + 2.0;
-	//}
-	//s_fAATime += dDeltaTime;
+	static double s_fAATime = 0.0;
+	static double s_fDeltaAATime = 2.0;
+	if (s_fAATime > s_fDeltaAATime)
+	{
+		float fMorphDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 2;
+		GM_ANIMATION.SetAnimationDuration(m_strName, fMorphDuration, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
+
+		s_fAATime = 0.0;
+		s_fDeltaAATime = m_iPseudoNoise(m_iRandom) * 0.1 + fMorphDuration;
+	}
+	s_fAATime += dDeltaTime;
 }
 
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)

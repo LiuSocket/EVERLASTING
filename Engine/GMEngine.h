@@ -72,11 +72,21 @@ namespace GM
         /** @brief 保存 */
         bool Save();
         /**
-        * 修改屏幕尺寸时调用此函数
+        * @brief 修改屏幕尺寸时调用此函数
         * @param iW: 屏幕宽度
         * @param iH: 屏幕高度
         */
         void ResizeScreen(const int iW, const int iH);
+        /**
+        * @brief 开启/关闭注视功能
+        * @param bEnable 开启/关闭
+        */
+        void SetLookTargetEnable(bool bEnable);
+        /**
+        * @brief 设置注视目标位置
+        * @param vTargetScreenPos 目标点的屏幕XY坐标
+        */
+        void SetLookTargetPos(const osg::Vec2f& vTargetScreenPos);
         /**
         * @brief 开启/暂停渲染，最小化或者其他软件置顶时可以关闭渲染
         *  关闭是为了最小化时不浪费显卡资源

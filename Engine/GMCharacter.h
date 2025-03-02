@@ -49,6 +49,58 @@ namespace GM
 	/*************************************************************************
 	 Structs
 	*************************************************************************/
+	/*!
+	 *  @struct SGMAnimData
+	 *  @brief 动画数据结构体
+	 */
+	struct SGMAnimData
+	{
+		/** @brief 构造 */
+		SGMAnimData(EGMANIMATION_BONE eAnim)
+			: eAnimation(eAnim)
+		{}
+		/**
+		* @brief 将权重设置得更接近目标
+		* @param fDeltaTime 间隔时间，单位：秒
+		* @return bool:	如果当前权重等于目标权重，则返回false，否则返回true
+		*/
+		bool SetWeightCloserToTarget(const float fDeltaTime)
+		{
+			if (fWeightNow == fWeightTarget) return false;
+
+			// 后续会根据角色心情调整速度系数
+			float fStep = 5*fDeltaTime*abs(fWeightTarget - fWeightSource);
+
+			if (fWeightNow < fWeightTarget)
+			{
+				fWeightNow += fStep;
+				fWeightNow = fmin(fWeightNow, fWeightTarget);
+			}
+			else
+			{
+				fWeightNow -= fStep;
+				fWeightNow = fmax(fWeightNow, fWeightTarget);
+			}
+			return true;
+		}
+		/**
+		* @brief 将权重在源权重和目标权重之间做差值混合
+		* @param fMix 混合系数，参考glsl的mix函数
+		* @return bool:	如果当前权重等于目标权重，则返回false，否则返回true
+		*/
+		inline bool SetWeightMix(const float fMix)
+		{
+			if (fWeightNow == fWeightTarget) return false;
+			fWeightNow = fWeightSource * (1 - fMix) + fWeightTarget * fMix;
+			return true;
+		}
+
+		float fWeightSource = 0;
+		float fWeightNow = 0;
+		float fWeightTarget = 0;
+		EGMANIMATION_BONE eAnimation = EA_BONE_HEAD_L;
+		bool bAnimOn = false;
+	};
 
 	/*************************************************************************
 	 Class
@@ -84,6 +136,23 @@ namespace GM
 		/** @brief 传入眼睛的变幻节点的vector */
 		void InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v);
 
+		/**
+		* @brief 开启/关闭注视功能
+		* @param bEnable 开启/关闭
+		*/
+		inline void SetLookTargetEnable(bool bEnable)
+		{
+			m_bLookAtTarget = bEnable;
+		}
+		/**
+		* @brief 设置注视目标位置
+		* @param vTargetWorldPos 目标点的世界空间坐标，单位：cm
+		*/
+		inline void SetLookTargetPos(const osg::Vec3d& vTargetWorldPos)
+		{
+			m_vTargetWorldPos = vTargetWorldPos;
+		}
+
 	private:
 		void _InnerUpdate(const double dDeltaTime);
 		/** @brief 定时更新眨眼状态 */
@@ -92,11 +161,37 @@ namespace GM
 		void _InnerUpdateLip(const double dDeltaTime);
 		/** @brief 改变注视方向 */
 		void _ChangeLookDir(const double dDeltaTime);
+		/** @brief 注视目标 */
+		void _ChangeLookAtTarget(const double dDeltaTime);
+		/** @brief 四处张望 */
+		void _ChangeLookAround(const double dDeltaTime);
+		/** @brief 改变目标动画 */
+		void _ChangeTargetAnimation(const float fTargetHeading, const float fTargetPitch);
 
 		/** @brief 每帧更新转头动画的过渡状态 */
 		void _UpdateLookAnimation(const double dDeltaTime);
+		/** @brief 每帧更新转头动画的过渡状态 */
+		void _UpdateLookAt(const double dDeltaTime);
+		/** @brief 每帧更新四处张望动画的过渡状态 */
+		void _UpdateLookAround(const double dDeltaTime);
 		/** @brief 每帧更新眼球方向 */
 		void _UpdateEye(const double dDeltaTime);
+
+		/**
+		* @brief 将上下左右动画的权重设置得更接近目标
+		* @param fDeltaTime 间隔时间，单位：秒
+		* @return bool:	如果上下左右动画的当前权重都等于目标权重，则返回false，否则返回true
+		*/
+		bool _SetWeightCloserToTarget(const float fDeltaTime);
+		/**
+		* @brief 将上下左右动画的权重在源权重和目标权重之间做差值混合
+		* @param fMix 混合系数，参考glsl的mix函数
+		* @return bool:	如果上下左右动画的当前权重都等于目标权重，则返回false，否则返回true
+		*/
+		bool _SetWeightMix(const float fMix);
+
+		void _UpdateAnimationWeight();
+		void _StopAnimation();
 
 		/**
 		* @brief 设置眼球相对于眼睛的方向
@@ -131,22 +226,22 @@ namespace GM
 		std::uniform_int_distribution<> m_iRandomAngle;			//!< 随机角度分布，[0,360]
 
 		std::string m_strName = "";								//!< 角色名称
+
 		float m_fLookDuration = 2.0f;							//!< 注视持续时间，单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头耗时，单位：秒
-		float m_fMixTime = 1.0f;								//!< 当前混合所经过的时间，单位：秒
-		float m_fHeading = 0.0f;								//!< 眼睛偏航角，左正右负，单位：°
-		float m_fPitch = 0.0f;									//!< 眼睛俯仰角，上正下负，单位：°
-		float m_fHeadingTargetWeight = 0;						//!< 转向动画的目标权重
-		float m_fPitchTargetWeight = 0;							//!< 俯仰动画的目标权重
-		float m_fHeadingSourceWeight = 0;						//!< 转向动画的起始权重
-		float m_fPitchSourceWeight = 0;							//!< 俯仰动画的起始权重
-		osg::Vec2 m_vHeadingWeight = osg::Vec2(0, 0);			//!< 2个转向动画的权重, x = left, y = right
-		osg::Vec2 m_vPitchWeight = osg::Vec2(0, 0);				//!< 2个俯仰动画的权重, x= up, y = down
+		float m_fFastTurnDuration = 0.5f;						//!< 快速转头耗时，单位：秒
+		float m_fMixTime = 0.0f;								//!< 当前混合所经过的时间，单位：秒
 
-		EGMANIMATION_BONE m_eHeadingAnim = EA_BONE_HEAD_L;		//!< 转向动画
+		float m_fTargetHeading = 0.0f;							//!< 眼睛偏航角，左正右负，单位：°
+		float m_fTargetPitch = 0.0f;							//!< 眼睛俯仰角，上正下负，单位：°
+
+		SGMAnimData m_animL = SGMAnimData(EA_BONE_HEAD_L);		//!< left动作的权重
+		SGMAnimData m_animR = SGMAnimData(EA_BONE_HEAD_R);		//!< right动作的权重
+		SGMAnimData m_animU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作的权重
+		SGMAnimData m_animD = SGMAnimData(EA_BONE_HEAD_D);		//!< down动作的权重
+
 		EGMANIMATION_BONE m_eNextHeadingAnim = EA_BONE_HEAD_L;	//!< 下一个转向动画
-		EGMANIMATION_BONE m_ePitchAnim = EA_BONE_HEAD_U;			//!< 俯仰动画
-		EGMANIMATION_BONE m_eNextPitchAnim = EA_BONE_HEAD_U;		//!< 下一个俯仰动画
+		EGMANIMATION_BONE m_eNextPitchAnim = EA_BONE_HEAD_U;	//!< 下一个俯仰动画
 
 		std::vector<std::string> m_strBoneAnimNameVec;			//!< 骨骼动画名称vector
 		std::vector<std::string> m_strMorphAnimNameVec;			//!< 变形动画名称vector
@@ -157,5 +252,8 @@ namespace GM
 		float m_fEyeBallFinalPitch = 0.0f;						//!< 眼球俯最终仰角，上正下负，单位：弧度
 		float m_fEyeBallHeading = 0.0f;							//!< 眼球当前偏航角，左正右负，单位：弧度
 		float m_fEyeBallPitch = 0.0f;							//!< 眼球当前俯仰角，上正下负，单位：弧度
+
+		bool m_bLookAtTarget = false;							//!< 是否注视目标
+		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 注视目标点的世界空间坐标，单位：cm
 	};
 }	// GM

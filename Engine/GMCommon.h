@@ -50,7 +50,7 @@ namespace GM
         std::string						strCorePath = "../../Data/Core/";       //!< 核心资源路径
         std::wstring					strMediaPath = L"../../Data/Media/";    //!< 外部资源路径
         EGMRENDER_QUALITY				eRenderQuality = EGMRENDER_LOW;         //!< 高画质模式
-        float							fFovy = 40.0f;                          //!< 相机的垂直FOV，单位：°
+        float							fFovy = 15.0f;                          //!< 相机的垂直FOV，单位：°
         int								iScreenWidth = 1920;                    //!< 屏幕宽度，单位：像素
         int								iScreenHeight = 1080;                   //!< 屏幕高度，单位：像素
     };

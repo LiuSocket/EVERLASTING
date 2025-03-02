@@ -130,7 +130,7 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	_InnerUpdateBlink(dDeltaTime);
 	// 嘴唇
 	_InnerUpdateLip(dDeltaTime);
-	// 眼睛四处看
+	// 眼睛转向
 	_ChangeLookDir(dDeltaTime);
 }
 
@@ -162,8 +162,33 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 {
-	static double s_fLookTime = 0.0;
-	if (s_fLookTime > m_fTurnDuration) // 注视的时候
+	// 如果强迫角色注视目标点，则注视一段时间
+	if (m_bLookAtTarget)
+	{
+		_ChangeLookAtTarget(dDeltaTime);
+	}
+	else // 否则则执行“四处张望”的功能
+	{	
+		_ChangeLookAround(dDeltaTime);
+	}
+}
+
+void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
+{
+	_SetEyeFinalDir(0, 0);
+
+	osg::Vec3d vDir = m_vTargetWorldPos - osg::Vec3d(0.0, -1.0, 12.0);
+	vDir.normalize();
+
+	float fTargetHeading = osg::RadiansToDegrees(std::atan2(-vDir.x(), -vDir.y()));
+	float fTargetPitch = osg::RadiansToDegrees(std::asin(vDir.z()));
+	_ChangeTargetAnimation(fTargetHeading, fTargetPitch);
+}
+
+void CGMCharacter::_ChangeLookAround(const double dDeltaTime)
+{
+	static double s_fLookAroundTime = 0.0;
+	if (s_fLookAroundTime > m_fTurnDuration) // 朝向固定的时候
 	{
 		static int s_i = 0;
 		if (s_i > 20)
@@ -176,19 +201,19 @@ void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 		s_i++;
 	}
 
-	if (s_fLookTime >= (m_fLookDuration + m_fTurnDuration)) // 注视结束
+	if (s_fLookAroundTime >= (m_fLookDuration + m_fTurnDuration)) // 开始改变朝向
 	{
 		float fDeltaHeading = m_iRandomAngle(m_iRandom) / 3 - 60; // [-60, 60]
 		float fDeltaPitch = m_iRandomAngle(m_iRandom) / 12 - 15; // [-15, 15]
 
 		// 下一个偏转角，[-90, 90]
-		float fHeading = m_fHeading + fDeltaHeading;
+		float fHeading = m_fTargetHeading + fDeltaHeading;
 		if (fHeading < -90) fHeading += 90;
 		else if (fHeading > 90) fHeading -= 90;
 		else {}
 
 		// 下一个俯仰角，[-30, 30]
-		float fPitch = m_fPitch + fDeltaPitch;
+		float fPitch = m_fTargetPitch + fDeltaPitch;
 		if (fPitch < -30) fPitch += 30;
 		else if (fPitch > 30) fPitch -= 30;
 		else {}
@@ -199,102 +224,117 @@ void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 		fPitch *= fCenterCloser;
 
 		// 计算当前朝向与下一个朝向的差值，以便于设置转向时间
-		fDeltaHeading = fHeading - m_fHeading;
-		fDeltaPitch = fPitch - m_fPitch;
+		fDeltaHeading = fHeading - m_fTargetHeading;
+		fDeltaPitch = fPitch - m_fTargetPitch;
 		float fDeltaAngle = abs(fDeltaHeading) + abs(fDeltaPitch);
 		// 眼球先动，眼睛再跟着专向
 		_SetEyeFinalDir(osg::clampTo(fDeltaHeading, -10.0f, 10.0f), osg::clampTo(fDeltaPitch, -20.0f, 20.0f));
 
-		// 最终的俯仰和偏航角
-		m_fHeading = fHeading;
-		m_fPitch = fPitch;
-		m_fHeadingSourceWeight = m_fHeadingTargetWeight;
-		m_fHeadingTargetWeight = abs(m_fHeading) / 90;
-		m_fPitchSourceWeight = m_fPitchTargetWeight;
-		m_fPitchTargetWeight = abs(m_fPitch) / 90;
+		m_animL.fWeightSource = m_animL.fWeightTarget;
+		m_animR.fWeightSource = m_animR.fWeightTarget;
+		m_animU.fWeightSource = m_animU.fWeightTarget;
+		m_animD.fWeightSource = m_animD.fWeightTarget;
 
-		m_eNextHeadingAnim = (m_fHeading > 0) ? EA_BONE_HEAD_R : EA_BONE_HEAD_L;
-		if (EA_BONE_HEAD_R == m_eHeadingAnim)// 如果原来朝右
-			m_vHeadingWeight = osg::Vec2(0, m_fHeadingSourceWeight);
-		else// 如果原来朝左
-			m_vHeadingWeight = osg::Vec2(m_fHeadingSourceWeight, 0);
+		// 这里要保证传入的是最终的俯仰和偏航角
+		_ChangeTargetAnimation(fHeading, fPitch);
 
-		m_eNextPitchAnim = (fPitch > 0) ? EA_BONE_HEAD_U : EA_BONE_HEAD_D;
-		if (EA_BONE_HEAD_D == m_ePitchAnim)// 如果原来朝下
-			m_vPitchWeight = osg::Vec2(0, m_fPitchSourceWeight);
-		else// 如果原来朝上
-			m_vPitchWeight = osg::Vec2(m_fPitchSourceWeight, 0);
-
-		if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(m_eNextHeadingAnim)))
-			GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextHeadingAnim), 1e-5f);
-		if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim)))
-			GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim), 1e-5f);
-
-		s_fLookTime = 0.0;
-		m_fMixTime = 0.0f;//重置混合时间，开始混合动画
+		s_fLookAroundTime = 0.0;
+		//重置混合时间，开始混合动画
+		m_fMixTime = 0.0f;
 		m_fLookDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 0.5;
 		m_fTurnDuration = (m_iPseudoNoise(m_iRandom) * 0.0001 + 0.01) * fDeltaAngle + 0.3;
 	}
-	s_fLookTime += dDeltaTime;
+	s_fLookAroundTime += dDeltaTime;
+}
+
+void CGMCharacter::_ChangeTargetAnimation(const float fTargetHeading, const float fTargetPitch)
+{
+	m_fTargetHeading = fTargetHeading;
+	m_fTargetPitch = fTargetPitch;
+	if (m_fTargetHeading < 0) //需要朝左
+	{
+		m_animL.fWeightSource = m_animL.fWeightNow;
+		m_animL.fWeightTarget = abs(m_fTargetHeading) / 90;
+		m_animL.bAnimOn = true;
+
+		m_animR.fWeightSource = m_animR.fWeightNow;
+		m_animR.fWeightTarget = 0;
+
+		m_eNextHeadingAnim = EA_BONE_HEAD_L;
+	}
+	else //需要朝右
+	{
+		m_animL.fWeightSource = m_animL.fWeightNow;
+		m_animL.fWeightTarget = 0;
+
+		m_animR.fWeightSource = m_animR.fWeightNow;
+		m_animR.fWeightTarget = abs(m_fTargetHeading) / 90;
+		m_animR.bAnimOn = true;
+
+		m_eNextHeadingAnim = EA_BONE_HEAD_R;
+	}
+
+	if (m_fTargetPitch < 0) //需要朝下
+	{
+		m_animU.fWeightSource = m_animU.fWeightNow;
+		m_animU.fWeightTarget = 0;
+
+		m_animD.fWeightSource = m_animD.fWeightNow;
+		m_animD.fWeightTarget = abs(m_fTargetPitch) / 90;
+		m_animD.bAnimOn = true;
+
+		m_eNextPitchAnim = EA_BONE_HEAD_D;
+	}
+	else //需要朝上
+	{
+		m_animU.fWeightSource = m_animU.fWeightNow;
+		m_animU.fWeightTarget = abs(m_fTargetPitch) / 90;
+		m_animU.bAnimOn = true;
+
+		m_animD.fWeightSource = m_animD.fWeightNow;
+		m_animD.fWeightTarget = 0;
+
+		m_eNextPitchAnim = EA_BONE_HEAD_U;
+	}
+
+	if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(m_eNextHeadingAnim)))
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextHeadingAnim), 1e-5f);
+	if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim)))
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim), 1e-5f);
 }
 
 void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
 {
+	if (m_bLookAtTarget)
+	{
+		_UpdateLookAt(dDeltaTime);
+	}
+	else
+	{
+		_UpdateLookAround(dDeltaTime);
+	}
+}
+
+void CGMCharacter::_UpdateLookAt(const double dDeltaTime)
+{
+	if (_SetWeightCloserToTarget(dDeltaTime))
+	{
+		_UpdateAnimationWeight();
+		_StopAnimation();
+	}
+}
+
+void CGMCharacter::_UpdateLookAround(const double dDeltaTime)
+{
 	if (m_fMixTime >= m_fTurnDuration) return;
 	float fMix = _Smoothstep(0.0, m_fTurnDuration, m_fMixTime);
-
-	if (EA_BONE_HEAD_L == m_eNextHeadingAnim)
+	if (_SetWeightMix(fMix))
 	{
-		if(EA_BONE_HEAD_L == m_eHeadingAnim)
-			m_vHeadingWeight = CGMKit::Mix(osg::Vec2(m_fHeadingSourceWeight, 0), osg::Vec2(m_fHeadingTargetWeight, 0), fMix);
-		else if(EA_BONE_HEAD_R == m_eHeadingAnim)
-			m_vHeadingWeight = CGMKit::Mix(osg::Vec2(0, m_fHeadingSourceWeight), osg::Vec2(m_fHeadingTargetWeight, 0), fMix);
-		else{}
+		_UpdateAnimationWeight();
+		_StopAnimation();
 	}
-	else
-	{
-		if (EA_BONE_HEAD_L == m_eHeadingAnim)
-			m_vHeadingWeight = CGMKit::Mix(osg::Vec2(m_fHeadingSourceWeight, 0), osg::Vec2(0, m_fHeadingTargetWeight), fMix);
-		else if (EA_BONE_HEAD_R == m_eHeadingAnim)
-			m_vHeadingWeight = CGMKit::Mix(osg::Vec2(0, m_fHeadingSourceWeight), osg::Vec2(0, m_fHeadingTargetWeight), fMix);
-		else {}
-	}
-
-	if (EA_BONE_HEAD_U == m_eNextPitchAnim)
-	{
-		if (EA_BONE_HEAD_U == m_ePitchAnim)
-			m_vPitchWeight = CGMKit::Mix(osg::Vec2(m_fPitchSourceWeight, 0), osg::Vec2(m_fPitchTargetWeight, 0), fMix);
-		else if (EA_BONE_HEAD_D == m_ePitchAnim)
-			m_vPitchWeight = CGMKit::Mix(osg::Vec2(0, m_fPitchSourceWeight), osg::Vec2(m_fPitchTargetWeight, 0), fMix);
-		else {}
-	}
-	else
-	{
-		if (EA_BONE_HEAD_U == m_ePitchAnim)
-			m_vPitchWeight = CGMKit::Mix(osg::Vec2(m_fPitchSourceWeight, 0), osg::Vec2(0, m_fPitchTargetWeight), fMix);
-		else if (EA_BONE_HEAD_D == m_ePitchAnim)
-			m_vPitchWeight = CGMKit::Mix(osg::Vec2(0, m_fPitchSourceWeight), osg::Vec2(0, m_fPitchTargetWeight), fMix);
-		else {}
-	}
-
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L), m_vHeadingWeight.x());
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R), m_vHeadingWeight.y());
-
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U), m_vPitchWeight.x());
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D), m_vPitchWeight.y());
-
-	if (0 == m_vHeadingWeight.y() && EA_BONE_HEAD_L == m_eNextHeadingAnim)
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R), 0);
-	if (0 == m_vHeadingWeight.x() && EA_BONE_HEAD_R == m_eNextHeadingAnim)
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L), 0);
-
-	if (0 == m_vPitchWeight.y() && EA_BONE_HEAD_U == m_eNextPitchAnim)
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D), 0);
-	if (0 == m_vPitchWeight.x() && EA_BONE_HEAD_D == m_eNextPitchAnim)
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U), 0);
-
 	m_fMixTime += dDeltaTime;
-	if (m_fMixTime > 0.7*m_fTurnDuration)
+	if (m_fMixTime > 0.7 * m_fTurnDuration)
 	{
 		// 这个函数目前会多次进入，但不影响性能，所以暂且不管
 		// 眼球回到正前方
@@ -303,9 +343,6 @@ void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
 	if (m_fMixTime > m_fTurnDuration)
 	{
 		m_fMixTime = m_fTurnDuration;
-		m_eHeadingAnim = m_eNextHeadingAnim;
-		m_ePitchAnim = m_eNextPitchAnim;
-
 	}
 }
 
@@ -349,5 +386,64 @@ void CGMCharacter::_UpdateEye(const double dDeltaTime)
 		m_fEyeBallPitch -= fDeltaAngle;
 		if (m_fEyeBallFinalPitch > m_fEyeBallPitch)
 			m_fEyeBallPitch = m_fEyeBallFinalPitch;
+	}
+}
+
+bool CGMCharacter::_SetWeightCloserToTarget(const float fDeltaTime)
+{
+	bool bLeft = m_animL.SetWeightCloserToTarget(fDeltaTime);
+	bool bRight = m_animR.SetWeightCloserToTarget(fDeltaTime);
+
+	bool bUp = m_animU.SetWeightCloserToTarget(fDeltaTime);
+	bool bDown = m_animD.SetWeightCloserToTarget(fDeltaTime);
+
+	return bLeft || bRight || bUp || bDown;
+}
+
+bool CGMCharacter::_SetWeightMix(const float fMix)
+{
+	bool bLeft = m_animL.SetWeightMix(fMix);
+	bool bRight = m_animR.SetWeightMix(fMix);
+
+	bool bUp = m_animU.SetWeightMix(fMix);
+	bool bDown = m_animD.SetWeightMix(fMix);
+
+	return bLeft || bRight || bUp || bDown;
+}
+
+void CGMCharacter::_UpdateAnimationWeight()
+{
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L), m_animL.fWeightNow);
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R), m_animR.fWeightNow);
+
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U), m_animU.fWeightNow);
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D), m_animD.fWeightNow);
+}
+
+void CGMCharacter::_StopAnimation()
+{
+	if (0 == m_animR.fWeightNow && EA_BONE_HEAD_L == m_eNextHeadingAnim)
+	{
+		m_animR.fWeightSource = m_animR.fWeightTarget;
+		m_animR.bAnimOn = false;
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R), 0);
+	}
+	if (0 == m_animL.fWeightNow && EA_BONE_HEAD_R == m_eNextHeadingAnim)
+	{
+		m_animL.fWeightSource = m_animL.fWeightTarget;
+		m_animL.bAnimOn = false;
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L), 0);
+	}
+	if (0 == m_animD.fWeightNow && EA_BONE_HEAD_U == m_eNextPitchAnim)
+	{
+		m_animD.fWeightSource = m_animD.fWeightTarget;
+		m_animD.bAnimOn = false;
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D), 0);
+	}
+	if (0 == m_animU.fWeightNow && EA_BONE_HEAD_D == m_eNextPitchAnim)
+	{
+		m_animU.fWeightSource = m_animU.fWeightTarget;
+		m_animU.bAnimOn = false;
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U), 0);
 	}
 }

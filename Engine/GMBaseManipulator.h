@@ -161,7 +161,8 @@ namespace GM
 		osg::Vec2f				m_vMousePushScreenPos;			// 鼠标点击的屏幕XY坐标
 		osg::Vec2f				m_vMouseLastScreenPos;			// 上一帧鼠标点击的屏幕XY坐标
 		osg::Vec2f				m_vMouseDragLastScreenPos;		// 拖拽时，上一帧鼠标的屏幕XY坐标
-		bool					m_bDoubleClick;					// 是否处于双击状态
+		bool					m_bLeftPush = false;			// 是否左键按下
+		bool					m_bDoubleLeftClick = false;		// 是否左键双击
 	};
 
 }	// GM

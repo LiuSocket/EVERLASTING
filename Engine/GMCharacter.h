@@ -41,6 +41,10 @@ namespace GM
 	{
 		/** 眨眼 */
 		EA_MORPH_BLINK,
+		/** 半闭眼 */
+		EA_MORPH_HALF,
+		/** 惊讶地睁大眼睛 */
+		EA_MORPH_SURPRISE,
 		/** 口型的idle动画 */
 		EA_MORPH_IDLE,
 		/** 口型“啊” */
@@ -229,7 +233,8 @@ namespace GM
 
 		std::string m_strName = "";								//!< 角色名称
 
-		float m_fLookDuration = 2.0f;							//!< 注视持续时间，单位：秒
+		float m_fLookAtTargetTime = 0.0f;						//!< 注视目标的持续时间，单位：秒
+		float m_fLookDuration = 2.0f;							//!< 注视持续时间（不是注视目标），单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头耗时，单位：秒
 		float m_fFastTurnDuration = 0.5f;						//!< 快速转头耗时，单位：秒
 		float m_fMixTime = 0.0f;								//!< 当前混合所经过的时间，单位：秒
@@ -255,7 +260,13 @@ namespace GM
 		float m_fEyeBallHeading = 0.0f;							//!< 眼球当前偏航角，左正右负，单位：弧度
 		float m_fEyeBallPitch = 0.0f;							//!< 眼球当前俯仰角，上正下负，单位：弧度
 
-		bool m_bLookAtTarget = false;							//!< 是否注视目标
-		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 注视目标点的世界空间坐标，单位：cm
+		bool m_bIgnoreTarget = false;							//!< 是否忽略目标
+		bool m_bLookAtTarget = false;							//!< 是否要求注视目标
+		bool m_bSurprise = false;								//!< 是否惊讶
+		bool m_bEyeHalf = false;								//!< 是否半闭眼
+		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm
+		osg::Vec3d m_vTargetLastWorldPos = osg::Vec3d(0, -30, 0);//!< 目标点上一次指定的世界空间坐标，单位：cm
+		osg::Vec3d m_vTargetLastVelocity = osg::Vec3d(0, 0, 0);	//!< 目标点上一次的速度，单位：cm/s
+		osg::Vec3d m_vTargetAcceleration = osg::Vec3d(0, 0, 0);	//!< 目标点的加速度，单位：cm/(s*s)
 	};
 }	// GM

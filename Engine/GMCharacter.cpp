@@ -29,6 +29,9 @@ Global Constants
 #define  MORPH_PRIORITY_HIGH				(1)		// 变形动画“高”优先级
 #define  MORPH_PRIORITY_NORMAL				(0)		// 变形动画“普通”优先级
 
+#define  DISDANE_TIME						(2)		// 鄙视持续时间，单位：秒
+
+
 /*************************************************************************
 CGMCharacter Methods
 *************************************************************************/
@@ -46,6 +49,8 @@ CGMCharacter::CGMCharacter()
 	m_strBoneAnimNameVec.push_back("bone_head_D");
 
 	m_strMorphAnimNameVec.push_back("eye_blink");
+	m_strMorphAnimNameVec.push_back("eye_half");
+	m_strMorphAnimNameVec.push_back("eye_surprise");
 	m_strMorphAnimNameVec.push_back("mouth_idle");
 	m_strMorphAnimNameVec.push_back("mouth_aa");
 	m_strMorphAnimNameVec.push_back("mouth_oo");
@@ -112,8 +117,22 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_OO));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_OO));
+
+	return true;
 }
 
 void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v)
@@ -127,19 +146,20 @@ void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v
 
 void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 {
+	// 眼睛转向
+	_ChangeLookDir(dDeltaTime);
 	// 眨眼
 	_InnerUpdateBlink(dDeltaTime);
 	// 嘴唇
 	_InnerUpdateLip(dDeltaTime);
-	// 眼睛转向
-	_ChangeLookDir(dDeltaTime);
 }
 
 void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
 {
 	static double s_fBlinkTime = 0.0;
 	static double s_fDeltaBlinkTime = 2.0;
-	if (s_fBlinkTime > s_fDeltaBlinkTime)
+	// “惊讶”和“半闭眼”时不眨眼
+	if (s_fBlinkTime > s_fDeltaBlinkTime && !m_bSurprise && !m_bIgnoreTarget)
 	{
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 		s_fBlinkTime = 0.0;
@@ -152,7 +172,8 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 {
 	static double s_fAATime = 0.0;
 	static double s_fDeltaAATime = 2.0;
-	if (s_fAATime > s_fDeltaAATime)
+	// “惊讶”和“半闭眼”时不会做其他口型
+	if (s_fAATime > s_fDeltaAATime && !m_bSurprise && !m_bIgnoreTarget)
 	{
 		float fMorphDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 2;
 		GM_ANIMATION.SetAnimationDuration(m_strName, fMorphDuration, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
@@ -166,27 +187,92 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 {
+	static float fAfterSurpriseTime = 0.0f;
+
 	// 如果强迫角色注视目标点，则注视一段时间
 	if (m_bLookAtTarget)
 	{
+		m_fLookAtTargetTime += dDeltaTime;
+		// “惊讶”过30秒之后才能再次“惊讶”
+		if (!m_bSurprise && (fAfterSurpriseTime > 30.0f))
+		{
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+
+			m_bSurprise = true;
+			fAfterSurpriseTime = 0.0f;
+		}
+
 		_ChangeLookAtTarget(dDeltaTime);
 	}
 	else // 否则则执行“四处张望”的功能
-	{	
+	{
+		m_fLookAtTargetTime = 0;
 		_ChangeLookAround(dDeltaTime);
 	}
+
+	fAfterSurpriseTime += dDeltaTime;
+	// 惊讶不过1秒
+	if (fAfterSurpriseTime > 1.0f) m_bSurprise = false;
 }
 
 void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 {
-	_SetEyeFinalDir(0, 0);
+	// 计算目标点的加速度
+	osg::Vec3d vTargetVelocity = (m_vTargetWorldPos - m_vTargetLastWorldPos) / dDeltaTime;
+	m_vTargetAcceleration = (vTargetVelocity - m_vTargetLastVelocity) / dDeltaTime;
+	m_vTargetLastVelocity = vTargetVelocity;
+	m_vTargetLastWorldPos = m_vTargetWorldPos;
 
-	osg::Vec3d vDir = m_vTargetWorldPos - osg::Vec3d(0.0, -1.0, 12.0);
-	vDir.normalize();
+	// 如果短时间内加速度模的累计值过大，说明目标在剧烈运动，可以认为在逗他
+	// 角色会放弃注视目标并看向前方一段时间，然后继续随意看，然后才能继续注视
+	static float s_fAcceSum = 0.0f;
+	static float s_fIgnoreTime = 0.0f;
+	static float s_fSumCheckTime = 0.0f;
 
-	float fTargetHeading = osg::RadiansToDegrees(std::atan2(-vDir.x(), -vDir.y()));
-	float fTargetPitch = osg::RadiansToDegrees(std::asin(vDir.z()));
-	_ChangeTargetAnimation(fTargetHeading, fTargetPitch);
+	s_fSumCheckTime += dDeltaTime;
+	if (s_fSumCheckTime > 3.0f)
+	{
+		if (s_fAcceSum > 6e4f)
+		{
+			m_bIgnoreTarget = true;
+			s_fIgnoreTime = 0.0f;
+			s_fAcceSum = 0.0f;
+
+			GM_ANIMATION.SetAnimationDuration(m_strName, 5.0f, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
+
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_IDLE), 0);
+		}
+		s_fSumCheckTime = 0.0f;
+	}
+
+	osg::Vec3d vDir = osg::Vec3d(0, -1, 0);
+	if (m_bIgnoreTarget)
+	{
+		s_fIgnoreTime += dDeltaTime;
+		if (s_fIgnoreTime > DISDANE_TIME*3)
+		{
+			m_bIgnoreTarget = false;
+			s_fIgnoreTime = 0.0f;
+			s_fAcceSum = 0.0f;
+		}
+	}
+	else
+	{
+		vDir = m_vTargetWorldPos - osg::Vec3d(0.0, -1.0, 12.0);
+		vDir.normalize();
+
+		s_fAcceSum += m_vTargetAcceleration.length();
+		_SetEyeFinalDir(0, 0);
+	}
+
+	// 默认为0，则会注视目标；鄙视时，会盯着前方，忽略目标
+	if (s_fIgnoreTime < DISDANE_TIME)
+	{
+		float fTargetHeading = osg::RadiansToDegrees(std::atan2(-vDir.x(), -vDir.y()));
+		float fTargetPitch = osg::RadiansToDegrees(std::asin(vDir.z()));
+		_ChangeTargetAnimation(fTargetHeading, fTargetPitch);
+	}
 }
 
 void CGMCharacter::_ChangeLookAround(const double dDeltaTime)

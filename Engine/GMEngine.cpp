@@ -285,9 +285,9 @@ void CGMEngine::ResizeScreen(const int iW, const int iH)
 		m_pPost->ResizeScreen(iW, iH);
 }
 
-void CGMEngine::SetLookTargetEnable(bool bEnable)
+void CGMEngine::SetLookTargetVisible(bool bVisible)
 {
-	m_pCharacter->SetLookTargetEnable(bEnable);
+	m_pCharacter->SetLookTargetVisible(bVisible);
 }
 
 void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)

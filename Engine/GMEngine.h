@@ -78,10 +78,10 @@ namespace GM
         */
         void ResizeScreen(const int iW, const int iH);
         /**
-        * @brief 开启/关闭注视功能
-        * @param bEnable 开启/关闭
+        * @brief 显示/隐藏目标
+        * @param bVisible 显示/隐藏
         */
-        void SetLookTargetEnable(bool bEnable);
+        void SetLookTargetVisible(bool bVisible);
         /**
         * @brief 设置注视目标位置
         * @param vTargetScreenPos 目标点的屏幕XY坐标

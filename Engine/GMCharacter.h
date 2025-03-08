@@ -68,14 +68,15 @@ namespace GM
 		/**
 		* @brief 将权重设置得更接近目标
 		* @param fDeltaTime 间隔时间，单位：秒
+		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[1,5]
 		* @return bool:	如果当前权重等于目标权重，则返回false，否则返回true
 		*/
-		bool SetWeightCloserToTarget(const float fDeltaTime)
+		bool SetWeightCloserToTarget(const float fDeltaTime, const float fSpeed)
 		{
 			if (fWeightNow == fWeightTarget) return false;
 
 			// 后续会根据角色心情调整速度系数
-			float fStep = 5*fDeltaTime*abs(fWeightTarget - fWeightSource);
+			float fStep = osg::clampTo(fSpeed, 1.0f, 5.0f)*fDeltaTime*abs(fWeightTarget - fWeightSource);
 
 			if (fWeightNow < fWeightTarget)
 			{
@@ -143,20 +144,23 @@ namespace GM
 		void InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v);
 
 		/**
-		* @brief 开启/关闭注视功能
-		* @param bEnable 开启/关闭
+		* @brief 显示/隐藏目标，目标不可见后，角色还会在那个方向疑惑片刻
+		* @param bVisible 显示/隐藏
 		*/
-		inline void SetLookTargetEnable(bool bEnable)
+		inline void SetLookTargetVisible(bool bVisible)
 		{
-			m_bLookAtTarget = bEnable;
+			m_bTargetVisible = bVisible;
+			// 如果目标突然消失，则开始搜寻目标，并计时
+			if (!bVisible) m_fSeekTargetTime = 0;
 		}
 		/**
-		* @brief 设置注视目标位置
+		* @brief 如果目标可见，则设置注视目标位置
 		* @param vTargetWorldPos 目标点的世界空间坐标，单位：cm
 		*/
 		inline void SetLookTargetPos(const osg::Vec3d& vTargetWorldPos)
 		{
-			m_vTargetWorldPos = vTargetWorldPos;
+			if(m_bTargetVisible)
+				m_vTargetWorldPos = vTargetWorldPos;
 		}
 
 	private:
@@ -186,9 +190,10 @@ namespace GM
 		/**
 		* @brief 将上下左右动画的权重设置得更接近目标
 		* @param fDeltaTime 间隔时间，单位：秒
+		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[1,5]
 		* @return bool:	如果上下左右动画的当前权重都等于目标权重，则返回false，否则返回true
 		*/
-		bool _SetWeightCloserToTarget(const float fDeltaTime);
+		bool _SetWeightCloserToTarget(const float fDeltaTime, const float fSpeed);
 		/**
 		* @brief 将上下左右动画的权重在源权重和目标权重之间做差值混合
 		* @param fMix 混合系数，参考glsl的mix函数
@@ -233,7 +238,7 @@ namespace GM
 
 		std::string m_strName = "";								//!< 角色名称
 
-		float m_fLookAtTargetTime = 0.0f;						//!< 注视目标的持续时间，单位：秒
+		float m_fSeekTargetTime = 0.0f;							//!< 搜索目标这个动作花了多长时间，单位：秒
 		float m_fLookDuration = 2.0f;							//!< 注视持续时间（不是注视目标），单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头耗时，单位：秒
 		float m_fFastTurnDuration = 0.5f;						//!< 快速转头耗时，单位：秒
@@ -260,13 +265,17 @@ namespace GM
 		float m_fEyeBallHeading = 0.0f;							//!< 眼球当前偏航角，左正右负，单位：弧度
 		float m_fEyeBallPitch = 0.0f;							//!< 眼球当前俯仰角，上正下负，单位：弧度
 
-		bool m_bIgnoreTarget = false;							//!< 是否忽略目标
-		bool m_bLookAtTarget = false;							//!< 是否要求注视目标
-		bool m_bSurprise = false;								//!< 是否惊讶
-		bool m_bEyeHalf = false;								//!< 是否半闭眼
+		//!< 好奇心，[0.0, 1.0]，0.0 == 淡，无视目标；1.0 == 浓，完全被目标吸引
+		float m_fInterest = 0.0f;
+		//!< 愤怒，[0.0, 1.0]，0.0 == 平静；1.0 == 非常愤怒
+		float m_fAngry = 0.0f;
+
+		bool m_bSurprise = false;								//!< 是否惊讶（以后考虑加入性格）
+		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
+		bool m_bTargetVisible = false;							//!< 注视目标是否可见
+
 		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm
 		osg::Vec3d m_vTargetLastWorldPos = osg::Vec3d(0, -30, 0);//!< 目标点上一次指定的世界空间坐标，单位：cm
 		osg::Vec3d m_vTargetLastVelocity = osg::Vec3d(0, 0, 0);	//!< 目标点上一次的速度，单位：cm/s
-		osg::Vec3d m_vTargetAcceleration = osg::Vec3d(0, 0, 0);	//!< 目标点的加速度，单位：cm/(s*s)
 	};
 }	// GM

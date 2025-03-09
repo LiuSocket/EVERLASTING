@@ -49,10 +49,10 @@ CGMCharacter::CGMCharacter()
 
 	m_strMorphAnimNameVec.push_back("eye_blink");
 	m_strMorphAnimNameVec.push_back("eye_half");
-	m_strMorphAnimNameVec.push_back("eye_surprise");
 	m_strMorphAnimNameVec.push_back("mouth_idle");
 	m_strMorphAnimNameVec.push_back("mouth_aa");
 	m_strMorphAnimNameVec.push_back("mouth_oo");
+	m_strMorphAnimNameVec.push_back("all_surprise");
 }
 
 /** @brief 析构 */
@@ -87,9 +87,11 @@ bool CGMCharacter::Update(double dDeltaTime)
 	m_fSeekTargetTime += dDeltaTime;
 
 	// 每帧都在减少好奇心（注意力很难长时间集中）
-	m_fInterest = fmax(0.0f, m_fInterest - 0.2f * dDeltaTime);
+	m_fInterest = fmax(0.0f, m_fInterest - 0.5f * dDeltaTime);
 	// 每帧都在减少愤怒值（消气）
 	m_fAngry = fmax(0.0f, m_fAngry - 0.02f * dDeltaTime);
+	// 每帧都在减少害怕值
+	m_fScared = fmax(0.0f, m_fScared - 0.4f * dDeltaTime);
 
 	return true;
 }
@@ -128,9 +130,6 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
 
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 
@@ -139,6 +138,9 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_OO));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_OO));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 
 	return true;
 }
@@ -160,6 +162,11 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	_InnerUpdateBlink(dDeltaTime);
 	// 嘴唇
 	_InnerUpdateLip(dDeltaTime);
+
+	if (m_fInterest > 0 || m_fAngry > 0 || m_fScared > 0 )
+	{
+		std::cout << "Interest: " << m_fInterest << "   Angry:" << m_fAngry <<"   Scared: " << m_fScared << std::endl;
+	}
 }
 
 void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
@@ -167,7 +174,7 @@ void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
 	static double s_fBlinkTime = 0.0;
 	static double s_fDeltaBlinkTime = 2.0;
 	// “惊讶”和“半闭眼”时不眨眼
-	if (s_fBlinkTime > s_fDeltaBlinkTime && !m_bSurprise && m_fInterest > 0.0)
+	if (s_fBlinkTime > s_fDeltaBlinkTime && m_fInterest > 0.0)
 	{
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 		s_fBlinkTime = 0.0;
@@ -181,7 +188,7 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 	static double s_fAATime = 0.0;
 	static double s_fDeltaAATime = 2.0;
 	// “惊讶”和“半闭眼”时不会做其他口型
-	if (s_fAATime > s_fDeltaAATime && !m_bSurprise && m_fAngry < 0.9)
+	if (s_fAATime > s_fDeltaAATime && m_fAngry < 0.9)
 	{
 		float fMorphDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 2;
 		GM_ANIMATION.SetAnimationDuration(m_strName, fMorphDuration, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
@@ -195,20 +202,19 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 {
-	static float fAfterSurpriseTime = 0.0f;
-
 	// 刚鄙视完，气还没消，直接无视目标
 	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.1;
 	// 如果强迫角色注视目标点，则注视一段时间
 	if (m_bTargetVisible && !bIgnoreTarget)
 	{
-		// “惊讶”过30秒之后才能再次“惊讶”
-		if (!m_bSurprise && (fAfterSurpriseTime > 30.0f) && m_fInterest>0.9 && m_fAngry<0.2)
+		// “惊讶”
+		if (m_fScared > 0.0f && m_fAngry < 0.1f && m_fInterest < 0.4f)
 		{
-			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-
-			m_bSurprise = true;
-			fAfterSurpriseTime = 0.0f;
+			if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE)))
+			{
+				GM_ANIMATION.SetAnimationDuration(m_strName, 2.0f, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+				GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+			}
 		}
 
 		_ChangeLookAtTarget(dDeltaTime);
@@ -218,12 +224,6 @@ void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 		_ChangeLookAround(dDeltaTime);
 	}
 	else {}
-
-	fAfterSurpriseTime += dDeltaTime;
-	// 惊讶不过1秒
-	if (fAfterSurpriseTime > 1.0f) m_bSurprise = false;
-
-	//std::cout << m_fAngry << std::endl;
 }
 
 void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
@@ -238,28 +238,32 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 
 	if (m_bDisdain)
 	{
-		if (m_fAngry < 0.4)
+		if (m_fAngry < 0.5)
 		{
 			m_bDisdain = false;
 		}
 	}
 	else
 	{
-		// 如果目标在变速运动，且愤怒值小于某个阈值，则角色的好奇心开始增加
-		if (m_fAngry < 0.6)
+		// 如果目标在变速运动，且愤怒值小于某个阈值，则角色的好奇开始增加
+		if (m_fAngry < 0.7)
 		{
-			m_fInterest = fmin(1.0f, m_fInterest + fDeltaVelocity * 1.5e-3f);
+			m_fInterest = fmin(1.0f, m_fInterest + fDeltaVelocity * 3e-3f);
 		}
+
 		// 如果变化不剧烈，则不会增加愤怒，超过一定的速度后才会增加
 		float fAddAngry = fmax(0.0f, fDeltaVelocity - 10.0f);
 		// 如果短时间内加速度模的累计值过大，说明目标在剧烈运动，可以认为在耍自己，愤怒值飙升
-		m_fAngry = fmin(m_fAngry + fAddAngry * fAddAngry * 5e-7f, 1.0f);
+		m_fAngry = fmin(m_fAngry + fAddAngry * fAddAngry * 1e-6f, 1.0f);
+
+		// 对短时加速度过大的物体会有危机感，增加害怕值
+		m_fScared = fmin(m_fScared + fmax(0.0f, fDeltaVelocity-10.0f)*5e-4f, 1.0f);
 	}
 
 	osg::Vec3d vDir = osg::Vec3d(0, -1, 0);
 	// 愤怒值超过一个阈值后，角色会放弃注视目标并看向前方一段时间，这时会减少愤怒值
 	// 愤怒值小于一个阈值后才会继续随意看四周，此时愤怒值会继续减小一直到0，然后才能继续注视
-	if (m_fAngry > 0.5)
+	if (m_fAngry > 0.6)
 	{
 		if (!m_bDisdain)
 		{
@@ -268,7 +272,7 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 			GM_ANIMATION.SetAnimationDuration(m_strName, 4.0f, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
 		}
 	}
-	else if(m_fAngry < 0.45)
+	else if(m_fAngry < 0.55)
 	{
 		vDir = m_vTargetWorldPos - osg::Vec3d(0.0, -1.0, 12.0);
 		vDir.normalize();
@@ -417,7 +421,7 @@ void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
 
 void CGMCharacter::_UpdateLookAt(const double dDeltaTime)
 {
-	if (_SetWeightCloserToTarget(dDeltaTime, m_fInterest * 5))
+	if (_SetWeightCloserToTarget(dDeltaTime, 2 + m_fInterest*3))
 	{
 		_UpdateAnimationWeight();
 		_StopAnimation();

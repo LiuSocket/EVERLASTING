@@ -43,14 +43,14 @@ namespace GM
 		EA_MORPH_BLINK,
 		/** 半闭眼 */
 		EA_MORPH_HALF,
-		/** 惊讶地睁大眼睛 */
-		EA_MORPH_SURPRISE,
 		/** 口型的idle动画 */
 		EA_MORPH_IDLE,
 		/** 口型“啊” */
 		EA_MORPH_AA,
 		/** 口型“哦” */
-		EA_MORPH_OO
+		EA_MORPH_OO,
+		/** 惊讶地睁大眼睛，并张嘴 */
+		EA_MORPH_SURPRISE
 	};
 	/*************************************************************************
 	 Structs
@@ -265,12 +265,13 @@ namespace GM
 		float m_fEyeBallHeading = 0.0f;							//!< 眼球当前偏航角，左正右负，单位：弧度
 		float m_fEyeBallPitch = 0.0f;							//!< 眼球当前俯仰角，上正下负，单位：弧度
 
-		//!< 好奇心，[0.0, 1.0]，0.0 == 淡，无视目标；1.0 == 浓，完全被目标吸引
+		//!< 好奇，[0.0, 1.0]，0.0 == 淡，无视目标；1.0 == 浓，完全被目标吸引
 		float m_fInterest = 0.0f;
 		//!< 愤怒，[0.0, 1.0]，0.0 == 平静；1.0 == 非常愤怒
 		float m_fAngry = 0.0f;
+		//!< 害怕，[0.0, 1.0]，0.0 == 平静；1.0 == 感到恐怖
+		float m_fScared = 0.0f;
 
-		bool m_bSurprise = false;								//!< 是否惊讶（以后考虑加入性格）
 		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
 		bool m_bTargetVisible = false;							//!< 注视目标是否可见
 

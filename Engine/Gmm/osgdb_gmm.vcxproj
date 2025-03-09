@@ -154,7 +154,8 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Animation\StackedSoftElement.cpp" />
+    <ClCompile Include="Animation\StackedSoftRotElement.cpp" />
+    <ClCompile Include="Animation\StackedSoftTransElement.cpp" />
     <ClCompile Include="Animation\UpdateSoftBone.cpp" />
     <ClCompile Include="gmmRAnimation.cpp" />
     <ClCompile Include="gmmRCamera.cpp" />
@@ -166,7 +167,8 @@
     <ClCompile Include="WriterNodeVisitor.cpp" />
     <ClCompile Include="gmmMaterialToOsgStateSet.cpp" />
     <ResourceCompile Include="$(SolutionDir)OSG\PlatformSpecifics\Windows\OpenSceneGraphVersionInfo.rc" />
-    <ClInclude Include="Animation\StackedSoftElement.h" />
+    <ClInclude Include="Animation\StackedSoftRotElement.h" />
+    <ClInclude Include="Animation\StackedSoftTransElement.h" />
     <ClInclude Include="Animation\UpdateSoftBone.h" />
     <ClInclude Include="gmmMaterialToOsgStateSet.h" />
     <ClInclude Include="gmmReader.h" />

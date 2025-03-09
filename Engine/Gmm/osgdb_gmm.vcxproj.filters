@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Animation\StackedSoftElement.cpp">
+    <ClCompile Include="Animation\StackedSoftTransElement.cpp">
       <Filter>Animation</Filter>
     </ClCompile>
     <ClCompile Include="Animation\UpdateSoftBone.cpp">
@@ -34,9 +34,12 @@
     <ClCompile Include="WriterNodeVisitor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Animation\StackedSoftRotElement.cpp">
+      <Filter>Animation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Animation\StackedSoftElement.h">
+    <ClInclude Include="Animation\StackedSoftTransElement.h">
       <Filter>Animation</Filter>
     </ClInclude>
     <ClInclude Include="Animation\UpdateSoftBone.h">
@@ -56,6 +59,9 @@
     </ClInclude>
     <ClInclude Include="WriterNodeVisitor.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation\StackedSoftRotElement.h">
+      <Filter>Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

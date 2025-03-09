@@ -163,10 +163,10 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	// ×ì´½
 	_InnerUpdateLip(dDeltaTime);
 
-	if (m_fInterest > 0 || m_fAngry > 0 || m_fScared > 0 )
-	{
-		std::cout << "Interest: " << m_fInterest << "   Angry:" << m_fAngry <<"   Scared: " << m_fScared << std::endl;
-	}
+	//if (m_fInterest > 0 || m_fAngry > 0 || m_fScared > 0 )
+	//{
+	//	std::cout << "Interest: " << m_fInterest << "   Angry:" << m_fAngry <<"   Scared: " << m_fScared << std::endl;
+	//}
 }
 
 void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)

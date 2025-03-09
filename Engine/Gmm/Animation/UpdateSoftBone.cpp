@@ -37,9 +37,11 @@ void UpdateSoftBone::operator()(osg::Node* node, osg::NodeVisitor* nv)
             return;
         }
 
-        float time = nv->getFrameStamp()->getReferenceTime();
+        // if I use real time,the shake will be not smooth,so I use the frame number instead
+        //float time = nv->getFrameStamp()->getReferenceTime();
+        unsigned int iFrame = nv->getFrameStamp()->getFrameNumber();
         // here we would prefer to have a flag inside transform stack in order to avoid update and a dirty state in matrixTransform if it's not require.
-        _transforms.update(time);
+        _transforms.update(iFrame);
         const osg::Matrix& matrix = _transforms.getMatrix();
         b->setMatrix(matrix);
 

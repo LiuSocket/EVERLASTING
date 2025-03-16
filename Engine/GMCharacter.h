@@ -26,13 +26,9 @@ namespace GM
 	enum EGMANIMATION_BONE
 	{
 		/** 0号idle */
-		EA_BONE_IDLE_0,
+		EA_BONE_IDLE,
 		/** 0号idle 转 1号idle */
-		EA_BONE_IDLE_0x1,
-		/** 1号idle */
-		EA_BONE_IDLE_1,
-		/** 1号idle 转 0号idle */
-		EA_BONE_IDLE_1x0,
+		EA_BONE_IDLE_ADD_0,
 		/** 头朝左看 */
 		EA_BONE_HEAD_L,
 		/** 头朝右看 */
@@ -248,15 +244,15 @@ namespace GM
 
 		std::string m_strName = "";								//!< 角色名称
 
-		float m_fIdleDuration = 5.0f;							//!< idle持续时间，单位：秒
-		float m_fTurnBodyDuration = 2.0f;						//!< 转身动画耗时，单位：秒
+		float m_fIdleDuration = 5.0f;							//!< idle动画周期，单位：秒
+		float m_fIdleAddDuration = 1.0f;						//!< idle附加动画周期，单位：秒
 		float m_fIdleTime = 0.0f;								//!< idle动作经过了多长时间，单位：秒
-		float m_fTurnBodyTime = 0.0f;							//!< 转身动作经过了多长时间，单位：秒
+		float m_fIdleAddTime = 0.0f;							//!< idle附加动作经过了多长时间，单位：秒
 
 		float m_fSeekTargetTime = 0.0f;							//!< 搜索目标这个动作花了多长时间，单位：秒
-		float m_fLookDuration = 2.0f;							//!< 注视持续时间（不是注视目标），单位：秒
-		float m_fTurnDuration = 1.0f;							//!< 转头耗时，单位：秒
-		float m_fFastTurnDuration = 0.5f;						//!< 快速转头耗时，单位：秒
+		float m_fLookDuration = 2.0f;							//!< 注视周期（不是注视目标），单位：秒
+		float m_fTurnDuration = 1.0f;							//!< 转头周期，单位：秒
+		float m_fFastTurnDuration = 0.5f;						//!< 快速转头周期，单位：秒
 		float m_fMixTime = 0.0f;								//!< 当前混合所经过的时间，单位：秒
 
 		float m_fTargetHeading = 0.0f;							//!< 眼睛偏航角，左正右负，单位：°
@@ -267,7 +263,6 @@ namespace GM
 		SGMAnimData m_animU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作的权重
 		SGMAnimData m_animD = SGMAnimData(EA_BONE_HEAD_D);		//!< down动作的权重
 
-		EGMANIMATION_BONE m_eIdleAnim = EA_BONE_IDLE_0;			//!< 当前的idle动画
 		EGMANIMATION_BONE m_eNextHeadingAnim = EA_BONE_HEAD_L;	//!< 下一个转向动画
 		EGMANIMATION_BONE m_eNextPitchAnim = EA_BONE_HEAD_U;	//!< 下一个俯仰动画
 

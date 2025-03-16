@@ -30,6 +30,7 @@ Global Constants
 #define  MORPH_PRIORITY_NORMAL				(0)			// 变形动画“普通”优先级
 
 #define  SEEK_TARGET_TIME					(2.0f)		// 搜索目标最长时间，单位：秒
+#define  IDLE_MIX_TIME						(1.0f)		// “idle动画”过渡到“转身动画”的时间，单位：秒
 
 /*************************************************************************
 CGMCharacter Methods
@@ -41,7 +42,10 @@ CGMCharacter::CGMCharacter()
 	m_iPseudoNoise = std::uniform_int_distribution<>(0, 100);
 	m_iRandomAngle = std::uniform_int_distribution<>(0, 360);
 
-	m_strBoneAnimNameVec.push_back("bone_idle");
+	m_strBoneAnimNameVec.push_back("bone_idle_0");
+	m_strBoneAnimNameVec.push_back("bone_idle_0x1");
+	m_strBoneAnimNameVec.push_back("bone_idle_1");
+	m_strBoneAnimNameVec.push_back("bone_idle_1x0");
 	m_strBoneAnimNameVec.push_back("bone_head_L");
 	m_strBoneAnimNameVec.push_back("bone_head_R");
 	m_strBoneAnimNameVec.push_back("bone_head_U");
@@ -80,6 +84,8 @@ bool CGMCharacter::Update(double dDeltaTime)
 	}
 	fDeltaStep += dDeltaTime;
 
+	// 更新idle动画权重
+	_UpdateIdle(dDeltaTime);
 	// 过渡状态时需要每帧更新转头动画的权重
 	_UpdateLookAnimation(dDeltaTime);
 
@@ -89,7 +95,7 @@ bool CGMCharacter::Update(double dDeltaTime)
 	// 每帧都在减少好奇心（注意力很难长时间集中）
 	m_fInterest = fmax(0.0f, m_fInterest - 0.5f * dDeltaTime);
 	// 每帧都在减少愤怒值（消气）
-	m_fAngry = fmax(0.0f, m_fAngry - 0.02f * dDeltaTime);
+	m_fAngry = fmax(0.0f, m_fAngry - 0.03f * dDeltaTime);
 	// 每帧都在减少害怕值
 	m_fScared = fmax(0.0f, m_fScared - 0.4f * dDeltaTime);
 
@@ -108,21 +114,29 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	if (!pNode) return false;
 	m_strName = strName;
 
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
-	GM_ANIMATION.SetAnimationPlay(strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
@@ -142,6 +156,11 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 
+	GM_ANIMATION.SetAnimationPlay(strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0));
+	GM_ANIMATION.SetAnimationPlay(strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1));
+	GM_ANIMATION.SetAnimationWeight(strName, 1.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0));
+	GM_ANIMATION.SetAnimationWeight(strName, 0.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1));
+
 	return true;
 }
 
@@ -156,6 +175,8 @@ void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v
 
 void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 {
+	// 转身动画
+	_ChangeIdle(dDeltaTime);
 	// 眼睛转向
 	_ChangeLookDir(dDeltaTime);
 	// 眨眼
@@ -176,6 +197,7 @@ void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
 	// “惊讶”和“半闭眼”时不眨眼
 	if (s_fBlinkTime > s_fDeltaBlinkTime && m_fInterest > 0.0)
 	{
+		GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 		s_fBlinkTime = 0.0;
 		s_fDeltaBlinkTime = m_iPseudoNoise(m_iRandom) * 0.1 + 0.3;
@@ -192,6 +214,7 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 	{
 		float fMorphDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 2;
 		GM_ANIMATION.SetAnimationDuration(m_strName, fMorphDuration, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
+		GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 
 		s_fAATime = 0.0;
@@ -200,10 +223,54 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 	s_fAATime += dDeltaTime;
 }
 
+void CGMCharacter::_ChangeIdle(const double dDeltaTime)
+{
+	if( (m_fIdleTime >= m_fIdleDuration) && (0.0 == m_fTurnBodyTime) )
+	{
+		// 开始在“Idle动画”中混入“转身动画”，也就是让转身动画时间不为0
+		m_fTurnBodyTime += 1e-5;
+
+		m_fTurnBodyDuration = m_iPseudoNoise(m_iRandom) * 0.01 + 3.0;
+		if (EA_BONE_IDLE_0 == m_eIdleAnim)
+		{
+			GM_ANIMATION.SetAnimationDuration(m_strName, m_fTurnBodyDuration, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+			GM_ANIMATION.SetAnimationWeight(m_strName, 0.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+		}
+		else
+		{
+			GM_ANIMATION.SetAnimationDuration(m_strName, m_fTurnBodyDuration, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
+			GM_ANIMATION.SetAnimationWeight(m_strName, 0.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
+		}
+	}
+
+	// 在转身动画的中间时切换Idle动画
+	double fHalfTurn = m_fTurnBodyDuration / 2;
+	if (m_fIdleDuration < m_fIdleTime && m_fTurnBodyTime < fHalfTurn && (m_fTurnBodyTime + dDeltaTime) > fHalfTurn)
+	{
+		m_fIdleDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 5.0;
+
+		if (EA_BONE_IDLE_0 == m_eIdleAnim)
+		{
+			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1));
+			GM_ANIMATION.SetAnimationWeight(m_strName, 0.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0));
+			m_eIdleAnim = EA_BONE_IDLE_1;
+		}
+		else
+		{
+			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0));
+			GM_ANIMATION.SetAnimationWeight(m_strName, 0.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1));
+			m_eIdleAnim = EA_BONE_IDLE_0;
+		}
+		m_fIdleTime = 0;
+	}
+}
+
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 {
 	// 刚鄙视完，气还没消，直接无视目标
-	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.1;
+	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.2;
 	// 如果强迫角色注视目标点，则注视一段时间
 	if (m_bTargetVisible && !bIgnoreTarget)
 	{
@@ -213,6 +280,7 @@ void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 			if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE)))
 			{
 				GM_ANIMATION.SetAnimationDuration(m_strName, 2.0f, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+				GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 				GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 			}
 		}
@@ -269,6 +337,7 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 		{
 			m_bDisdain = true;
 			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
+			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
 			GM_ANIMATION.SetAnimationDuration(m_strName, 4.0f, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
 		}
 	}
@@ -402,9 +471,45 @@ void CGMCharacter::_ChangeTargetAnimation(const float fTargetHeading, const floa
 	}
 
 	if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(m_eNextHeadingAnim)))
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextHeadingAnim), 1e-5f);
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextHeadingAnim));
 	if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim)))
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim), 1e-5f);
+		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim));
+}
+
+void CGMCharacter::_UpdateIdle(const double dDeltaTime)
+{
+	if (0 < m_fTurnBodyTime)
+	{
+		if (IDLE_MIX_TIME >= m_fTurnBodyTime)
+		{
+			// 从“Idle动画”到“转身动画”过渡
+			float fTurnWeight = _Smoothstep(0.0f, IDLE_MIX_TIME, m_fTurnBodyTime);
+			if (EA_BONE_IDLE_0 == m_eIdleAnim)
+				GM_ANIMATION.SetAnimationWeight(m_strName, fTurnWeight, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+			else
+				GM_ANIMATION.SetAnimationWeight(m_strName, fTurnWeight, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
+		}
+		else if ((m_fTurnBodyDuration - IDLE_MIX_TIME) <= m_fTurnBodyTime)
+		{
+			// 从“转身动画”到“Idle动画”过渡
+			float fTurnWeight = _Smoothstep(0.0f, IDLE_MIX_TIME, m_fTurnBodyDuration - m_fTurnBodyTime);
+			if (EA_BONE_IDLE_0 == m_eIdleAnim)
+				GM_ANIMATION.SetAnimationWeight(m_strName, fTurnWeight, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
+			else
+				GM_ANIMATION.SetAnimationWeight(m_strName, fTurnWeight, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+		}
+		else
+		{
+			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_0x1));
+			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_1x0));
+		}
+		m_fTurnBodyTime += dDeltaTime;
+	}
+
+	m_fIdleTime += dDeltaTime;
+	// 重置转身动画时间
+	if (m_fTurnBodyDuration < m_fTurnBodyTime)
+		m_fTurnBodyTime = 0.0;
 }
 
 void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
@@ -517,11 +622,11 @@ bool CGMCharacter::_SetWeightMix(const float fMix)
 
 void CGMCharacter::_UpdateAnimationWeight()
 {
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L), m_animL.fWeightNow);
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R), m_animR.fWeightNow);
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_animL.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_animR.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
 
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U), m_animU.fWeightNow);
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D), m_animD.fWeightNow);
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_animU.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_animD.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
 }
 
 void CGMCharacter::_StopAnimation()
@@ -530,24 +635,24 @@ void CGMCharacter::_StopAnimation()
 	{
 		m_animR.fWeightSource = m_animR.fWeightTarget;
 		m_animR.bAnimOn = false;
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R), 0);
+		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
 	}
 	if (0 == m_animL.fWeightNow && EA_BONE_HEAD_R == m_eNextHeadingAnim)
 	{
 		m_animL.fWeightSource = m_animL.fWeightTarget;
 		m_animL.bAnimOn = false;
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L), 0);
+		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
 	}
 	if (0 == m_animD.fWeightNow && EA_BONE_HEAD_U == m_eNextPitchAnim)
 	{
 		m_animD.fWeightSource = m_animD.fWeightTarget;
 		m_animD.bAnimOn = false;
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D), 0);
+		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
 	}
 	if (0 == m_animU.fWeightNow && EA_BONE_HEAD_D == m_eNextPitchAnim)
 	{
 		m_animU.fWeightSource = m_animU.fWeightTarget;
 		m_animU.bAnimOn = false;
-		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U), 0);
+		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
 	}
 }

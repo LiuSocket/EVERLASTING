@@ -25,8 +25,14 @@ namespace GM
 	// 骨骼动画的枚举值
 	enum EGMANIMATION_BONE
 	{
-		/** idle */
-		EA_BONE_IDLE,
+		/** 0号idle */
+		EA_BONE_IDLE_0,
+		/** 0号idle 转 1号idle */
+		EA_BONE_IDLE_0x1,
+		/** 1号idle */
+		EA_BONE_IDLE_1,
+		/** 1号idle 转 0号idle */
+		EA_BONE_IDLE_1x0,
 		/** 头朝左看 */
 		EA_BONE_HEAD_L,
 		/** 头朝右看 */
@@ -169,6 +175,8 @@ namespace GM
 		void _InnerUpdateBlink(const double dDeltaTime);
 		/** @brief 定时更新嘴唇状态 */
 		void _InnerUpdateLip(const double dDeltaTime);
+		/** @brief 改变idle状态 */
+		void _ChangeIdle(const double dDeltaTime);
 		/** @brief 改变注视方向 */
 		void _ChangeLookDir(const double dDeltaTime);
 		/** @brief 注视目标 */
@@ -178,6 +186,8 @@ namespace GM
 		/** @brief 改变目标动画 */
 		void _ChangeTargetAnimation(const float fTargetHeading, const float fTargetPitch);
 
+		/** @brief 每帧更新idle动画 */
+		void _UpdateIdle(const double dDeltaTime);
 		/** @brief 每帧更新转头动画的过渡状态 */
 		void _UpdateLookAnimation(const double dDeltaTime);
 		/** @brief 每帧更新转头动画的过渡状态 */
@@ -238,6 +248,11 @@ namespace GM
 
 		std::string m_strName = "";								//!< 角色名称
 
+		float m_fIdleDuration = 5.0f;							//!< idle持续时间，单位：秒
+		float m_fTurnBodyDuration = 2.0f;						//!< 转身动画耗时，单位：秒
+		float m_fIdleTime = 0.0f;								//!< idle动作经过了多长时间，单位：秒
+		float m_fTurnBodyTime = 0.0f;							//!< 转身动作经过了多长时间，单位：秒
+
 		float m_fSeekTargetTime = 0.0f;							//!< 搜索目标这个动作花了多长时间，单位：秒
 		float m_fLookDuration = 2.0f;							//!< 注视持续时间（不是注视目标），单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头耗时，单位：秒
@@ -252,6 +267,7 @@ namespace GM
 		SGMAnimData m_animU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作的权重
 		SGMAnimData m_animD = SGMAnimData(EA_BONE_HEAD_D);		//!< down动作的权重
 
+		EGMANIMATION_BONE m_eIdleAnim = EA_BONE_IDLE_0;			//!< 当前的idle动画
 		EGMANIMATION_BONE m_eNextHeadingAnim = EA_BONE_HEAD_L;	//!< 下一个转向动画
 		EGMANIMATION_BONE m_eNextPitchAnim = EA_BONE_HEAD_U;	//!< 下一个俯仰动画
 

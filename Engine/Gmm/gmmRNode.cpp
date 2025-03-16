@@ -328,20 +328,20 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
 {
 	osg::Vec3 vSoftRange = osg::Vec3(0.0f, 0.0f, 0.0f);
 	osg::Vec3 vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
-	double fShakeRange = 0.0;
+	double fElastic = 0.0;
 	std::string name = pUpdate->getName();
 	if (std::string::npos != name.find("Ribcage") ||
 		std::string::npos != name.find("Spine"))
 	{
 		vSoftRange = osg::Vec3(0.4f, 0.01f, 0.01f);
 		vSoftCenter = osg::Vec3(-0.4f, 0.0f, 0.0f);
-		fShakeRange = 0.1;
+		fElastic = 20.0;
 	}
 	else if (std::string::npos != name.find("Neck"))
 	{
 		vSoftRange = osg::Vec3(0.15f, 0.01f, 0.01f);
 		vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
-		fShakeRange = 0.2;
+		fElastic = 30.0;
 	}
 	else if (std::string::npos != name.find("arm"))
 	{
@@ -374,7 +374,7 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
 
 	readRotationElement(pNode->LclRotation, gmmRotOrder,
 		pNode->QuaternionInterpolate.IsValid() && pNode->QuaternionInterpolate.Get(),
-		pUpdate, staticTransform, gmmScene, fShakeRange);
+		pUpdate, staticTransform, gmmScene, fElastic);
 
 	if (rotationActive)
 	{

@@ -121,27 +121,33 @@ namespace GM
 		/**
 		* @brief 设置动画权重
 		* @param strModelName 模型名称
-		* @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
-		* @param fWeight 动画混合权重，[0.0,1.0]，0.0表示停止，1.0表示播放，动画可根据权重混合
+		* @param fWeight 动画混合权重，[0.0,1.0]，多个动画可根据权重混合
+		* @param strAnimationName 动画名称，不输入动画名称就设置第一个或者上一个控制的动画
 		* @return bool 成功返回 true，失败返回 false
 		*/
-		bool SetAnimationWeight(const std::string& strModelName, const std::string& strAnimationName, float fWeight);
+		bool SetAnimationWeight(const std::string& strModelName, float fWeight, const std::string& strAnimationName = "");
 		/**
 		* @brief 获取动画权重
 		* @param strModelName 模型名称
-		* @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
+		* @param strAnimationName 动画名称
 		* @return float 动画混合权重
 		*/
 		float GetAnimationWeight(const std::string& strModelName, const std::string& strAnimationName);
 
 		/**
-		* @brief 播放动画，如果不输入动画名称且输入权重为0.0，就停止所有动画
+		* @brief 播放动画
 		* @param strModelName 模型名称
 		* @param strAnimationName 动画名称，不输入动画名称就播放第一个或者上一个控制的动画
-		* @param fWeight 动画混合权重，[0.0,1.0]，0.0表示停止，1.0表示播放，动画可根据权重混合
 		* @return bool 成功返回 true，失败返回 false
 		*/
-		bool SetAnimationPlay(const std::string& strModelName, const std::string& strAnimationName = "", float fWeight = 1.0f);
+		bool SetAnimationPlay(const std::string& strModelName, const std::string& strAnimationName = "");
+		/**
+		* @brief停止动画，如果不输入动画名称，就停止所有动画
+		* @param strModelName 模型名称
+		* @param strAnimationName 动画名称，不输入动画名称就停止所有动画
+		* @return bool 成功返回 true，失败返回 false
+		*/
+		bool SetAnimationStop(const std::string& strModelName, const std::string& strAnimationName = "");
 		/**
 		* @brief 暂停动画
 		* @param strModelName 模型名称

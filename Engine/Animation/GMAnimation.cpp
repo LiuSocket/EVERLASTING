@@ -134,12 +134,12 @@ namespace GM
 			return true;
 		}
 
-		/* @brief 播放当前聚焦的动画，如果只有一个动画在播放，则修改权重无效 */
+		/* @brief 播放当前聚焦的动画，按照之前设定或者默认的权重和优先级 */
 		bool play()
 		{
 			if (_focus < ANIM_LIST.size())
 			{
-				_manager->playAnimation(ANIM_LIST.at(_focus).get());
+				_manager->playAnimation(ANIM_LIST.at(_focus).get(), ANIM_LIST.at(_focus)->getWeight());
 				return true;
 			}
 			return false;
@@ -157,7 +157,7 @@ namespace GM
 		}
 
 		/* @brief 停止所有动画，停在当前位置 */
-		void stop()
+		void stopAll()
 		{
 			_manager->stopAll();
 		}
@@ -336,6 +336,16 @@ namespace GM
 			return true;
 		}
 
+		/* @brief 设置当前聚焦的动画的权重 */
+		bool setWeight(float fWeight)
+		{
+			if (_focus < ANIM_LIST.size())
+			{
+				ANIM_LIST.at(_focus)->setWeight(fWeight);
+				return true;
+			}
+			return false;
+		}
 		/* @brief 设置指定动画的权重 */
 		bool setWeight(const std::string& name, float fWeight)
 		{
@@ -553,12 +563,19 @@ int CGMAnimation::GetAnimationPriority(const std::string& strModelName, const st
 	return priority;
 }
 
-bool CGMAnimation::SetAnimationWeight(const std::string& strModelName, const std::string& strAnimationName, float fWeight)
+bool CGMAnimation::SetAnimationWeight(const std::string& strModelName, float fWeight, const std::string& strAnimationName)
 {
 	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
 	if (pAniPlayer)
 	{
-		pAniPlayer->setWeight(strAnimationName, fWeight);
+		if ("" == strAnimationName)
+		{
+			pAniPlayer->setWeight(fWeight);
+		}
+		else
+		{
+			pAniPlayer->setWeight(strAnimationName, fWeight);
+		}
 		return true;
 	}
 	return false;
@@ -571,25 +588,37 @@ float CGMAnimation::GetAnimationWeight(const std::string& strModelName, const st
 	return pAniPlayer->getWeight(strAnimationName);
 }
 
-bool CGMAnimation::SetAnimationPlay(const std::string& strModelName, const std::string& strAnimationName, float fWeight)
+bool CGMAnimation::SetAnimationPlay(const std::string& strModelName, const std::string& strAnimationName)
 {
 	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
 	if (pAniPlayer)
 	{
 		if ("" == strAnimationName)
 		{
-			if (fWeight > 0)
-				pAniPlayer->play();
-			else
-				pAniPlayer->stop();
+			pAniPlayer->play();
 		}
 		else
 		{
-			if (fWeight > 0)
-				pAniPlayer->play(strAnimationName, fWeight);
-			else
-				pAniPlayer->stop(strAnimationName);
+			float fWeight = pAniPlayer->getWeight(strAnimationName);
+			pAniPlayer->play(strAnimationName, fWeight);
 		}
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool CGMAnimation::SetAnimationStop(const std::string& strModelName, const std::string& strAnimationName)
+{
+	CAnimationPlayer* pAniPlayer = _GetPlayerByModelName(strModelName);
+	if (pAniPlayer)
+	{
+		if ("" == strAnimationName)
+			pAniPlayer->stopAll();
+		else
+			pAniPlayer->stop(strAnimationName);
 
 		return true;
 	}

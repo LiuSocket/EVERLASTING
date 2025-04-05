@@ -36,7 +36,11 @@ namespace GM
 		/** 头朝上看 */
 		EA_BONE_HEAD_U,
 		/** 头朝下看 */
-		EA_BONE_HEAD_D
+		EA_BONE_HEAD_D,
+		/** 左手抬起 */
+		EA_BONE_ARM_L_UP,
+		/** 右手抬起 */
+		EA_BONE_ARM_R_UP,
 	};
 	// 变形动画的枚举值
 	enum EGMANIMATION_MORPH
@@ -173,6 +177,8 @@ namespace GM
 		void _InnerUpdateLip(const double dDeltaTime);
 		/** @brief 改变idle状态 */
 		void _ChangeIdle(const double dDeltaTime);
+		/** @brief 改变手部状态 */
+		void _ChangeArm(const double dDeltaTime);
 		/** @brief 改变注视方向 */
 		void _ChangeLookDir(const double dDeltaTime);
 		/** @brief 注视目标 */
@@ -184,8 +190,11 @@ namespace GM
 
 		/** @brief 每帧更新idle动画 */
 		void _UpdateIdle(const double dDeltaTime);
-		/** @brief 每帧更新转头动画的过渡状态 */
+		/** @brief 每帧更新转头动画 */
 		void _UpdateLookAnimation(const double dDeltaTime);
+		/** @brief 每帧更新手部动画 */
+		void _UpdateArmAnimation(const double dDeltaTime);
+
 		/** @brief 每帧更新转头动画的过渡状态 */
 		void _UpdateLookAt(const double dDeltaTime);
 		/** @brief 每帧更新四处张望动画的过渡状态 */
@@ -199,16 +208,15 @@ namespace GM
 		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[1,5]
 		* @return bool:	如果上下左右动画的当前权重都等于目标权重，则返回false，否则返回true
 		*/
-		bool _SetWeightCloserToTarget(const float fDeltaTime, const float fSpeed);
+		bool _SetHeadWeightToTarget(const float fDeltaTime, const float fSpeed);
 		/**
 		* @brief 将上下左右动画的权重在源权重和目标权重之间做差值混合
 		* @param fMix 混合系数，参考glsl的mix函数
 		* @return bool:	如果上下左右动画的当前权重都等于目标权重，则返回false，否则返回true
 		*/
-		bool _SetWeightMix(const float fMix);
+		bool _SetHeadWeightMix(const float fMix);
 
-		void _UpdateAnimationWeight();
-		void _StopAnimation();
+		void _UpdateHeadAnimation();
 
 		/**
 		* @brief 设置眼球相对于眼睛的方向
@@ -248,20 +256,26 @@ namespace GM
 		float m_fIdleAddDuration = 1.0f;						//!< idle附加动画周期，单位：秒
 		float m_fIdleTime = 0.0f;								//!< idle动作经过了多长时间，单位：秒
 		float m_fIdleAddTime = 0.0f;							//!< idle附加动作经过了多长时间，单位：秒
+		float m_fArmTimeL = 0.0f;								//!< 左手动作经过了多长时间，单位：秒
+		float m_fArmTimeR = 0.0f;								//!< 右手动作经过了多长时间，单位：秒
+		float m_fArmDurationL = 4.0f;							//!< 左手动画周期，单位：秒
+		float m_fArmDurationR = 4.0f;							//!< 右手动画周期，单位：秒
 
 		float m_fSeekTargetTime = 0.0f;							//!< 搜索目标这个动作花了多长时间，单位：秒
 		float m_fLookDuration = 2.0f;							//!< 注视周期（不是注视目标），单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头周期，单位：秒
 		float m_fFastTurnDuration = 0.5f;						//!< 快速转头周期，单位：秒
-		float m_fMixTime = 0.0f;								//!< 当前混合所经过的时间，单位：秒
+		float m_fTurnMixTime = 0.0f;							//!< 当前转头动画混合所经过的时间，单位：秒
 
 		float m_fTargetHeading = 0.0f;							//!< 眼睛偏航角，左正右负，单位：°
 		float m_fTargetPitch = 0.0f;							//!< 眼睛俯仰角，上正下负，单位：°
 
-		SGMAnimData m_animL = SGMAnimData(EA_BONE_HEAD_L);		//!< left动作的权重
-		SGMAnimData m_animR = SGMAnimData(EA_BONE_HEAD_R);		//!< right动作的权重
-		SGMAnimData m_animU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作的权重
-		SGMAnimData m_animD = SGMAnimData(EA_BONE_HEAD_D);		//!< down动作的权重
+		SGMAnimData m_animHeadL = SGMAnimData(EA_BONE_HEAD_L);		//!< left动作的权重
+		SGMAnimData m_animHeadR = SGMAnimData(EA_BONE_HEAD_R);		//!< right动作的权重
+		SGMAnimData m_animHeadU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作的权重
+		SGMAnimData m_animHeadD = SGMAnimData(EA_BONE_HEAD_D);		//!< down动作的权重
+		SGMAnimData m_animArmL = SGMAnimData(EA_BONE_ARM_L_UP);		//!< 左手举起动作的权重
+		SGMAnimData m_animArmR = SGMAnimData(EA_BONE_ARM_R_UP);		//!< 右手举起动作的权重
 
 		EGMANIMATION_BONE m_eNextHeadingAnim = EA_BONE_HEAD_L;	//!< 下一个转向动画
 		EGMANIMATION_BONE m_eNextPitchAnim = EA_BONE_HEAD_U;	//!< 下一个俯仰动画

@@ -110,6 +110,9 @@
     <ClCompile Include="..\Engine\Animation\GMAnimation.cpp">
       <Filter>GMEngine\Animation</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\GMAudio.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -183,6 +186,9 @@
     </ClInclude>
     <ClInclude Include="..\Engine\Animation\GMAnimation.h">
       <Filter>GMEngine\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMAudio.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

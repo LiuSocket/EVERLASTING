@@ -63,14 +63,14 @@
     <IntDir>$(SolutionDir)Out\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_d</TargetName>
     <IncludePath>$(SolutionDir)3RD\include;$(SolutionDir)OSG\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)3RD\lib;$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutDir>$(SolutionDir)Bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Out\$(ProjectName)\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)3RD\include;$(SolutionDir)OSG\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)OSG\include;$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)3RD\lib;$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <QtMoc>
@@ -87,7 +87,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\$(Configuration)\;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenThreadsd.lib;osgd.lib;osgViewerd.lib;osgAnimationd.lib;osgGAd.lib;osgDBd.lib;osgUtild.lib;qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;Qt5OpenGLd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenThreadsd.lib;osgd.lib;osgViewerd.lib;osgAnimationd.lib;osgGAd.lib;osgDBd.lib;osgUtild.lib;qtmaind.lib;Qt5Cored.lib;Qt5Guid.lib;Qt5Widgetsd.lib;Qt5OpenGLd.lib;bass_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -106,7 +106,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)Lib\$(Configuration)\;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>OpenThreads.lib;osg.lib;osgAnimation.lib;osgDB.lib;osgFX.lib;osgGA.lib;osgViewer.lib;osgUtil.lib;osgWidget.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;Qt5OpenGL.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>OpenThreads.lib;osg.lib;osgAnimation.lib;osgDB.lib;osgFX.lib;osgGA.lib;osgViewer.lib;osgUtil.lib;osgWidget.lib;qtmain.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Widgets.lib;Qt5OpenGL.lib;bass_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -142,6 +142,7 @@
     <ClCompile Include="..\Engine\Assist\tinyxml.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlerror.cpp" />
     <ClCompile Include="..\Engine\Assist\tinyxmlparser.cpp" />
+    <ClCompile Include="..\Engine\GMAudio.cpp" />
     <ClCompile Include="..\Engine\GMBaseManipulator.cpp" />
     <ClCompile Include="..\Engine\GMCharacter.cpp" />
     <ClCompile Include="..\Engine\GMCommonUniform.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="..\Engine\Assist\mikktspace.h" />
     <ClInclude Include="..\Engine\Assist\tinystr.h" />
     <ClInclude Include="..\Engine\Assist\tinyxml.h" />
+    <ClInclude Include="..\Engine\GMAudio.h" />
     <ClInclude Include="..\Engine\GMBaseManipulator.h" />
     <ClInclude Include="..\Engine\GMCharacter.h" />
     <ClInclude Include="..\Engine\GMCommon.h" />

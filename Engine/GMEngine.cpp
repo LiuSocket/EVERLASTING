@@ -19,6 +19,7 @@
 #include "GMModel.h"
 #include "GMCharacter.h"
 #include "GMLight.h"
+#include "GMAudio.h"
 #include "Animation/GMAnimation.h"
 #include "osgQt/GraphicsWindowQt.h"
 #include <osgViewer/ViewerEventHandlers>
@@ -120,11 +121,13 @@ bool CGMEngine::Init()
 	m_pManipulator = new CGMBaseManipulator();
 	m_pModel = new CGMModel();
 	m_pCharacter = new CGMCharacter();
+	m_pAudio = new CGMAudio();
 	m_pPost = new CGMPost();
 
 	GM_UNIFORM.Init(m_pKernelData, m_pConfigData);
 	m_pModel->Init(m_pKernelData, m_pConfigData);
 	m_pCharacter->Init(m_pKernelData, m_pConfigData);
+	m_pAudio->Init(m_pConfigData);
 	m_pPost->Init(m_pKernelData, m_pConfigData);
 
 	GM_View->getCamera()->setCullMask(GM_MAIN_MASK);
@@ -187,6 +190,11 @@ void CGMEngine::Release()
 	GM_UNIFORM.Release();
 	GM_ANIMATION.Release();
 
+	GM_DELETE(m_pAudio);
+	GM_DELETE(m_pCharacter);
+	GM_DELETE(m_pModel);
+	GM_DELETE(m_pPost);
+
 	GM_DELETE(m_pConfigData);
 	GM_DELETE(m_pKernelData);
 	GM_DELETE(msSingleton);
@@ -218,6 +226,7 @@ bool CGMEngine::Update()
 		}
 		m_fDeltaStep = fInnerDeltaTime;
 
+		m_pAudio->Update(deltaTime);
 		if (m_bRendering)
 		{
 			GM_LIGHT.Update(deltaTime);

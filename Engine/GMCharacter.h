@@ -300,6 +300,7 @@ namespace GM
 		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
 		bool m_bTargetVisible = false;							//!< 注视目标是否可见
 
+		float m_fDeltaVelocity = 0;								//!< 目标点的速度差，单位：cm/s
 		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm
 		osg::Vec3d m_vTargetLastWorldPos = osg::Vec3d(0, -30, 0);//!< 目标点上一次指定的世界空间坐标，单位：cm
 		osg::Vec3d m_vTargetLastVelocity = osg::Vec3d(0, 0, 0);	//!< 目标点上一次的速度，单位：cm/s

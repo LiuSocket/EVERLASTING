@@ -106,6 +106,17 @@ namespace GM
 			return m_bRendering;
 		}
 		
+		/**
+		* @brief 开启“欢迎效果”
+		* 每次开启软件，调用此函数以实现“欢迎功能”
+		*/
+		void Welcome();
+		/**
+		* @brief “欢迎效果”是否结束
+		* @return bool 结束则返回true，否则false
+		*/
+		bool IsWelcomeFinished() const;
+
 		/** @brief 创建视口(QT:QWidget) */
 		CGMViewWidget* CreateViewWidget(QWidget* parent);
 

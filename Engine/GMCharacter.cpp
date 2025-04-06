@@ -177,6 +177,11 @@ void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v
 
 void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 {
+	// 计算目标点的加速度
+	osg::Vec3d vTargetVelocity = (m_vTargetWorldPos - m_vTargetLastWorldPos) / dDeltaTime;
+	osg::Vec3d vDeltaVelocity = vTargetVelocity - m_vTargetLastVelocity;
+	m_fDeltaVelocity = vDeltaVelocity.length();
+
 	// 转身动画
 	_ChangeIdle(dDeltaTime);
 	// 手部动画
@@ -192,6 +197,11 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	//{
 	//	std::cout << "Interest: " << m_fInterest << "   Angry:" << m_fAngry <<"   Scared: " << m_fScared << std::endl;
 	//}
+
+	//std::cout << "DeltaVelocity: " << m_fDeltaVelocity << std::endl;
+
+	m_vTargetLastVelocity = vTargetVelocity;
+	m_vTargetLastWorldPos = m_vTargetWorldPos;
 }
 
 void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
@@ -244,28 +254,45 @@ void CGMCharacter::_ChangeIdle(const double dDeltaTime)
 
 void CGMCharacter::_ChangeArm(const double dDeltaTime)
 {
+	static float s_fWaveTime = 0.0f;	// 目标挥舞的时间，单位：秒
+	static float s_fArmUpAcceThreshold = 10.0f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
+
+	// 目标加速度大于某个阈值时，才会抬手，
+	if(m_fDeltaVelocity > s_fArmUpAcceThreshold)
+		s_fWaveTime += dDeltaTime;
+	else
+		s_fWaveTime = 0.0f;
+	// 目标挥舞的时间大于2秒，才会抬手
+	bool bArmUp = s_fWaveTime > 2.0f;
+	if (bArmUp)
+		s_fWaveTime = 0.0f;
+
+	// 加速度越大，抬手越快
+	float fArmDuration = 6.0f / osg::clampTo((m_fDeltaVelocity - s_fArmUpAcceThreshold) * 0.1, 1.0, 2.0);
 	// 抬手不能过于频繁，所以等一段时间后，下一个手臂动画才会开始
-	if ((m_fArmTimeL > 4 * m_fArmDurationL) && (m_fInterest > 0.5)
-		&& (m_animHeadL.fWeightNow > 0.3) && (m_animHeadU.fWeightNow > 0.1))
+	if (bArmUp && (m_fArmTimeL > m_fArmDurationL) && (m_fInterest > 0.5)
+		&& (m_animHeadL.fWeightNow > 0.1) && (m_animHeadL.fWeightTarget > 0.4))
 	{
 		// 重置手部动画的时间
 		m_fArmTimeL = 0.0;
+		m_animArmL.bAnimOn = true;
 		m_animArmL.fWeightSource = 0;
 		m_animArmL.fWeightTarget = max(m_animHeadL.fWeightNow, m_animHeadU.fWeightNow);
-		m_fArmDurationL = m_iPseudoNoise(m_iRandom) * 0.04 + 4.0;
+		m_fArmDurationL = fArmDuration;
 		
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fArmDurationL, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
 	}
 
-	if ((m_fArmTimeR > 4 * m_fArmDurationR) && (m_fInterest > 0.5)
-		&& (m_animHeadR.fWeightNow > 0.3) && (m_animHeadU.fWeightNow > 0.1))
+	if (bArmUp && (m_fArmTimeR > m_fArmDurationR) && (m_fInterest > 0.5)
+		&& (m_animHeadR.fWeightNow > 0.1) && (m_animHeadR.fWeightTarget > 0.4))
 	{
 		// 重置手部动画的时间
 		m_fArmTimeR = 0.0;
+		m_animArmR.bAnimOn = true;
 		m_animArmR.fWeightSource = 0;
 		m_animArmR.fWeightTarget = max(m_animHeadR.fWeightNow, m_animHeadU.fWeightNow);
-		m_fArmDurationR = m_iPseudoNoise(m_iRandom) * 0.04 + 4.0;
+		m_fArmDurationR = fArmDuration;
 
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fArmDurationR, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
@@ -301,14 +328,6 @@ void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 
 void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 {
-	// 计算目标点的加速度
-	osg::Vec3d vTargetVelocity = (m_vTargetWorldPos - m_vTargetLastWorldPos) / dDeltaTime;
-	osg::Vec3d vDeltaVelocity = vTargetVelocity - m_vTargetLastVelocity;
-	float fDeltaVelocity = vDeltaVelocity.length();
-
-	m_vTargetLastVelocity = vTargetVelocity;
-	m_vTargetLastWorldPos = m_vTargetWorldPos;
-
 	if (m_bDisdain)
 	{
 		if (m_fAngry < 0.5)
@@ -321,16 +340,16 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 		// 如果目标在变速运动，且愤怒值小于某个阈值，则角色的好奇开始增加
 		if (m_fAngry < 0.7)
 		{
-			m_fInterest = fmin(1.0f, m_fInterest + fDeltaVelocity * 3e-3f);
+			m_fInterest = fmin(1.0f, m_fInterest + m_fDeltaVelocity * 3e-3f);
 		}
 
 		// 如果变化不剧烈，则不会增加愤怒，超过一定的速度后才会增加
-		float fAddAngry = fmax(0.0f, fDeltaVelocity - 10.0f);
+		float fAddAngry = fmax(0.0f, m_fDeltaVelocity - 10.0f);
 		// 如果短时间内加速度模的累计值过大，说明目标在剧烈运动，可以认为在耍自己，愤怒值飙升
 		m_fAngry = fmin(m_fAngry + fAddAngry * fAddAngry * 1e-6f, 1.0f);
 
 		// 对短时加速度过大的物体会有危机感，增加害怕值
-		m_fScared = fmin(m_fScared + fmax(0.0f, fDeltaVelocity-10.0f)*5e-4f, 1.0f);
+		m_fScared = fmin(m_fScared + fmax(0.0f, m_fDeltaVelocity - 10.0f) * 5e-4f, 1.0f);
 	}
 
 	osg::Vec3d vDir = osg::Vec3d(0, -1, 0);
@@ -525,11 +544,10 @@ void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
 
 void CGMCharacter::_UpdateArmAnimation(const double dDeltaTime)
 {
-	m_fArmTimeL += dDeltaTime;
-	m_fArmTimeR += dDeltaTime;
-
-	if (m_fArmTimeL <= m_fArmDurationL)
+	if (!m_animArmR.bAnimOn && m_fArmTimeL <= m_fArmDurationL)
 	{
+		m_fArmTimeL += dDeltaTime;
+
 		float fMix = 0.0;
 		if (ARM_FADE_TIME >= m_fArmTimeL) // 淡入
 			fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmTimeL);
@@ -541,9 +559,15 @@ void CGMCharacter::_UpdateArmAnimation(const double dDeltaTime)
 		m_animArmL.fWeightNow = m_animArmL.fWeightSource * (1 - fMix) + m_animArmL.fWeightTarget * fMix;
 		GM_ANIMATION.SetAnimationWeight(m_strName, m_animArmL.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
 	}
-
-	if (m_fArmTimeR <= m_fArmDurationR)
+	else
 	{
+		m_animArmL.bAnimOn = false;
+	}
+
+	if (!m_animArmL.bAnimOn && m_fArmTimeR <= m_fArmDurationR)
+	{
+		m_fArmTimeR += dDeltaTime;
+
 		float fMix = 0.0;
 		if (ARM_FADE_TIME >= m_fArmTimeR) // 淡入
 			fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmTimeR);
@@ -554,6 +578,10 @@ void CGMCharacter::_UpdateArmAnimation(const double dDeltaTime)
 
 		m_animArmR.fWeightNow = m_animArmR.fWeightSource * (1 - fMix) + m_animArmR.fWeightTarget * fMix;
 		GM_ANIMATION.SetAnimationWeight(m_strName, m_animArmR.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
+	}
+	else
+	{
+		m_animArmR.bAnimOn = false;
 	}
 }
 

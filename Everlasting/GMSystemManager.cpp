@@ -32,7 +32,6 @@ CGMSystemManager Methods
 *************************************************************************/
 
 CGMSystemManager::CGMSystemManager()
-	: m_bInit(false), m_bFirst(true), m_nKeyMask(0)
 {
 }
 
@@ -133,6 +132,7 @@ void CGMSystemManager::timerEvent(QTimerEvent *event)
 {
 	if (m_bFirst)
 	{
+		GM_ENGINE.Welcome();
 		m_bFirst = false;
 	}
 

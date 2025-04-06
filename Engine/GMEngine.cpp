@@ -317,6 +317,16 @@ void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)
 	m_pCharacter->SetLookTargetPos(vTargetWorldPos);
 }
 
+void CGMEngine::Welcome()
+{
+	m_pAudio->Welcome();
+}
+
+bool CGMEngine::IsWelcomeFinished() const
+{
+	return m_pAudio->IsWelcomeFinished();
+}
+
 CGMViewWidget* CGMEngine::CreateViewWidget(QWidget* parent)
 {
 	GM_Viewer = new CGMViewWidget(GM_View, parent);

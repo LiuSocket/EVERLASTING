@@ -74,8 +74,8 @@ public:
 	static CGMSystemManager* getSingletonPtr(void);
 
 private:
-	bool							m_bInit;				//!< 初始化标识
-	bool							m_bFirst;				//!< 是否第一帧
+	bool							m_bInit = false;				//!< 初始化标识
+	bool							m_bFirst = true;				//!< 是否第一帧
 
-	uint							m_nKeyMask;
+	uint							m_nKeyMask = 0;
 };

@@ -72,7 +72,7 @@ bool CGMSystemManager::Init()
 	GM_UI_MANAGER.Init();
 
 	// Æô¶¯¶¨Ê±Æ÷
-	startTimer(8);
+	startTimer(16);
 
 	m_bInit = true;
 	return true;

@@ -335,7 +335,7 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
 	{
 		vSoftRange = osg::Vec3(0.4f, 0.01f, 0.01f);
 		vSoftCenter = osg::Vec3(-0.4f, 0.0f, 0.0f);
-		fElastic = 20.0;
+		fElastic = 60.0;
 	}
 	else if (std::string::npos != name.find("Neck"))
 	{

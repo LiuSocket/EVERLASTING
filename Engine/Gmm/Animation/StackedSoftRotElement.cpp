@@ -55,7 +55,7 @@ void StackedSoftRotElement::update(float frame)
 	_fShakeValue += _vShakeVelocity;
 	_angle += _fShakeValue;
 
-	_fShakeValue *= 0.95;
+	_fShakeValue *= 0.9;
 
 	_fLastRigAngle = _fRigAngle;
 	_fLastRigAngleVelocity = _fRigAngleVelocity;

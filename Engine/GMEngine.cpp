@@ -327,6 +327,14 @@ bool CGMEngine::IsWelcomeFinished() const
 	return m_pAudio->IsWelcomeFinished();
 }
 
+bool CGMEngine::Play()
+{
+	std::wstring strAudioFile = L"The Minions - Y.M.C.A.mp3";
+	m_pAudio->SetCurrentAudio(strAudioFile);
+	m_pAudio->AudioControl(EGMA_CMD_PLAY);
+	return true;
+}
+
 CGMViewWidget* CGMEngine::CreateViewWidget(QWidget* parent)
 {
 	GM_Viewer = new CGMViewWidget(GM_View, parent);

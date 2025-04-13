@@ -117,6 +117,8 @@ namespace GM
 		*/
 		bool IsWelcomeFinished() const;
 
+		bool Play();
+
 		/** @brief 创建视口(QT:QWidget) */
 		CGMViewWidget* CreateViewWidget(QWidget* parent);
 

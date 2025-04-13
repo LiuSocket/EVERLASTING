@@ -22,7 +22,10 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	connect(ui.minBtn, SIGNAL(clicked()), this, SLOT(_slotMinimum()));
 	connect(ui.maxBtn, SIGNAL(clicked()), this, SLOT(_slotMaximum()));
 	connect(ui.closeBtn, SIGNAL(clicked()), this, SLOT(_slotClose()));
+	connect(ui.volumeBtn, &QPushButton::clicked, this, &CGMMainWindow::_slotVolume);
+	connect(ui.listBtn, &QPushButton::clicked, this, &CGMMainWindow::_slotList);
 	connect(ui.fullScreenBtn, SIGNAL(clicked()), this, SLOT(_slotFullScreen()));
+	
 
 	// º”‘ÿQSS
 	QFile qssFile(":/Resources/MainWindow.qss");
@@ -126,6 +129,15 @@ void CGMMainWindow::_slotClose()
 {
 	GM_ENGINE.Save();
 	exit(0);
+}
+
+void CGMMainWindow::_slotVolume()
+{
+}
+
+void CGMMainWindow::_slotList()
+{
+	GM_ENGINE.Play();
 }
 
 void CGMMainWindow::_slotFullScreen()

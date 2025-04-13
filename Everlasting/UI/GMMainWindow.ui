@@ -26,7 +26,7 @@
    <enum>Qt::ClickFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>星音乐</string>
+   <string>EVERLASTING</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="mouseTracking">
@@ -311,39 +311,35 @@
          <property name="spacing">
           <number>0</number>
          </property>
-         <item row="0" column="0" rowspan="2">
-          <spacer name="horizontalSpacer_7">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+         <item row="0" column="1" rowspan="2">
+          <widget class="QLabel" name="audioImgLab">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
+           <property name="minimumSize">
             <size>
-             <width>12</width>
+             <width>64</width>
              <height>64</height>
             </size>
            </property>
-          </spacer>
+           <property name="maximumSize">
+            <size>
+             <width>64</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="toolTipDuration">
+            <number>-1</number>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
          </item>
          <item row="0" column="5" rowspan="2">
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>64</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="4" rowspan="2">
           <widget class="QPushButton" name="fullScreenBtn">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -374,6 +370,88 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="0" rowspan="2">
+          <spacer name="horizontalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>12</width>
+             <height>64</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="0" colspan="7">
+          <spacer name="bottomEdge">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>1258</width>
+             <height>6</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="6" rowspan="2">
+          <spacer name="horizontalSpacer_4">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType">
+            <enum>QSizePolicy::Fixed</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>64</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="4" rowspan="2">
+          <widget class="QPushButton" name="listBtn">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>40</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>64</height>
+            </size>
+           </property>
+           <property name="mouseTracking">
+            <bool>true</bool>
+           </property>
+           <property name="toolTip">
+            <string>播放</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
          <item row="0" column="2" rowspan="2">
           <spacer name="horizontalSpacer_6">
            <property name="orientation">
@@ -390,49 +468,30 @@
            </property>
           </spacer>
          </item>
-         <item row="0" column="1" rowspan="2">
-          <widget class="QLabel" name="audioImgLab">
+         <item row="0" column="3" rowspan="2">
+          <widget class="QPushButton" name="volumeBtn">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
            <property name="minimumSize">
             <size>
-             <width>64</width>
+             <width>40</width>
              <height>64</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>64</width>
+             <width>40</width>
              <height>64</height>
             </size>
-           </property>
-           <property name="toolTipDuration">
-            <number>-1</number>
            </property>
            <property name="text">
             <string/>
            </property>
           </widget>
-         </item>
-         <item row="2" column="0" colspan="6">
-          <spacer name="bottomEdge">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeType">
-            <enum>QSizePolicy::Fixed</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>1258</width>
-             <height>6</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </widget>
@@ -448,6 +507,7 @@
   <tabstop>minBtn</tabstop>
   <tabstop>maxBtn</tabstop>
   <tabstop>closeBtn</tabstop>
+  <tabstop>listBtn</tabstop>
   <tabstop>fullScreenBtn</tabstop>
  </tabstops>
  <resources/>

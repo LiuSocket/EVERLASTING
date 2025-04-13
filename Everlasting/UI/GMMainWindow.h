@@ -32,7 +32,7 @@ public:
 	*/
 	bool GetFullScreen();
 
-public slots:
+private slots:
 
 	/** @brief 最小化/还原 */
 	void _slotMinimum();
@@ -40,8 +40,13 @@ public slots:
 	void _slotMaximum();
 	/** @brief 关闭 */
 	void _slotClose();
+	/** @brief 音量 */
+	void _slotVolume();
+	/** @brief 列表 */
+	void _slotList();
 	/** @brief 启用全屏 */
 	void _slotFullScreen();
+	
 
 protected:
 	void changeEvent(QEvent* event);

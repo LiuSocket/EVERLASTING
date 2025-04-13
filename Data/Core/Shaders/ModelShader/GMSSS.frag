@@ -42,7 +42,7 @@ vec3 SSS(vec3 sssDeep, float dotNL, float curvature, float thickness)
 {
 	float sqrtCurv = sqrt(curvature);
 	float dotNLN = min(0.0, dotNL);
-	return mix(vec3(dotNL), vec3(sqrtCurv / (1.0 + 3.0*dotNLN*dotNLN)), (1.0-thickness)*sssDeep*sqrtCurv);
+	return max(vec3(0), mix(vec3(dotNL), vec3(sqrtCurv / (1.0 + 3.0*dotNLN*dotNLN)), (1.0-thickness)*sssDeep*sqrtCurv));
 }
 
 void main()
@@ -104,7 +104,7 @@ void main()
 	vec4 ambient = vec4(mix(vec3(0.2, 0.24, 0.26), vec3(0.04), max(0.5*(1.0-localReflect.z),0))*ambientOcc, 1.0);
 
 	/* Diffuse BRDF */
-	vec3 diffuseL = shadow*max(vec3(0),sss)*mainlightColor;
+	vec3 diffuseL = (vec3(1) - exp2(-shadow*20.0*max(vec3(0.1), sssDeep)))*sss*mainlightColor;
 	vec3 diffuseFact = (1-metallic)*diffuseL*gl_FrontMaterial.diffuse.rgb;
 
 	/* Microfacet Specular BRDF */

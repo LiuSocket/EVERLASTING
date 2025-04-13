@@ -32,7 +32,7 @@ Global Constants
 
 #define  SEEK_TARGET_TIME					(2.0f)		// 搜索目标最长时间，单位：秒
 #define  IDLE_ADD_FADE_TIME					(0.5f)		// idle附加动画的淡入淡出时间，单位：秒
-#define  ARM_FADE_TIME						(0.5f)		// 手部动画的淡入淡出时间，单位：秒
+#define  ARM_FADE_TIME						(0.8f)		// 手部动画的淡入淡出时间，单位：秒
 
 /*************************************************************************
 CGMCharacter Methods
@@ -46,6 +46,7 @@ CGMCharacter::CGMCharacter()
 
 	m_strBoneAnimNameVec.push_back("bone_idle");
 	m_strBoneAnimNameVec.push_back("bone_idleAdd_0");
+	m_strBoneAnimNameVec.push_back("bone_dance_0");
 	m_strBoneAnimNameVec.push_back("bone_head_L");
 	m_strBoneAnimNameVec.push_back("bone_head_R");
 	m_strBoneAnimNameVec.push_back("bone_head_U");
@@ -88,6 +89,8 @@ bool CGMCharacter::Update(double dDeltaTime)
 
 	// 更新idle动画权重
 	_UpdateIdle(dDeltaTime);
+	// 更新舞蹈动画权重
+	_UpdateDance(dDeltaTime);
 	// 过渡状态时需要每帧更新转头动画的权重
 	_UpdateLookAnimation(dDeltaTime);
 	// 更新手部动画权重
@@ -98,6 +101,8 @@ bool CGMCharacter::Update(double dDeltaTime)
 
 	// 每帧都在减少好奇心（注意力很难长时间集中）
 	m_fInterest = fmax(0.0f, m_fInterest - 0.5f * dDeltaTime);
+	// 每帧都在趋于平静（心情会慢慢变好）
+	m_fHappy = CGMKit::Mix(m_fHappy, 0.5f, min(1.0f, 0.05f * float(dDeltaTime)));
 	// 每帧都在减少愤怒值（消气）
 	m_fAngry = fmax(0.0f, m_fAngry - 0.03f * dDeltaTime);
 	// 每帧都在减少害怕值
@@ -124,6 +129,9 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
 
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
 
@@ -137,10 +145,10 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
@@ -175,6 +183,26 @@ void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v
 	}
 }
 
+void CGMCharacter::SetMusicEnable(bool bEnable)
+{
+	m_bMusicOn = bEnable;
+
+	// 立刻开始四处看
+	m_fLookDuration = 0;
+
+	// “惊讶”
+	if (m_bMusicOn)
+	{
+		m_fInterest = 1.0f;
+		if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE)))
+		{
+			GM_ANIMATION.SetAnimationDuration(m_strName, 2.0f, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+		}
+	}
+}
+
 void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 {
 	// 计算目标点的加速度
@@ -182,9 +210,17 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	osg::Vec3d vDeltaVelocity = vTargetVelocity - m_vTargetLastVelocity;
 	m_fDeltaVelocity = vDeltaVelocity.length();
 
-	// 转身动画
-	_ChangeIdle(dDeltaTime);
-	// 手部动画
+	if (m_bMusicOn)
+	{
+		m_fHappy = min(1.0f, m_fHappy + 0.01f*dDeltaTime);
+		_ChangeDance(dDeltaTime);
+	}
+	else
+	{
+		_ChangeIdle(dDeltaTime);
+	}
+
+	// 改变手部动画
 	_ChangeArm(dDeltaTime);
 	// 眼睛转向
 	_ChangeLookDir(dDeltaTime);
@@ -244,7 +280,7 @@ void CGMCharacter::_ChangeIdle(const double dDeltaTime)
 		m_fIdleTime = 0.0;
 		// 开始在“Idle动画”中混入“转身动画”，也就是让转身动画时间不为0
 		m_fIdleAddTime += 1e-5;
-		m_fIdleDuration = (m_iPseudoNoise(m_iRandom)%3 + 1) * 5.0;
+		m_fIdleDuration = (m_iPseudoNoise(m_iRandom) % 3 + 1) * 5.0;
 		m_fIdleAddDuration = m_iPseudoNoise(m_iRandom) * 0.1 + 4.0;
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fIdleAddDuration, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
 		GM_ANIMATION.SetAnimationWeight(m_strName, 0.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
@@ -252,26 +288,42 @@ void CGMCharacter::_ChangeIdle(const double dDeltaTime)
 	}
 }
 
+void CGMCharacter::_ChangeDance(const double dDeltaTime)
+{
+	m_animDance.fWeightTarget = osg::clampTo(20 * (m_fHappy - 0.51f), 0.0f, 1.0f);
+	if (m_animDance.fWeightTarget > 0.0f)
+	{
+		if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0)))
+		{
+			m_animDance.bAnimOn = true;
+			m_animDance.fWeightSource = 0;
+			GM_ANIMATION.SetAnimationWeight(m_strName, 0, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+		}
+	}
+}
+
 void CGMCharacter::_ChangeArm(const double dDeltaTime)
 {
-	static float s_fWaveTime = 0.0f;	// 目标挥舞的时间，单位：秒
+	static float s_fWaveSumTime = 0.0f;	// 目标挥舞的时间，单位：秒
 	static float s_fArmUpAcceThreshold = 10.0f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
 
 	// 目标加速度大于某个阈值时，才会抬手，
 	if(m_fDeltaVelocity > s_fArmUpAcceThreshold)
-		s_fWaveTime += dDeltaTime;
+		s_fWaveSumTime += dDeltaTime;
 	else
-		s_fWaveTime = 0.0f;
-	// 目标挥舞的时间大于2秒，才会抬手
-	bool bArmUp = s_fWaveTime > 2.0f;
+		s_fWaveSumTime = 0.0f;
+	// 目标挥舞的时间大于2秒，才会有一定的概率抬手
+	bool bArmUp = s_fWaveSumTime > 2.0f && (m_iPseudoNoise(m_iRandom) > 50 );
 	if (bArmUp)
-		s_fWaveTime = 0.0f;
+		s_fWaveSumTime = 0.0f;
+
 
 	// 加速度越大，抬手越快
 	float fArmDuration = 6.0f / osg::clampTo((m_fDeltaVelocity - s_fArmUpAcceThreshold) * 0.1, 1.0, 2.0);
 	// 抬手不能过于频繁，所以等一段时间后，下一个手臂动画才会开始
 	if (bArmUp && (m_fArmTimeL > m_fArmDurationL) && (m_fInterest > 0.5)
-		&& (m_animHeadL.fWeightNow > 0.1) && (m_animHeadL.fWeightTarget > 0.4))
+		&& (m_animHeadL.fWeightNow > 0.1) && (m_animHeadL.fWeightTarget > 0.2))
 	{
 		// 重置手部动画的时间
 		m_fArmTimeL = 0.0;
@@ -283,9 +335,17 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fArmDurationL, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
 	}
+	else
+	{
+		// 如果头已经看向右边，左手动画就不需要了
+		if ((m_animHeadR.fWeightTarget > 0.0) && (m_fArmDurationL > (m_fArmTimeL + ARM_FADE_TIME)))
+		{
+			m_fArmDurationL = m_fArmTimeL + ARM_FADE_TIME;
+		}
+	}
 
 	if (bArmUp && (m_fArmTimeR > m_fArmDurationR) && (m_fInterest > 0.5)
-		&& (m_animHeadR.fWeightNow > 0.1) && (m_animHeadR.fWeightTarget > 0.4))
+		&& (m_animHeadR.fWeightNow > 0.1) && (m_animHeadR.fWeightTarget > 0.2))
 	{
 		// 重置手部动画的时间
 		m_fArmTimeR = 0.0;
@@ -297,6 +357,14 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fArmDurationR, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
 	}
+	else
+	{
+		// 如果头已经看向左边，右手部动画就不需要了
+		if ((m_animHeadL.fWeightTarget > 0.0) && (m_fArmDurationR > (m_fArmTimeR + ARM_FADE_TIME)))
+		{
+			m_fArmDurationR = m_fArmTimeR + ARM_FADE_TIME;
+		}
+	}
 }
 
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
@@ -306,17 +374,6 @@ void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 	// 如果强迫角色注视目标点，则注视一段时间
 	if (m_bTargetVisible && !bIgnoreTarget)
 	{
-		// “惊讶”
-		if (m_fScared > 0.0f && m_fAngry < 0.1f && m_fInterest < 0.4f)
-		{
-			if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE)))
-			{
-				GM_ANIMATION.SetAnimationDuration(m_strName, 2.0f, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-				GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-				GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-			}
-		}
-
 		_ChangeLookAtTarget(dDeltaTime);
 	}
 	else if(m_fSeekTargetTime > SEEK_TARGET_TIME)// 否则则执行“四处张望”的功能
@@ -415,10 +472,18 @@ void CGMCharacter::_ChangeLookAround(const double dDeltaTime)
 		else if (fPitch > 30) fPitch -= 30;
 		else {}
 
-		// 需要让眼睛大部分时间都朝前看，所以给俯仰角和偏转角乘了个系数
-		float fCenterCloser = m_iPseudoNoise(m_iRandom) * 0.01; // [0,1]
-		fHeading *= fCenterCloser;
-		fPitch *= fCenterCloser;
+		// 如果好奇心过高，眼睛就会快速到处搜索，左右看
+		if (m_fInterest > 0.7)
+		{
+			fHeading = abs(fHeading) * ((m_fTargetHeading > 0) ? -1 : 1);
+		}
+		else
+		{
+			// 需要让眼睛大部分时间都朝前看，所以给俯仰角和偏转角乘了个系数
+			float fCenterCloser = m_iPseudoNoise(m_iRandom) * 0.01; // [0,1]
+			fHeading *= fCenterCloser;
+			fPitch *= fCenterCloser;
+		}
 
 		// 计算当前朝向与下一个朝向的差值，以便于设置转向时间
 		fDeltaHeading = fHeading - m_fTargetHeading;
@@ -439,8 +504,8 @@ void CGMCharacter::_ChangeLookAround(const double dDeltaTime)
 		s_fLookAroundTime = 0.0;
 		//重置混合时间，开始混合动画
 		m_fTurnMixTime = 0.0f;
-		m_fLookDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 0.5;
-		m_fTurnDuration = (m_iPseudoNoise(m_iRandom) * 0.0001 + 0.01) * fDeltaAngle + 0.3;
+		m_fLookDuration = max(0, m_iPseudoNoise(m_iRandom) * 0.001 / max(0.01, m_fInterest)) + 0.5;
+		m_fTurnDuration = ((m_iPseudoNoise(m_iRandom) * 0.00001 + 0.001) * fDeltaAngle + 0.03) / max(0.1, m_fInterest);
 	}
 	s_fLookAroundTime += dDeltaTime;
 }
@@ -530,6 +595,12 @@ void CGMCharacter::_UpdateIdle(const double dDeltaTime)
 		m_fIdleAddTime = 0.0;
 }
 
+void CGMCharacter::_UpdateDance(const double dDeltaTime)
+{
+	m_animDance.SetWeightCloserToTarget(dDeltaTime, 1.0f);
+	GM_ANIMATION.SetAnimationWeight(m_strName, m_animDance.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+}
+
 void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
 {
 	if (m_bTargetVisible || m_fSeekTargetTime < SEEK_TARGET_TIME)
@@ -548,13 +619,8 @@ void CGMCharacter::_UpdateArmAnimation(const double dDeltaTime)
 	{
 		m_fArmTimeL += dDeltaTime;
 
-		float fMix = 0.0;
-		if (ARM_FADE_TIME >= m_fArmTimeL) // 淡入
-			fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmTimeL);
-		else if ((m_fArmDurationL - ARM_FADE_TIME) <= m_fArmTimeL) // 淡出
-			fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmDurationL - m_fArmTimeL);
-		else
-			fMix = 1.0;
+		float fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmTimeL) // 淡入
+			* _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmDurationL - m_fArmTimeL); // 淡出
 
 		m_animArmL.fWeightNow = m_animArmL.fWeightSource * (1 - fMix) + m_animArmL.fWeightTarget * fMix;
 		GM_ANIMATION.SetAnimationWeight(m_strName, m_animArmL.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
@@ -568,13 +634,8 @@ void CGMCharacter::_UpdateArmAnimation(const double dDeltaTime)
 	{
 		m_fArmTimeR += dDeltaTime;
 
-		float fMix = 0.0;
-		if (ARM_FADE_TIME >= m_fArmTimeR) // 淡入
-			fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmTimeR);
-		else if ((m_fArmDurationR - ARM_FADE_TIME) <= m_fArmTimeR) // 淡出
-			fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmDurationR - m_fArmTimeR);
-		else
-			fMix = 1.0;
+		float fMix = _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmTimeR) // 淡入
+			* _Smoothstep(0.0f, ARM_FADE_TIME, m_fArmDurationR - m_fArmTimeR); // 淡出
 
 		m_animArmR.fWeightNow = m_animArmR.fWeightSource * (1 - fMix) + m_animArmR.fWeightTarget * fMix;
 		GM_ANIMATION.SetAnimationWeight(m_strName, m_animArmR.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));

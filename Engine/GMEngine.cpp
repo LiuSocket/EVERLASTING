@@ -332,6 +332,8 @@ bool CGMEngine::Play()
 	std::wstring strAudioFile = L"The Minions - Y.M.C.A.mp3";
 	m_pAudio->SetCurrentAudio(strAudioFile);
 	m_pAudio->AudioControl(EGMA_CMD_PLAY);
+
+	m_pCharacter->SetMusicEnable(true);
 	return true;
 }
 

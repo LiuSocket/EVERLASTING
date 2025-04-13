@@ -25,10 +25,12 @@ namespace GM
 	// 骨骼动画的枚举值
 	enum EGMANIMATION_BONE
 	{
-		/** 0号idle */
+		/** idle */
 		EA_BONE_IDLE,
-		/** 0号idle 转 1号idle */
+		/** 小动作：脚稍微动一动 */
 		EA_BONE_IDLE_ADD_0,
+		/** 跳舞 */
+		EA_BONE_DANCE_0,
 		/** 头朝左看 */
 		EA_BONE_HEAD_L,
 		/** 头朝右看 */
@@ -169,6 +171,8 @@ namespace GM
 				m_vTargetWorldPos = vTargetWorldPos;
 		}
 
+		void SetMusicEnable(bool bEnable);
+
 	private:
 		void _InnerUpdate(const double dDeltaTime);
 		/** @brief 定时更新眨眼状态 */
@@ -177,6 +181,8 @@ namespace GM
 		void _InnerUpdateLip(const double dDeltaTime);
 		/** @brief 改变idle状态 */
 		void _ChangeIdle(const double dDeltaTime);
+		/** @brief 改变舞蹈动作 */
+		void _ChangeDance(const double dDeltaTime);
 		/** @brief 改变手部状态 */
 		void _ChangeArm(const double dDeltaTime);
 		/** @brief 改变注视方向 */
@@ -190,6 +196,8 @@ namespace GM
 
 		/** @brief 每帧更新idle动画 */
 		void _UpdateIdle(const double dDeltaTime);
+		/** @brief 每帧更新舞蹈动作 */
+		void _UpdateDance(const double dDeltaTime);
 		/** @brief 每帧更新转头动画 */
 		void _UpdateLookAnimation(const double dDeltaTime);
 		/** @brief 每帧更新手部动画 */
@@ -262,7 +270,7 @@ namespace GM
 		float m_fArmDurationR = 4.0f;							//!< 右手动画周期，单位：秒
 
 		float m_fSeekTargetTime = 0.0f;							//!< 搜索目标这个动作花了多长时间，单位：秒
-		float m_fLookDuration = 2.0f;							//!< 注视周期（不是注视目标），单位：秒
+		float m_fLookDuration = 2.0f;							//!< 四处观望时，盯在某个方向的时间，单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头周期，单位：秒
 		float m_fFastTurnDuration = 0.5f;						//!< 快速转头周期，单位：秒
 		float m_fTurnMixTime = 0.0f;							//!< 当前转头动画混合所经过的时间，单位：秒
@@ -270,6 +278,7 @@ namespace GM
 		float m_fTargetHeading = 0.0f;							//!< 眼睛偏航角，左正右负，单位：°
 		float m_fTargetPitch = 0.0f;							//!< 眼睛俯仰角，上正下负，单位：°
 
+		SGMAnimData m_animDance = SGMAnimData(EA_BONE_DANCE_0);		//!< 舞蹈的权重
 		SGMAnimData m_animHeadL = SGMAnimData(EA_BONE_HEAD_L);		//!< left动作的权重
 		SGMAnimData m_animHeadR = SGMAnimData(EA_BONE_HEAD_R);		//!< right动作的权重
 		SGMAnimData m_animHeadU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作的权重
@@ -290,8 +299,10 @@ namespace GM
 		float m_fEyeBallHeading = 0.0f;							//!< 眼球当前偏航角，左正右负，单位：弧度
 		float m_fEyeBallPitch = 0.0f;							//!< 眼球当前俯仰角，上正下负，单位：弧度
 
-		//!< 好奇，[0.0, 1.0]，0.0 == 淡，无视目标；1.0 == 浓，完全被目标吸引
+		//!< 好奇，[0.0, 1.0]，0.0 == 清心寡欲，无视目标；1.0 == 强烈的好奇心，会完全被目标吸引
 		float m_fInterest = 0.0f;
+		//!< 开心，[0.0, 1.0]，0.0 == 悲痛欲绝；0.5 == 平静; 1.0 == 欣喜若狂
+		float m_fHappy = 0.5f;
 		//!< 愤怒，[0.0, 1.0]，0.0 == 平静；1.0 == 非常愤怒
 		float m_fAngry = 0.0f;
 		//!< 害怕，[0.0, 1.0]，0.0 == 平静；1.0 == 感到恐怖
@@ -299,6 +310,7 @@ namespace GM
 
 		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
 		bool m_bTargetVisible = false;							//!< 注视目标是否可见
+		bool m_bMusicOn = false;								//!< 音乐是否开启
 
 		float m_fDeltaVelocity = 0;								//!< 目标点的速度差，单位：cm/s
 		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm

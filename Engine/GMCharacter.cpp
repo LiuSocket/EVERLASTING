@@ -82,14 +82,14 @@ bool CGMCharacter::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 
 bool CGMCharacter::Update(double dDeltaTime)
 {
-	static double fConstantStep = 0.05;
-	static double fDeltaStep = 0.0;
-	if (fDeltaStep > fConstantStep)
+	static double s_fConstantStep = 0.05;
+	static double s_fDeltaStep = 0.0;
+	if (s_fDeltaStep > s_fConstantStep)
 	{
-		_InnerUpdate(fDeltaStep);
-		fDeltaStep = 0.0;
+		_InnerUpdate(s_fDeltaStep);
+		s_fDeltaStep = 0.0;
 	}
-	fDeltaStep += dDeltaTime;
+	s_fDeltaStep += dDeltaTime;
 
 	// 更新idle动画权重
 	_UpdateIdle(dDeltaTime);
@@ -190,6 +190,8 @@ void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v
 
 void CGMCharacter::SetMusicEnable(bool bEnable)
 {
+	if (m_bMusicOn == bEnable) return;
+
 	m_bMusicOn = bEnable;
 	m_fMusicTime = 0.0f;
 
@@ -205,6 +207,16 @@ void CGMCharacter::SetMusicEnable(bool bEnable)
 			GM_ANIMATION.SetAnimationDuration(m_strName, 6.0f, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+		}
+	}
+	else
+	{
+		for (auto& itr : m_animDanceVec)
+		{
+			if (!itr.bAnimOn) continue;
+
+			itr.fWeightSource = itr.fWeightNow;
+			itr.fWeightTarget = 0;
 		}
 	}
 }
@@ -647,6 +659,8 @@ void CGMCharacter::_UpdateDance(const double dDeltaTime)
 		float fFadeSpeed = 1.0f;
 		if (m_bStartDance) // 如果是第一次跳舞，则需要慢慢淡入
 			fFadeSpeed = 0.1f;
+		else if(!m_bMusicOn)
+			fFadeSpeed = 2.0f;
 
 		if (itr.SetWeightCloserToTarget(dDeltaTime, fFadeSpeed))
 		{

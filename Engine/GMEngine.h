@@ -163,8 +163,6 @@ namespace GM
 		bool								m_bInit = false;                //!< 初始化标志
 		bool								m_bRendering = true;            //!< 是否渲染
 		double								m_dTimeLastFrame = 0.0;         //!< 上一帧时间
-		float								m_fDeltaStep = 0.0f;            //!< 单位s
-		float								m_fConstantStep = 0.1f;         //!< 等间隔更新的时间,单位s
 
 		CGMModel*							m_pModel = nullptr;				//!< 模型模块
 		CGMCharacter*						m_pCharacter = nullptr;			//!< 角色模块

@@ -212,36 +212,35 @@ bool CGMEngine::Update()
 	if (GM_Viewer->checkNeedToDoFrame())
 	{
 		double timeCurrFrame = osg::Timer::instance()->time_s();
-		double deltaTime = timeCurrFrame - m_dTimeLastFrame; //单位:秒
+		double dDeltaTime = timeCurrFrame - m_dTimeLastFrame; //单位:秒
 		m_dTimeLastFrame = timeCurrFrame;
 
-		float fInnerDeltaTime = deltaTime;
-		fInnerDeltaTime += m_fDeltaStep;
-		float updateStep = m_fConstantStep;
-		while (fInnerDeltaTime >= updateStep)
+		static double s_fConstantStep = 0.05;		//!< 等间隔更新的时间,单位s
+		static double s_fDeltaStep = 0.0;			//!< 单位s
+		if (s_fDeltaStep > s_fConstantStep)
 		{
-			if(m_bRendering)
-				_InnerUpdate(updateStep);
-			fInnerDeltaTime -= updateStep;
+			if (m_bRendering)
+				_InnerUpdate(s_fDeltaStep);
+			s_fDeltaStep = 0.0;
 		}
-		m_fDeltaStep = fInnerDeltaTime;
+		s_fDeltaStep += dDeltaTime;
 
-		m_pAudio->Update(deltaTime);
+		m_pAudio->Update(dDeltaTime);
 		if (m_bRendering)
 		{
-			GM_LIGHT.Update(deltaTime);
+			GM_LIGHT.Update(dDeltaTime);
 
-			GM_UNIFORM.Update(deltaTime);
-			m_pPost->Update(deltaTime);
-			m_pModel->Update(deltaTime);
-			m_pCharacter->Update(deltaTime);
+			GM_UNIFORM.Update(dDeltaTime);
+			m_pPost->Update(dDeltaTime);
+			m_pModel->Update(dDeltaTime);
+			m_pCharacter->Update(dDeltaTime);
 
 			GM_Viewer->advance(USE_REFERENCE_TIME);
 			GM_Viewer->eventTraversal();
 			GM_Viewer->updateTraversal();
 
 			// 在主相机改变位置后再更新
-			_UpdateLater(deltaTime);
+			_UpdateLater(dDeltaTime);
 
 			GM_Viewer->renderingTraversals();
 		}
@@ -435,7 +434,10 @@ void CGMEngine::_InitForeground()
 
 void CGMEngine::_InnerUpdate(const float updateStep)
 {
-
+	if (m_pAudio->IsAudioOver())
+	{
+		m_pCharacter->SetMusicEnable(false);
+	}
 }
 
 bool CGMEngine::_UpdateLater(const double dDeltaTime)

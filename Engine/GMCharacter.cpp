@@ -47,6 +47,7 @@ CGMCharacter::CGMCharacter()
 	m_strBoneAnimNameVec.push_back("bone_idle");
 	m_strBoneAnimNameVec.push_back("bone_idleAdd_0");
 	m_strBoneAnimNameVec.push_back("bone_dance_0");
+	m_strBoneAnimNameVec.push_back("bone_dance_1");
 	m_strBoneAnimNameVec.push_back("bone_head_L");
 	m_strBoneAnimNameVec.push_back("bone_head_R");
 	m_strBoneAnimNameVec.push_back("bone_head_U");
@@ -60,6 +61,9 @@ CGMCharacter::CGMCharacter()
 	m_strMorphAnimNameVec.push_back("mouth_aa");
 	m_strMorphAnimNameVec.push_back("mouth_oo");
 	m_strMorphAnimNameVec.push_back("all_surprise");
+
+	m_animDanceVec.push_back(SGMAnimData(EA_BONE_DANCE_0));
+	m_animDanceVec.push_back(SGMAnimData(EA_BONE_DANCE_1));
 }
 
 /** @brief 析构 */
@@ -78,7 +82,7 @@ bool CGMCharacter::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 
 bool CGMCharacter::Update(double dDeltaTime)
 {
-	static double fConstantStep = 0.1;
+	static double fConstantStep = 0.05;
 	static double fDeltaStep = 0.0;
 	if (fDeltaStep > fConstantStep)
 	{
@@ -98,6 +102,8 @@ bool CGMCharacter::Update(double dDeltaTime)
 
 	// 每帧累加搜索时间
 	m_fSeekTargetTime += dDeltaTime;
+	// 每帧累加音乐播放时间
+	m_fMusicTime += dDeltaTime;
 
 	// 每帧都在减少好奇心（注意力很难长时间集中）
 	m_fInterest = fmax(0.0f, m_fInterest - 0.5f * dDeltaTime);
@@ -131,22 +137,21 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
-
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
-
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
-
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
 
@@ -186,6 +191,7 @@ void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v
 void CGMCharacter::SetMusicEnable(bool bEnable)
 {
 	m_bMusicOn = bEnable;
+	m_fMusicTime = 0.0f;
 
 	// 立刻开始四处看
 	m_fLookDuration = 0;
@@ -196,7 +202,7 @@ void CGMCharacter::SetMusicEnable(bool bEnable)
 		m_fInterest = 1.0f;
 		if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE)))
 		{
-			GM_ANIMATION.SetAnimationDuration(m_strName, 2.0f, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+			GM_ANIMATION.SetAnimationDuration(m_strName, 6.0f, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 			GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 		}
@@ -290,15 +296,54 @@ void CGMCharacter::_ChangeIdle(const double dDeltaTime)
 
 void CGMCharacter::_ChangeDance(const double dDeltaTime)
 {
-	m_animDance.fWeightTarget = osg::clampTo(20 * (m_fHappy - 0.51f), 0.0f, 1.0f);
-	if (m_animDance.fWeightTarget > 0.0f)
+	if (m_fHappy > 0.5f)
 	{
-		if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0)))
+		EGMANIMATION_BONE eDanceAnim = EA_BONE_IDLE;
+		// bPeriod 表示当前时间是否在一个“旋律”的开始位置,“旋律”由多个“节拍”组成
+		bool bPeriod = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicPeriod) * m_fMusicPeriod) < 0.05f;
+		if (bPeriod)
 		{
-			m_animDance.bAnimOn = true;
-			m_animDance.fWeightSource = 0;
-			GM_ANIMATION.SetAnimationWeight(m_strName, 0, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
-			GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+			if (m_animDanceVec.at(0).bAnimOn)// 如果0号舞蹈动画正在播放，则有一定概率播放1号舞蹈动画
+			{
+				if (m_iPseudoNoise(m_iRandom) > 90)
+				{
+					eDanceAnim = EA_BONE_DANCE_1;
+					//std::cout << "EA_BONE_DANCE_1" << std::endl;
+				}
+			}
+			else// 如果0号舞蹈动画不在播放，则下一个节奏循环后一定要播放0号舞蹈动画
+			{
+				eDanceAnim = EA_BONE_DANCE_0;
+				//std::cout << "EA_BONE_DANCE_0" << std::endl;
+			}
+		}
+		// bSympathetic 表示当前时间是否在鼓点上
+		bool bSympathetic = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicBeatTime) * m_fMusicBeatTime) < 0.05f;
+		if (bSympathetic && (int(eDanceAnim) >= int(EA_BONE_DANCE_0)))
+		{
+			for (auto& itr : m_animDanceVec)
+			{
+				if (eDanceAnim == itr.eAnimation)
+				{
+					itr.bAnimOn = true;
+					itr.fWeightSource = 0;
+					itr.fWeightNow = 0.0001;
+					itr.fWeightTarget = 1;
+					GM_ANIMATION.SetAnimationWeight(m_strName, 0.0001, m_strBoneAnimNameVec.at(itr.eAnimation));
+					GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(itr.eAnimation));
+				}
+				else
+				{
+					if (itr.bAnimOn)
+					{
+						// 一旦有新的舞蹈动画播放，则停止当前的舞蹈动画，且将“初次跳舞”标记为false
+						m_bStartDance = false;
+
+						itr.fWeightSource = itr.fWeightNow;
+						itr.fWeightTarget = 0;
+					}
+				}
+			}
 		}
 	}
 }
@@ -306,7 +351,7 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 void CGMCharacter::_ChangeArm(const double dDeltaTime)
 {
 	static float s_fWaveSumTime = 0.0f;	// 目标挥舞的时间，单位：秒
-	static float s_fArmUpAcceThreshold = 10.0f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
+	static float s_fArmUpAcceThreshold = 6.0f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
 
 	// 目标加速度大于某个阈值时，才会抬手，
 	if(m_fDeltaVelocity > s_fArmUpAcceThreshold)
@@ -597,8 +642,22 @@ void CGMCharacter::_UpdateIdle(const double dDeltaTime)
 
 void CGMCharacter::_UpdateDance(const double dDeltaTime)
 {
-	m_animDance.SetWeightCloserToTarget(dDeltaTime, 1.0f);
-	GM_ANIMATION.SetAnimationWeight(m_strName, m_animDance.fWeightNow, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+	for (auto& itr : m_animDanceVec)
+	{
+		float fFadeSpeed = 1.0f;
+		if (m_bStartDance) // 如果是第一次跳舞，则需要慢慢淡入
+			fFadeSpeed = 0.1f;
+
+		if (itr.SetWeightCloserToTarget(dDeltaTime, fFadeSpeed))
+		{
+			GM_ANIMATION.SetAnimationWeight(m_strName, itr.fWeightNow, m_strBoneAnimNameVec.at(itr.eAnimation));
+		}
+		// 如果达到合适条件，则停止动画
+		if (0 == itr.fWeightNow && 0 != itr.fWeightSource)
+		{
+			_StopAnimation(itr);
+		}
+	}
 }
 
 void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
@@ -751,26 +810,25 @@ void CGMCharacter::_UpdateHeadAnimation()
 	// 如果达到合适条件，则停止动画
 	if (0 == m_animHeadR.fWeightNow && EA_BONE_HEAD_L == m_eNextHeadingAnim)
 	{
-		m_animHeadR.fWeightSource = m_animHeadR.fWeightTarget;
-		m_animHeadR.bAnimOn = false;
-		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
+		_StopAnimation(m_animHeadR);
 	}
 	if (0 == m_animHeadL.fWeightNow && EA_BONE_HEAD_R == m_eNextHeadingAnim)
 	{
-		m_animHeadL.fWeightSource = m_animHeadL.fWeightTarget;
-		m_animHeadL.bAnimOn = false;
-		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
+		_StopAnimation(m_animHeadL);
 	}
 	if (0 == m_animHeadD.fWeightNow && EA_BONE_HEAD_U == m_eNextPitchAnim)
 	{
-		m_animHeadD.fWeightSource = m_animHeadD.fWeightTarget;
-		m_animHeadD.bAnimOn = false;
-		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
+		_StopAnimation(m_animHeadD);
 	}
 	if (0 == m_animHeadU.fWeightNow && EA_BONE_HEAD_D == m_eNextPitchAnim)
 	{
-		m_animHeadU.fWeightSource = m_animHeadU.fWeightTarget;
-		m_animHeadU.bAnimOn = false;
-		GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
+		_StopAnimation(m_animHeadU);
 	}
+}
+
+void CGMCharacter::_StopAnimation(SGMAnimData& sAnim)
+{
+	sAnim.fWeightSource = sAnim.fWeightTarget;
+	sAnim.bAnimOn = false;
+	GM_ANIMATION.SetAnimationStop(m_strName, m_strBoneAnimNameVec.at(sAnim.eAnimation));
 }

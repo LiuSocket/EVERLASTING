@@ -29,8 +29,10 @@ namespace GM
 		EA_BONE_IDLE,
 		/** 小动作：脚稍微动一动 */
 		EA_BONE_IDLE_ADD_0,
-		/** 跳舞 */
+		/** 跳舞0 */
 		EA_BONE_DANCE_0,
+		/** 跳舞1 */
+		EA_BONE_DANCE_1,
 		/** 头朝左看 */
 		EA_BONE_HEAD_L,
 		/** 头朝右看 */
@@ -70,13 +72,12 @@ namespace GM
 	struct SGMAnimData
 	{
 		/** @brief 构造 */
-		SGMAnimData(EGMANIMATION_BONE eAnim)
-			: eAnimation(eAnim)
-		{}
+		SGMAnimData(){}
+		SGMAnimData(EGMANIMATION_BONE eAnim): eAnimation(eAnim){}
 		/**
 		* @brief 将权重设置得更接近目标
 		* @param fDeltaTime 间隔时间，单位：秒
-		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[1,5]
+		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[0.1,5.0]
 		* @return bool:	如果当前权重等于目标权重，则返回false，否则返回true
 		*/
 		bool SetWeightCloserToTarget(const float fDeltaTime, const float fSpeed)
@@ -84,7 +85,7 @@ namespace GM
 			if (fWeightNow == fWeightTarget) return false;
 
 			// 后续会根据角色心情调整速度系数
-			float fStep = osg::clampTo(fSpeed, 1.0f, 5.0f)*fDeltaTime*abs(fWeightTarget - fWeightSource);
+			float fStep = osg::clampTo(fSpeed, 0.1f, 5.0f)*fDeltaTime*abs(fWeightTarget - fWeightSource);
 
 			if (fWeightNow < fWeightTarget)
 			{
@@ -226,6 +227,8 @@ namespace GM
 
 		void _UpdateHeadAnimation();
 
+		void _StopAnimation(SGMAnimData& sAnim);
+
 		/**
 		* @brief 设置眼球相对于眼睛的方向
 		* @param fHeading: 眼球偏航角，左正右负，单位：°
@@ -278,13 +281,13 @@ namespace GM
 		float m_fTargetHeading = 0.0f;							//!< 眼睛偏航角，左正右负，单位：°
 		float m_fTargetPitch = 0.0f;							//!< 眼睛俯仰角，上正下负，单位：°
 
-		SGMAnimData m_animDance = SGMAnimData(EA_BONE_DANCE_0);		//!< 舞蹈的权重
-		SGMAnimData m_animHeadL = SGMAnimData(EA_BONE_HEAD_L);		//!< left动作的权重
-		SGMAnimData m_animHeadR = SGMAnimData(EA_BONE_HEAD_R);		//!< right动作的权重
-		SGMAnimData m_animHeadU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作的权重
-		SGMAnimData m_animHeadD = SGMAnimData(EA_BONE_HEAD_D);		//!< down动作的权重
-		SGMAnimData m_animArmL = SGMAnimData(EA_BONE_ARM_L_UP);		//!< 左手举起动作的权重
-		SGMAnimData m_animArmR = SGMAnimData(EA_BONE_ARM_R_UP);		//!< 右手举起动作的权重
+		std::vector<SGMAnimData> m_animDanceVec;					//!< 舞蹈
+		SGMAnimData m_animHeadL = SGMAnimData(EA_BONE_HEAD_L);		//!< left动作
+		SGMAnimData m_animHeadR = SGMAnimData(EA_BONE_HEAD_R);		//!< right动作
+		SGMAnimData m_animHeadU = SGMAnimData(EA_BONE_HEAD_U);		//!< up动作
+		SGMAnimData m_animHeadD = SGMAnimData(EA_BONE_HEAD_D);		//!< down动作
+		SGMAnimData m_animArmL = SGMAnimData(EA_BONE_ARM_L_UP);		//!< 左手举起动作
+		SGMAnimData m_animArmR = SGMAnimData(EA_BONE_ARM_R_UP);		//!< 右手举起动作
 
 		EGMANIMATION_BONE m_eNextHeadingAnim = EA_BONE_HEAD_L;	//!< 下一个转向动画
 		EGMANIMATION_BONE m_eNextPitchAnim = EA_BONE_HEAD_U;	//!< 下一个俯仰动画
@@ -311,6 +314,11 @@ namespace GM
 		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
 		bool m_bTargetVisible = false;							//!< 注视目标是否可见
 		bool m_bMusicOn = false;								//!< 音乐是否开启
+		bool m_bStartDance = true;								//!< 是否刚开始舞蹈
+
+		float m_fMusicTime = 0.0f;								//!< 音乐播放的时间，单位：秒
+		float m_fMusicBeatTime = 1.0f;							//!< 音乐的节拍（最小鼓点周期），单位：秒
+		float m_fMusicPeriod = 4.0f;							//!< 音乐的旋律（节奏循环）时间，单位：秒
 
 		float m_fDeltaVelocity = 0;								//!< 目标点的速度差，单位：cm/s
 		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm

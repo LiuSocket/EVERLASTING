@@ -318,6 +318,7 @@ void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)
 
 void CGMEngine::Welcome()
 {
+	m_pCharacter->Welcome();
 	m_pAudio->Welcome();
 }
 

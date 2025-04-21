@@ -188,6 +188,10 @@ void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v
 	}
 }
 
+void CGMCharacter::Welcome()
+{
+}
+
 void CGMCharacter::SetMusicEnable(bool bEnable)
 {
 	if (m_bMusicOn == bEnable) return;

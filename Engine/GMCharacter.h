@@ -153,6 +153,12 @@ namespace GM
 		void InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v);
 
 		/**
+		* @brief 开启“欢迎效果”
+		* @brief 每次开启软件，Engine调用此函数以实现“欢迎功能”
+		*/
+		void Welcome();
+
+		/**
 		* @brief 显示/隐藏目标，目标不可见后，角色还会在那个方向疑惑片刻
 		* @param bVisible 显示/隐藏
 		*/

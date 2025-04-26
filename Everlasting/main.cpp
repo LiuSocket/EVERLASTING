@@ -22,6 +22,8 @@ using namespace GM;
 
 int main(int argc, char **argv)
 {
+	//自动适应高分辨率
+	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 	QTextCodec *xcodec = QTextCodec::codecForLocale();
 	QString exeDir = xcodec->toUnicode(QByteArray(argv[0]));
 	QString BKE_CURRENT_DIR = QFileInfo(exeDir).path();

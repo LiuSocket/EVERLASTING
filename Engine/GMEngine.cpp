@@ -316,16 +316,6 @@ void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)
 	m_pCharacter->SetLookTargetPos(vTargetWorldPos);
 }
 
-void CGMEngine::Welcome()
-{
-	m_pAudio->Welcome();
-}
-
-bool CGMEngine::IsWelcomeFinished() const
-{
-	return m_pAudio->IsWelcomeFinished();
-}
-
 bool CGMEngine::Play()
 {
 	std::wstring strAudioFile = L"The Minions - Y.M.C.A.mp3";
@@ -334,6 +324,77 @@ bool CGMEngine::Play()
 
 	m_pCharacter->SetMusicEnable(true);
 	return true;
+}
+
+/** @brief 暂停 */
+bool CGMEngine::Pause()
+{
+	m_pAudio->AudioControl(EGMA_CMD_PAUSE);
+	m_pCharacter->SetMusicEnable(false);
+	return true;
+}
+
+/** @brief 停止 */
+bool CGMEngine::Stop()
+{
+	m_pAudio->AudioControl(EGMA_CMD_STOP);
+	m_pCharacter->SetMusicEnable(false);
+
+	return true;
+}
+
+/** @brief 下一首 */
+bool CGMEngine::Next()
+{
+	_Next(m_ePlayMode);
+
+	return true;
+}
+
+bool CGMEngine::SetVolume(const float fVolume)
+{
+	return m_pAudio->SetVolume(osg::clampBetween(fVolume, 0.0f, 1.0f));
+}
+
+float CGMEngine::GetVolume() const
+{
+	return m_pAudio->GetVolume();
+}
+
+bool CGMEngine::SetPlayMode(EGMA_MODE eMode)
+{
+	m_ePlayMode = eMode;
+	return true;
+}
+
+std::wstring CGMEngine::GetAudioName() const
+{
+	return m_pAudio->GetCurrentAudio();
+}
+
+bool CGMEngine::SetAudioCurrentTime(const int iTime)
+{	
+	return m_pAudio->SetAudioCurrentTime(iTime);
+}
+
+int CGMEngine::GetAudioCurrentTime() const
+{
+	return m_pAudio->GetAudioCurrentTime();
+}
+
+int CGMEngine::GetAudioDuration() const
+{
+	return m_pAudio->GetAudioDuration();
+}
+
+void CGMEngine::Welcome()
+{
+	m_pAudio->Welcome();
+}
+
+bool CGMEngine::IsWelcomeFinished() const
+{
+	return m_pAudio->IsWelcomeFinished();
 }
 
 CGMViewWidget* CGMEngine::CreateViewWidget(QWidget* parent)
@@ -431,6 +492,70 @@ void CGMEngine::_InitForeground()
 	GM_Root->addChild(m_pKernelData->pForegroundCam.get());
 }
 
+void CGMEngine::_Next(const EGMA_MODE eMode)
+{
+	std::wstring wstrCurrentFile = L"";
+
+	switch (eMode)
+	{
+	case EGMA_MOD_SINGLE:
+	{
+		m_pAudio->AudioControl(EGMA_CMD_PLAY);
+	}
+	break;
+	//case EGMA_MOD_CIRCLE:
+	//{
+	//	m_pAudio->AudioControl(EGMA_CMD_CLOSE);
+
+	//	int iMaxNum = m_pDataManager->GetAudioNum();
+	//	unsigned int iNext = (m_pDataManager->GetUID() + 1) % iMaxNum;// wrong to do
+	//	wstrCurrentFile = m_pDataManager->FindAudio(iNext);
+
+	//	m_pAudio->SetCurrentAudio(wstrCurrentFile);
+	//	m_pAudio->AudioControl(EGMA_CMD_OPEN);
+	//	m_pAudio->AudioControl(EGMA_CMD_PLAY);
+
+	//	SGMGalaxyCoord vGC = m_pDataManager->GetGalaxyCoord(wstrCurrentFile);
+	//	double fWorldX, fWorldY;
+	//	_GalaxyCoord2World(vGC.x, vGC.y, fWorldX, fWorldY);
+	//	m_pGalaxy->SetCurrentStar(osg::Vec3f(fWorldX, fWorldY, 0.0f), wstrCurrentFile);
+	//}
+	//break;
+	//case EGMA_MOD_RANDOM:
+	//{
+	//	m_pAudio->AudioControl(EGMA_CMD_CLOSE);
+
+	//	int iMaxNum = m_pDataManager->GetAudioNum();
+	//	std::uniform_int_distribution<> iPseudoNoise(0, iMaxNum-1);
+	//	int iNext = iPseudoNoise(m_iRandom);
+	//	wstrCurrentFile = m_pDataManager->FindAudio(iNext);
+	//	while (L"" == wstrCurrentFile)
+	//	{
+	//		iNext = iPseudoNoise(m_iRandom);
+	//		wstrCurrentFile = m_pDataManager->FindAudio(iNext);
+	//	}
+	//	m_pAudio->SetCurrentAudio(wstrCurrentFile);
+	//	m_pAudio->AudioControl(EGMA_CMD_OPEN);
+	//	m_pAudio->AudioControl(EGMA_CMD_PLAY);
+
+	//	SGMGalaxyCoord vGC = m_pDataManager->GetGalaxyCoord(wstrCurrentFile);
+	//	double fWorldX, fWorldY;
+	//	_GalaxyCoord2World(vGC.x, vGC.y, fWorldX, fWorldY);
+	//	m_pGalaxy->SetCurrentStar(osg::Vec3f(fWorldX, fWorldY, 0.0f), wstrCurrentFile);
+	//}
+	//break;
+	case EGMA_MOD_ORDER:
+	{
+		m_pAudio->AudioControl(EGMA_CMD_CLOSE);
+	}
+	break;
+	default:
+	{
+		m_pAudio->AudioControl(EGMA_CMD_CLOSE);
+	}
+	break;
+	}
+}
 
 void CGMEngine::_InnerUpdate(const float updateStep)
 {

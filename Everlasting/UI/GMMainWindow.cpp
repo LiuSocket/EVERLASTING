@@ -1,4 +1,5 @@
 #include "GMMainWindow.h"
+#include "GMVolumeWidget.h"
 #include "GMUIManager.h"
 #include "../Engine/GMEngine.h"
 #include <QKeyEvent>
@@ -7,9 +8,10 @@
 using namespace GM;
 
 CGMMainWindow::CGMMainWindow(QWidget *parent)
-	: QMainWindow(parent), m_pSceneWidget(nullptr),
-	m_bInit(false), m_bFull(false), m_bPressed(false),
-	m_vPos(QPoint(0,0))
+	: QMainWindow(parent),
+	m_pVolumeWidget(nullptr), m_pSceneWidget(nullptr),
+	m_bInit(false), m_bFull(false), m_bPressed(false), m_bShowVolume(false),
+	m_vPos(QPoint(0,0)), m_iAudioDuration(5000), m_strName(QString())
 {
 	ui.setupUi(this);
 	setWindowFlags(Qt::FramelessWindowHint);
@@ -19,13 +21,24 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	ui.titleWidget->setLayout(ui.titleHLayout);
 	ui.toolWidget->setLayout(ui.toolGLayout);
 
+	connect(ui.lastBtn, SIGNAL(clicked()), this, SLOT(_slotLast()));
+	connect(ui.playBtn, SIGNAL(clicked()), this, SLOT(_slotPlayOrPause()));
+	connect(ui.nextBtn, SIGNAL(clicked()), this, SLOT(_slotNext()));
+
 	connect(ui.minBtn, SIGNAL(clicked()), this, SLOT(_slotMinimum()));
 	connect(ui.maxBtn, SIGNAL(clicked()), this, SLOT(_slotMaximum()));
 	connect(ui.closeBtn, SIGNAL(clicked()), this, SLOT(_slotClose()));
-	connect(ui.volumeBtn, &QPushButton::clicked, this, &CGMMainWindow::_slotVolume);
-	connect(ui.listBtn, &QPushButton::clicked, this, &CGMMainWindow::_slotList);
+
+	connect(ui.timeSlider, SIGNAL(valueChanged(int)), this, SLOT(_slotSetAudioTime(int)));
+
+	connect(ui.volumeBtn, SIGNAL(clicked()), this, SLOT(_slotSetMute()));
+	connect(ui.listBtn, SIGNAL(clicked()), this, SLOT(_slotListVisible()));
 	connect(ui.fullScreenBtn, SIGNAL(clicked()), this, SLOT(_slotFullScreen()));
-	
+
+	m_pVolumeWidget = new CGMVolumeWidget(this);
+	m_pVolumeWidget->raise();
+	m_pVolumeWidget->hide();
+	connect(m_pVolumeWidget, SIGNAL(_signalSetVolume(int)), this, SLOT(_slotSetVolume(int)));
 
 	// 加载QSS
 	QFile qssFile(":/Resources/MainWindow.qss");
@@ -33,6 +46,7 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	{
 		QString style = QLatin1String(qssFile.readAll());
 		setStyleSheet(style);
+		m_pVolumeWidget->setStyleSheet(style);
 		qssFile.close();
 	}
 }
@@ -51,6 +65,8 @@ bool CGMMainWindow::Init()
 	m_pSceneWidget = GM_ENGINE.CreateViewWidget(this);
 	ui.centralVLayout->insertWidget(2,(QWidget*)m_pSceneWidget);
 
+	connect(m_pSceneWidget, SIGNAL(_signalEnter3D()), this, SLOT(_slotEnter3D()));
+
 	QImage* pAudioImg = new QImage;
 	pAudioImg->load(":/Resources/default_Image.png");
 	ui.audioImgLab->setPixmap(QPixmap::fromImage(*pAudioImg));
@@ -62,6 +78,11 @@ bool CGMMainWindow::Init()
 
 void CGMMainWindow::Update()
 {
+	// 更新音量
+	if (m_bShowVolume)
+	{
+		m_pVolumeWidget->SetVolume(GM_ENGINE.GetVolume() * 100);
+	}
 }
 
 void CGMMainWindow::SetFullScreen(const bool bFull)
@@ -81,6 +102,8 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 			ui.titleEdgeLab->hide();
 			ui.toolWidget->hide();
 			ui.toolEdgeLab->hide();
+
+			ui.listBtn->setChecked(false);
 		}
 		else
 		{
@@ -107,6 +130,101 @@ bool CGMMainWindow::GetFullScreen()
 	return m_bFull;
 }
 
+void CGMMainWindow::UpdateAudioInfo()
+{
+	const std::wstring wstrAudioName = GM_ENGINE.GetAudioName();
+	QString strFileName = QString::fromStdWString(wstrAudioName);
+	if ("" == strFileName) return;
+	if (m_strName != strFileName)
+	{
+		m_strName = strFileName;
+		strFileName.chop(strFileName.size() - strFileName.lastIndexOf("."));
+		QStringList strList = strFileName.split(" - ");
+		// 如果切成的段数大于1，第一段就是作者名，第二段就是歌曲名称
+		if (1 < strList.size())
+		{
+			ui.audioNameTextScroller->setText(strList[1]);
+			ui.audioInfoTextScroller->setText(strList[0]);
+		}
+		else
+		{
+			ui.audioNameTextScroller->setText(strFileName);
+			ui.audioInfoTextScroller->setText("Unknown");
+		}
+
+		m_iAudioDuration = GM_ENGINE.GetAudioDuration();
+
+		// 将播放/暂停按钮设置成播放状态
+		ui.playBtn->setChecked(true);
+
+		// 计算并显示当前音频总时长
+		int iMinutesAll = 0;
+		int iSecondsAll = 0;
+		_Million2MinutesSeconds(m_iAudioDuration, iMinutesAll, iSecondsAll);
+		QString strAll = QString::number(iMinutesAll);
+		if (iMinutesAll < 10) strAll = "0" + strAll;
+		strAll += ":";
+		if (iSecondsAll < 10) strAll += "0";
+		strAll += QString::number(iSecondsAll);
+		ui.timeAllLab->setText(strAll);
+	}
+	// 获取当前音频播放位置，单位：ms
+	int iCurrentTime = GM_ENGINE.GetAudioCurrentTime();
+	float fTimeRatio = 400 * float(iCurrentTime) / float(m_iAudioDuration);
+	// 避免循环修改时间
+	int iTimeLast = ui.timeSlider->value();
+	if(abs(fTimeRatio - iTimeLast) > 0.5f)
+		ui.timeSlider->setValue(fTimeRatio);
+
+	// 计算并显示已播放时间
+	int iMinutesPassed = 0;
+	int iSecondsPassed = 0;
+	_Million2MinutesSeconds(iCurrentTime, iMinutesPassed, iSecondsPassed);
+	QString strPassed = QString::number(iMinutesPassed);
+	if (iMinutesPassed < 10) strPassed = "0" + strPassed;
+	strPassed += ":";
+	if (iSecondsPassed < 10) strPassed += "0";
+	strPassed += QString::number(iSecondsPassed);
+	ui.timePassedLab->setText(strPassed);
+}
+
+void CGMMainWindow::SetVolumeVisible(const bool bVisible)
+{
+	if (bVisible)
+	{
+		int iX = pos().x() + ui.volumeBtn->pos().x();
+		int iY = pos().y() + ui.toolEdgeLab->pos().y() - m_pVolumeWidget->size().height() + 20;
+		m_pVolumeWidget->move(iX, iY);
+	}
+
+	m_pVolumeWidget->setVisible(bVisible);
+	m_bShowVolume = bVisible;
+}
+
+void CGMMainWindow::_slotLast()
+{
+	//GM_ENGINE.Last();
+	ui.playBtn->setChecked(true);
+}
+
+void CGMMainWindow::_slotPlayOrPause()
+{
+	if (ui.playBtn->isChecked())
+	{
+		GM_ENGINE.Play();
+	}
+	else
+	{
+		GM_ENGINE.Pause();
+	}
+}
+
+void CGMMainWindow::_slotNext()
+{
+	GM_ENGINE.Next();
+	ui.playBtn->setChecked(true);
+}
+
 void CGMMainWindow::_slotMinimum()
 {
 	showMinimized();
@@ -131,18 +249,53 @@ void CGMMainWindow::_slotClose()
 	exit(0);
 }
 
-void CGMMainWindow::_slotVolume()
+void CGMMainWindow::_slotSetAudioTime(int iTimeRatio)
 {
+	// 当前音频播放的时刻
+	int iAudioCurrentTime = float(iTimeRatio)*0.0025*m_iAudioDuration;
+	int iAudioCurrentPreciseTime = GM_ENGINE.GetAudioCurrentTime();
+	if (std::abs(iAudioCurrentPreciseTime - iAudioCurrentTime) > 1000)
+	{
+		GM_ENGINE.SetAudioCurrentTime(iAudioCurrentTime);
+	}
 }
 
-void CGMMainWindow::_slotList()
+void CGMMainWindow::_slotSetMute()
 {
-	GM_ENGINE.Play();
+	if (ui.volumeBtn->isChecked())
+	{
+		GM_ENGINE.SetVolume(0.0f);
+	}
+	else
+	{
+		GM_ENGINE.SetVolume(m_pVolumeWidget->GetVolume()*0.01f);
+	}
+}
+
+void CGMMainWindow::_slotSetVolume(int iVolume)
+{
+	if (0 == iVolume)
+	{
+		if(!ui.volumeBtn->isChecked())
+			ui.volumeBtn->setChecked(true);
+	}
+	else
+	{
+		if (ui.volumeBtn->isChecked())
+			ui.volumeBtn->setChecked(false);
+	}
+
+	GM_ENGINE.SetVolume(iVolume*0.01f);
 }
 
 void CGMMainWindow::_slotFullScreen()
 {
 	SetFullScreen(true);
+}
+
+void CGMMainWindow::_slotEnter3D()
+{
+	m_pVolumeWidget->hide();
 }
 
 void CGMMainWindow::changeEvent(QEvent* event)
@@ -163,6 +316,8 @@ void CGMMainWindow::changeEvent(QEvent* event)
 
 void CGMMainWindow::resizeEvent(QResizeEvent* event)
 {
+	m_pVolumeWidget->hide();
+
 	GM_UI_MANAGER_PTR->Resize();
 }
 
@@ -206,6 +361,30 @@ void CGMMainWindow::mouseReleaseEvent(QMouseEvent * event)
 
 void CGMMainWindow::mouseMoveEvent(QMouseEvent* event)
 {
+	// 设置音量控件显隐
+	int iVolumeMinX = ui.volumeBtn->pos().x();
+	int iVolumeMaxX = iVolumeMinX + ui.volumeBtn->width();
+	int iVolumeMinY = ui.toolEdgeLab->pos().y();
+	int iVolumeMaxY = iVolumeMinY + ui.volumeBtn->height();
+
+	if (event->x() < iVolumeMinX || event->x() > iVolumeMaxX ||
+		event->y() < iVolumeMinY || event->y() > iVolumeMaxY)
+	{
+		if (m_pVolumeWidget->isVisible())
+		{
+			m_pVolumeWidget->hide();
+		}
+	}
+	else if (!m_pVolumeWidget->isVisible())
+	{
+		int iX = pos().x() + ui.volumeBtn->pos().x();
+		int iY = pos().y() + ui.toolEdgeLab->pos().y() - m_pVolumeWidget->size().height() + 20;
+
+		m_pVolumeWidget->SetVolume(GM_ENGINE.GetVolume() * 100);
+		m_pVolumeWidget->move(iX, iY);
+		m_pVolumeWidget->show();
+	}
+
 	// 鼠标拖动标题栏以移动窗口
 	if (m_bPressed && (event->pos().y() < ui.titleWidget->height()))
 	{
@@ -240,10 +419,14 @@ void CGMMainWindow::keyPressEvent(QKeyEvent* event)
 	{
 	case Qt::Key_F2:
 	{
+		GM_ENGINE.SetPlayMode(EGMA_MOD_CIRCLE);
+		GM_ENGINE.Next();
 	}
 	break;
 	case Qt::Key_F3:
 	{
+		GM_ENGINE.SetPlayMode(EGMA_MOD_RANDOM);
+		GM_ENGINE.Next();
 	}
 	break;
 	case Qt::Key_F11:
@@ -261,4 +444,11 @@ void CGMMainWindow::keyPressEvent(QKeyEvent* event)
 void CGMMainWindow::keyReleaseEvent(QKeyEvent* event)
 {
 	QWidget::keyReleaseEvent(event);
+}
+
+void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & seconds)
+{
+	int iAllSeconds = ms / 1000;
+	minutes = max(0, min(59, iAllSeconds / 60));
+	seconds = max(0, min(59, iAllSeconds % 60));
 }

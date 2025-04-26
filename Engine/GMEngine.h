@@ -31,6 +31,15 @@ namespace GM
 	Enums
 	*************************************************************************/
 
+	// 当前音频播放模式
+	enum EGMA_MODE
+	{
+		EGMA_MOD_SINGLE,			// 单曲循环
+		EGMA_MOD_CIRCLE,			// 列表循环
+		EGMA_MOD_RANDOM,			// 随机播放
+		EGMA_MOD_ORDER				// 顺序播放
+	};
+
 	/*************************************************************************
 	Structs
 	*************************************************************************/
@@ -106,6 +115,57 @@ namespace GM
 			return m_bRendering;
 		}
 		
+		/** @brief 播放 */
+		bool Play();
+		/** @brief 暂停 */
+		bool Pause();
+		/** @brief 停止 */
+		bool Stop();
+		/** @brief 下一首 */
+		bool Next();
+		/** @brief 设置音量，0.0-1.0 */
+		bool SetVolume(const float fVolume);
+		/** @brief 获取音量，0.0-1.0 */
+		float GetVolume() const;
+		/**
+		* @brief 设置播放模式
+		* @param eMode:			播放模式（单曲循环、随机播放、列表循环等）
+		* @return bool：		成功true， 失败false
+		*/
+		bool SetPlayMode(EGMA_MODE eMode);
+		/**
+		* @brief 获取播放模式	
+		* @return EGMA_MODE：	播放模式（单曲循环、随机播放、列表循环等）
+		*/
+		inline EGMA_MODE GetPlayMode() const
+		{
+			return m_ePlayMode;
+		}
+
+		/**
+		* @brief 获取当前音频文件名称
+		* @return std::wstring 当前播放的音频文件名称，含后缀名，未播放则返回 L""
+		*/
+		std::wstring GetAudioName() const;
+
+		/**
+		* @brief 设置音频的播放位置，单位：ms
+		* @param iTime: 音频的播放位置
+		* @return bool 成功true， 失败false
+		*/
+		bool SetAudioCurrentTime(const int iTime);
+		/**
+		* @brief 获取音频的播放位置，单位：ms
+		* @return int: 音频的播放位置
+		*/
+		int GetAudioCurrentTime() const;
+
+		/**
+		* @brief 获取音频的总时长，单位：ms
+		* @return int: 音频的总时长
+		*/
+		int GetAudioDuration() const;
+
 		/**
 		* @brief 开启“欢迎效果”
 		* 每次开启软件，调用此函数以实现“欢迎功能”
@@ -117,7 +177,11 @@ namespace GM
 		*/
 		bool IsWelcomeFinished() const;
 
-		bool Play();
+		/**
+		* @brief 获取音频播放的顺序列表，back位置为最新的音频
+		* @return std::vector<std::wstring>：	音频播放的顺序列表
+		*/
+		const std::vector<std::wstring> GetPlayingOrder() const;
 
 		/** @brief 创建视口(QT:QWidget) */
 		CGMViewWidget* CreateViewWidget(QWidget* parent);
@@ -135,7 +199,10 @@ namespace GM
 		* @brief 初始化前景相关节点
 		*/
 		void _InitForeground();
-		
+		/**
+		* @brief 播放下一首
+		*/
+		void _Next(const EGMA_MODE eMode);
 		/**
 		* @brief 间隔更新，一秒钟更新10次
 		* @param updateStep 两次间隔更新的时间差，单位s
@@ -169,6 +236,7 @@ namespace GM
 		CGMAudio*							m_pAudio = nullptr;				//!< 音频模块
 		CGMPost*							m_pPost = nullptr;				//!< 后期模块
 
+		EGMA_MODE							m_ePlayMode = EGMA_MOD_SINGLE;	//!< 当前播放模式
 		osg::ref_ptr<osg::Texture2D>		m_pSceneTex = nullptr;			//!< 主场景颜色图
 		osg::ref_ptr<osg::Texture2D>		m_pBackgroundTex = nullptr;		//!< 背景颜色图
 		osg::ref_ptr<osg::Texture2D>		m_pForegroundTex = nullptr;		//!< 前景颜色图

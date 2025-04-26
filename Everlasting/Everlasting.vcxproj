@@ -160,7 +160,10 @@
     <ClCompile Include="GMSystemManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="UI\GMMainWindow.cpp" />
+    <ClCompile Include="UI\GMSlider.cpp" />
+    <ClCompile Include="UI\GMTextScroller.cpp" />
     <ClCompile Include="UI\GMUIManager.cpp" />
+    <ClCompile Include="UI\GMVolumeWidget.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Animation\GMAnimation.h" />
@@ -188,6 +191,9 @@
     <ClInclude Include="..\Engine\GMXml.h" />
     <ClInclude Include="..\Engine\osgQt\GraphicsWindowQt.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="UI\GMVolumeWidget.h" />
+    <QtMoc Include="UI\GMTextScroller.h" />
+    <QtMoc Include="UI\GMSlider.h" />
     <QtMoc Include="UI\GMUIManager.h" />
     <QtMoc Include="UI\GMMainWindow.h" />
     <QtMoc Include="GMSystemManager.h" />
@@ -195,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="UI\GMMainWindow.ui" />
+    <QtUic Include="UI\GMVolumeWidget.ui" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Everlasting.rc" />

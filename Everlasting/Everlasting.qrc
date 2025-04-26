@@ -35,5 +35,10 @@
         <file>Resources/SpinUp_Hover.png</file>
         <file>Resources/Empty.qss</file>
         <file>Resources/Everlasting_title.png</file>
+        <file>Resources/btn_pause.png</file>
+        <file>Resources/btn_pause_hover.png</file>
+        <file>Resources/btn_play.png</file>
+        <file>Resources/btn_play_hover.png</file>
+        <file>Resources/volumeLab.png</file>
     </qresource>
 </RCC>

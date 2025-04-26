@@ -113,6 +113,16 @@ bool CGMUIManager::GetFullScreen()
 	return m_pMainWindow->GetFullScreen();
 }
 
+void CGMUIManager::UpdateAudioInfo()
+{
+	m_pMainWindow->UpdateAudioInfo();
+}
+
+void CGMUIManager::SetVolumeVisible(const bool bVisible)
+{
+	m_pMainWindow->SetVolumeVisible(bVisible);
+}
+
 void CGMUIManager::SetCursorVisible(bool bVisible)
 {
 	if (bVisible)

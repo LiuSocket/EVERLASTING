@@ -6,6 +6,7 @@
 /*************************************************************************
 Class
 *************************************************************************/
+class CGMVolumeWidget;
 class CGMViewWidget;
 
 class CGMMainWindow : public QMainWindow
@@ -32,7 +33,27 @@ public:
 	*/
 	bool GetFullScreen();
 
-private slots:
+	/**
+	* @brief 更新音频的所有信息
+	*/
+	void UpdateAudioInfo();
+
+	/**
+	* @brief 设置是否显示实时变化的音量
+	* @param bVisible 是否显示实时变化的音量
+	*/
+	void SetVolumeVisible(const bool bVisible);
+
+public slots:
+
+	/** @brief 上一首 */
+	void _slotLast();
+
+	/** @brief 播放/暂停 */
+	void _slotPlayOrPause();
+
+	/** @brief 下一首 */
+	void _slotNext();
 
 	/** @brief 最小化/还原 */
 	void _slotMinimum();
@@ -40,13 +61,30 @@ private slots:
 	void _slotMaximum();
 	/** @brief 关闭 */
 	void _slotClose();
-	/** @brief 音量 */
-	void _slotVolume();
-	/** @brief 列表 */
-	void _slotList();
-	/** @brief 启用全屏 */
+
+	/** 
+	* @brief 设置音频当前的时间
+	* @param iTimeRatio: 当前时间与总时间的比值,[0,100]
+	*/
+	void _slotSetAudioTime(int iTimeRatio);
+
+	/** @brief 开启声音/静音 */
+	void _slotSetMute();
+	/**
+	* @brief 设置音量
+	* @param iVolume	音量，[0, 100]
+	*/
+	void _slotSetVolume(int iVolume);
+
+	/**
+	* @brief 启用全屏
+	*/
 	void _slotFullScreen();
-	
+
+	/**
+	* @brief 进入三维界面
+	*/
+	void _slotEnter3D();
 
 protected:
 	void changeEvent(QEvent* event);
@@ -61,13 +99,26 @@ protected:
 	void keyReleaseEvent(QKeyEvent *event);
 
 private:
+	/**
+	* _Million2MinutesSeconds
+	* @brief 毫秒数 转 分钟:秒数
+	* @param ms: 输入毫秒数
+	* @param minutes: 输出分钟数
+	* @param seconds: 输出秒数
+	* @return void
+	*/
+	void _Million2MinutesSeconds(const int ms, int& minutes, int& seconds);
 
 private:
 	Ui::GMMainWindow					ui;
+	CGMVolumeWidget*					m_pVolumeWidget;
 	CGMViewWidget*						m_pSceneWidget;
 
 	bool								m_bInit;
 	bool								m_bFull;				//!< 是否全屏
 	bool								m_bPressed;				//!< 是否按下鼠标
+	bool								m_bShowVolume;			//!< 是否显示实时变化的音量
 	QPoint								m_vPos;					//!< 窗口的位置
+	int									m_iAudioDuration;		//!< 音频总时长，单位：ms
+	QString								m_strName;				//!< 音频文件名称，包含后缀名
 };

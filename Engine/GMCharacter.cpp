@@ -267,7 +267,7 @@ void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
 	static double s_fBlinkTime = 0.0;
 	static double s_fDeltaBlinkTime = 2.0;
 	// “惊讶”和“半闭眼”时不眨眼
-	if (s_fBlinkTime > s_fDeltaBlinkTime && m_fInterest > 0.0)
+	if (s_fBlinkTime > s_fDeltaBlinkTime)
 	{
 		GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
@@ -662,9 +662,11 @@ void CGMCharacter::_UpdateDance(const double dDeltaTime)
 	{
 		float fFadeSpeed = 1.0f;
 		if (m_bStartDance) // 如果是第一次跳舞，则需要慢慢淡入
-			fFadeSpeed = 0.1f;
+			fFadeSpeed = 0.2f;
 		else if(!m_bMusicOn)
-			fFadeSpeed = 2.0f;
+			fFadeSpeed = 10.0f;
+		else
+			fFadeSpeed = 1.0f;
 
 		if (itr.SetWeightCloserToTarget(dDeltaTime, fFadeSpeed))
 		{

@@ -32,7 +32,6 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	connect(ui.timeSlider, SIGNAL(valueChanged(int)), this, SLOT(_slotSetAudioTime(int)));
 
 	connect(ui.volumeBtn, SIGNAL(clicked()), this, SLOT(_slotSetMute()));
-	connect(ui.listBtn, SIGNAL(clicked()), this, SLOT(_slotListVisible()));
 	connect(ui.fullScreenBtn, SIGNAL(clicked()), this, SLOT(_slotFullScreen()));
 
 	m_pVolumeWidget = new CGMVolumeWidget(this);

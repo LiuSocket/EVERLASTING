@@ -77,7 +77,7 @@ namespace GM
 		/**
 		* @brief 将权重设置得更接近目标
 		* @param fDeltaTime 间隔时间，单位：秒
-		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[0.1,5.0]
+		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[0.1, 20.0]
 		* @return bool:	如果当前权重等于目标权重，则返回false，否则返回true
 		*/
 		bool SetWeightCloserToTarget(const float fDeltaTime, const float fSpeed)
@@ -85,7 +85,7 @@ namespace GM
 			if (fWeightNow == fWeightTarget) return false;
 
 			// 后续会根据角色心情调整速度系数
-			float fStep = osg::clampTo(fSpeed, 0.1f, 5.0f)*fDeltaTime*abs(fWeightTarget - fWeightSource);
+			float fStep = osg::clampTo(fSpeed, 0.1f, 20.0f)*fDeltaTime*abs(fWeightTarget - fWeightSource);
 
 			if (fWeightNow < fWeightTarget)
 			{

@@ -77,5 +77,6 @@ private:
 	bool							m_bInit = false;				//!< 初始化标识
 	bool							m_bFirst = true;				//!< 是否第一帧
 
+	int								m_iFrameCount = 0;				//!< 帧数计数器，30帧一循环
 	uint							m_nKeyMask = 0;
 };

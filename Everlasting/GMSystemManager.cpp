@@ -27,6 +27,8 @@ using namespace GM;
 Macro Defines
 *************************************************************************/
 
+#define FRAME_UPDATE	30 	// 多少帧更新一次信息
+
 /*************************************************************************
 CGMSystemManager Methods
 *************************************************************************/
@@ -134,6 +136,18 @@ void CGMSystemManager::timerEvent(QTimerEvent *event)
 	{
 		GM_ENGINE.Welcome();
 		m_bFirst = false;
+	}
+
+	// 间隔更新
+	m_iFrameCount++;
+	if (FRAME_UPDATE <= m_iFrameCount)
+	{
+		if (GM_ENGINE.IsWelcomeFinished())
+		{
+			GM_UI_MANAGER.UpdateAudioInfo();
+		}
+
+		m_iFrameCount = 0;
 	}
 
 	_Render();

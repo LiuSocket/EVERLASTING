@@ -133,7 +133,12 @@ void CGMMainWindow::UpdateAudioInfo()
 {
 	const std::wstring wstrAudioName = GM_ENGINE.GetAudioName();
 	QString strFileName = QString::fromStdWString(wstrAudioName);
-	if ("" == strFileName) return;
+	if ("" == strFileName || GM_ENGINE.IsAudioOver())
+	{
+		// ½«²¥·Å/ÔÝÍ£°´Å¥ÉèÖÃ³ÉÔÝÍ£×´Ì¬
+		ui.playBtn->setChecked(false);
+		return;
+	}
 	if (m_strName != strFileName)
 	{
 		m_strName = strFileName;

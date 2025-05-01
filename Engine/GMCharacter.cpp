@@ -103,7 +103,7 @@ bool CGMCharacter::Update(double dDeltaTime)
 	// 每帧累加搜索时间
 	m_fSeekTargetTime += dDeltaTime;
 	// 每帧累加音乐播放时间
-	m_fMusicTime += dDeltaTime;
+	if(m_bMusicOn) m_fMusicTime += dDeltaTime;
 
 	// 每帧都在减少好奇心（注意力很难长时间集中）
 	m_fInterest = fmax(0.0f, m_fInterest - 0.5f * dDeltaTime);
@@ -225,6 +225,31 @@ void CGMCharacter::SetMusicEnable(bool bEnable)
 	}
 }
 
+void CGMCharacter::SetMusicDuration(int iDuration)
+{
+	m_fMusicDuration = iDuration / 1000.0f;
+}
+
+void CGMCharacter::SetMusicCurrentTime(int iTime)
+{
+	m_fMusicTime = iTime / 1000.0f;
+	m_bReStartDance = true;
+	for (auto& itr : m_animDanceVec)
+	{
+		if (!itr.bAnimOn) continue;
+
+		itr.fWeightSource = itr.fWeightNow;
+		itr.fWeightTarget = 0;
+	}
+
+	// 立刻向下看，这种情况就相当于目标突然出现又突然消失，则开始搜寻目标，并计时
+	m_vTargetWorldPos = osg::Vec3d(20 * (m_fMusicTime - 0.3f*m_fMusicDuration) / m_fMusicDuration, -20, -20);
+	// 重置上一帧的注视目标位置
+	m_vTargetLastWorldPos = m_vTargetWorldPos;
+	m_bTargetVisible = true;
+	m_fSeekTargetTime = 0;
+}
+
 void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 {
 	// 计算目标点的加速度
@@ -315,9 +340,9 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 	if (m_fHappy > 0.5f)
 	{
 		EGMANIMATION_BONE eDanceAnim = EA_BONE_IDLE;
-		// bPeriod 表示当前时间是否在一个“旋律”的开始位置,“旋律”由多个“节拍”组成
-		bool bPeriod = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicPeriod) * m_fMusicPeriod) < 0.05f;
-		if (bPeriod)
+		// bBar 表示当前时间是否在一个“小节”的开始位置,“小节”== 4个“拍子”
+		bool bBar = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicBarTime) * m_fMusicBarTime) < 0.05f;
+		if (bBar)
 		{
 			if (m_animDanceVec.at(0).bAnimOn)// 如果0号舞蹈动画正在播放，则有一定概率播放1号舞蹈动画
 			{
@@ -333,32 +358,37 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 				//std::cout << "EA_BONE_DANCE_0" << std::endl;
 			}
 		}
-		// bSympathetic 表示当前时间是否在鼓点上
-		bool bSympathetic = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicBeatTime) * m_fMusicBeatTime) < 0.05f;
-		if (bSympathetic && (int(eDanceAnim) >= int(EA_BONE_DANCE_0)))
+		// bBeat 表示当前时间是否在“拍子”上
+		bool bBeat = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicBeatTime) * m_fMusicBeatTime) < 0.05f;
+		if (bBeat)
 		{
 			for (auto& itr : m_animDanceVec)
 			{
-				if (eDanceAnim == itr.eAnimation)
+				if (int(eDanceAnim) >= int(EA_BONE_DANCE_0))
 				{
-					itr.bAnimOn = true;
-					itr.fWeightSource = 0;
-					itr.fWeightNow = 0.0001;
-					itr.fWeightTarget = 1;
-					GM_ANIMATION.SetAnimationWeight(m_strName, 0.0001, m_strBoneAnimNameVec.at(itr.eAnimation));
-					GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(itr.eAnimation));
-				}
-				else
-				{
-					if (itr.bAnimOn)
+					if (eDanceAnim == itr.eAnimation)
 					{
-						// 一旦有新的舞蹈动画播放，则停止当前的舞蹈动画，且将“初次跳舞”标记为false
-						m_bStartDance = false;
-
-						itr.fWeightSource = itr.fWeightNow;
-						itr.fWeightTarget = 0;
+						itr.bAnimOn = true;
+						itr.fWeightSource = 0;
+						itr.fWeightNow = 0.0001;
+						itr.fWeightTarget = 1;
+						GM_ANIMATION.SetAnimationWeight(m_strName, 0.0001, m_strBoneAnimNameVec.at(itr.eAnimation));
+						GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(itr.eAnimation));
+					}
+					else
+					{
+						// 一旦有新的舞蹈动画播放，则停止当前的舞蹈动画，
+						if (itr.bAnimOn)
+						{
+							itr.fWeightSource = itr.fWeightNow;
+							itr.fWeightTarget = 0;
+						}
 					}
 				}
+
+				// 一旦有舞蹈动画权重为1，则将“初次跳舞”标记为false
+				if (1.0f == itr.fWeightNow)
+					m_bStartDance = false;
 			}
 		}
 	}
@@ -431,7 +461,7 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 {
 	// 刚鄙视完，气还没消，直接无视目标
-	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.2;
+	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.45;
 	// 如果强迫角色注视目标点，则注视一段时间
 	if (m_bTargetVisible && !bIgnoreTarget)
 	{
@@ -662,9 +692,9 @@ void CGMCharacter::_UpdateDance(const double dDeltaTime)
 	{
 		float fFadeSpeed = 1.0f;
 		if (m_bStartDance) // 如果是第一次跳舞，则需要慢慢淡入
-			fFadeSpeed = 0.2f;
-		else if(!m_bMusicOn)
-			fFadeSpeed = 10.0f;
+			fFadeSpeed = 0.5f;
+		else if(!m_bMusicOn || m_bReStartDance) // 停下音乐或重新调整音乐时间时，需要稍微快一点淡出
+			fFadeSpeed = 1.5f;
 		else
 			fFadeSpeed = 1.0f;
 
@@ -676,6 +706,8 @@ void CGMCharacter::_UpdateDance(const double dDeltaTime)
 		if (0 == itr.fWeightNow && 0 != itr.fWeightSource)
 		{
 			_StopAnimation(itr);
+			m_bReStartDance = false;
+			m_bTargetVisible = false;
 		}
 	}
 }

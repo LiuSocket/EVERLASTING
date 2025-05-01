@@ -318,10 +318,14 @@ void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)
 
 bool CGMEngine::Play()
 {
-	std::wstring strAudioFile = L"The Minions - Y.M.C.A.mp3";
-	m_pAudio->SetCurrentAudio(strAudioFile);
+	std::wstring wstrCurrentFile = m_pAudio->GetCurrentAudio();
+	if (L"" == wstrCurrentFile)
+	{
+		wstrCurrentFile = L"The Minions - Y.M.C.A.mp3";
+		m_pAudio->SetCurrentAudio(wstrCurrentFile);
+		m_pCharacter->SetMusicDuration(m_pAudio->GetAudioDuration());
+	}
 	m_pAudio->AudioControl(EGMA_CMD_PLAY);
-
 	m_pCharacter->SetMusicEnable(true);
 	return true;
 }
@@ -373,7 +377,8 @@ std::wstring CGMEngine::GetAudioName() const
 }
 
 bool CGMEngine::SetAudioCurrentTime(const int iTime)
-{	
+{
+	m_pCharacter->SetMusicCurrentTime(iTime);
 	return m_pAudio->SetAudioCurrentTime(iTime);
 }
 
@@ -385,6 +390,11 @@ int CGMEngine::GetAudioCurrentTime() const
 int CGMEngine::GetAudioDuration() const
 {
 	return m_pAudio->GetAudioDuration();
+}
+
+bool CGMEngine::IsAudioOver() const
+{
+	return m_pAudio->IsAudioOver();
 }
 
 void CGMEngine::Welcome()

@@ -77,7 +77,7 @@ namespace GM
 		/**
 		* @brief 将权重设置得更接近目标
 		* @param fDeltaTime 间隔时间，单位：秒
-		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[0.1, 20.0]
+		* @param fSpeed 接近目标权重的速度比例，需要根据心情调整，[0.1, 5.0]
 		* @return bool:	如果当前权重等于目标权重，则返回false，否则返回true
 		*/
 		bool SetWeightCloserToTarget(const float fDeltaTime, const float fSpeed)
@@ -85,7 +85,7 @@ namespace GM
 			if (fWeightNow == fWeightTarget) return false;
 
 			// 后续会根据角色心情调整速度系数
-			float fStep = osg::clampTo(fSpeed, 0.1f, 20.0f)*fDeltaTime*abs(fWeightTarget - fWeightSource);
+			float fStep = osg::clampTo(fSpeed, 0.1f, 5.0f)*fDeltaTime*abs(fWeightTarget - fWeightSource);
 
 			if (fWeightNow < fWeightTarget)
 			{
@@ -164,9 +164,17 @@ namespace GM
 		*/
 		inline void SetLookTargetVisible(bool bVisible)
 		{
-			m_bTargetVisible = bVisible;
-			// 如果目标突然消失，则开始搜寻目标，并计时
-			if (!bVisible) m_fSeekTargetTime = 0;
+			m_bTargetVisible = bVisible;	
+			if (bVisible)
+			{
+				// 如果目标可见，则重置上一帧的注视目标位置
+				m_vTargetLastWorldPos = m_vTargetWorldPos;
+			}
+			else
+			{
+				// 如果目标突然消失，则开始搜寻目标，并计时
+				m_fSeekTargetTime = 0;
+			}
 		}
 		/**
 		* @brief 如果目标可见，则设置注视目标位置
@@ -177,8 +185,21 @@ namespace GM
 			if(m_bTargetVisible)
 				m_vTargetWorldPos = vTargetWorldPos;
 		}
-
+		/**
+		* @brief 开启/关闭音频
+		* @param bEnable：开启/关闭
+		*/
 		void SetMusicEnable(bool bEnable);
+		/**
+		* @brief 设置音频的总时长，单位：ms
+		* @param iDuration: 音频的总时长
+		*/
+		void SetMusicDuration(int iDuration);
+		/**
+		* @brief 设置音频的播放位置，单位：ms
+		* @param iTime: 音频的播放位置
+		*/
+		void SetMusicCurrentTime(int iTime);
 
 	private:
 		void _InnerUpdate(const double dDeltaTime);
@@ -321,10 +342,13 @@ namespace GM
 		bool m_bTargetVisible = false;							//!< 注视目标是否可见
 		bool m_bMusicOn = false;								//!< 音乐是否开启
 		bool m_bStartDance = true;								//!< 是否刚开始舞蹈
+		bool m_bReStartDance = false;							//!< 是否被打断舞蹈，需要重新开始舞蹈
 
 		float m_fMusicTime = 0.0f;								//!< 音乐播放的时间，单位：秒
-		float m_fMusicBeatTime = 1.0f;							//!< 音乐的节拍（最小鼓点周期），单位：秒
-		float m_fMusicPeriod = 4.0f;							//!< 音乐的旋律（节奏循环）时间，单位：秒
+		float m_fMusicBeatTime = 1.0f;							//!< 音乐的拍子，单位：秒
+		float m_fMusicBarTime = 4.0f;							//!< 音乐的小节（4拍子），单位：秒
+		float m_fMusicPhraseTime = 16.0f;						//!< 音乐的乐段（4小节），单位：秒
+		float m_fMusicDuration = 1.0f;							//!< 音乐的总时长，单位：秒
 
 		float m_fDeltaVelocity = 0;								//!< 目标点的速度差，单位：cm/s
 		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm

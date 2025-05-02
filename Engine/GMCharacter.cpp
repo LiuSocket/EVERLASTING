@@ -77,6 +77,11 @@ bool CGMCharacter::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	m_pKernelData = pKernelData;
 	m_pConfigData = pConfigData;
 
+	m_danceSequenceVec.push_back(SGMDanceSequence(14, 16, EA_BONE_DANCE_1));
+	m_danceSequenceVec.push_back(SGMDanceSequence(39, 42, EA_BONE_DANCE_1));
+	m_danceSequenceVec.push_back(SGMDanceSequence(65, 67, EA_BONE_DANCE_1));
+	m_danceSequenceVec.push_back(SGMDanceSequence(84, 86, EA_BONE_DANCE_1));
+
 	return true;
 }
 
@@ -198,7 +203,8 @@ void CGMCharacter::SetMusicEnable(bool bEnable)
 
 	m_bMusicOn = bEnable;
 	m_fMusicTime = 0.0f;
-
+	m_iBarCount = -1;
+	m_eLastDanceAnim = EA_BONE_IDLE;
 	// 立刻开始四处看
 	m_fLookDuration = 0;
 
@@ -233,6 +239,7 @@ void CGMCharacter::SetMusicDuration(int iDuration)
 void CGMCharacter::SetMusicCurrentTime(int iTime)
 {
 	m_fMusicTime = iTime / 1000.0f;
+	m_eLastDanceAnim = EA_BONE_IDLE;
 	m_bReStartDance = true;
 	for (auto& itr : m_animDanceVec)
 	{
@@ -340,32 +347,27 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 	if (m_fHappy > 0.5f)
 	{
 		EGMANIMATION_BONE eDanceAnim = EA_BONE_IDLE;
-		// bBar 表示当前时间是否在一个“小节”的开始位置,“小节”== 4个“拍子”
-		bool bBar = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicBarTime) * m_fMusicBarTime) < 0.05f;
-		if (bBar)
+		// 计算当前的乐段编号
+		int iBarCount = int(m_fMusicTime / m_fMusicBarTime);
+		if (m_iBarCount != iBarCount)
 		{
-			if (m_animDanceVec.at(0).bAnimOn)// 如果0号舞蹈动画正在播放，则有一定概率播放1号舞蹈动画
+			bool bChangeDance = false;
+			m_iBarCount = iBarCount;
+			eDanceAnim = EA_BONE_DANCE_0;
+			for (auto& itr : m_danceSequenceVec)
 			{
-				if (m_iPseudoNoise(m_iRandom) > 90)
+				if (itr.iBarStart <= iBarCount && iBarCount < itr.iBarEnd)
 				{
-					eDanceAnim = EA_BONE_DANCE_1;
-					//std::cout << "EA_BONE_DANCE_1" << std::endl;
+					eDanceAnim = itr.eDance;
+					break;
 				}
 			}
-			else// 如果0号舞蹈动画不在播放，则下一个节奏循环后一定要播放0号舞蹈动画
-			{
-				eDanceAnim = EA_BONE_DANCE_0;
-				//std::cout << "EA_BONE_DANCE_0" << std::endl;
-			}
-		}
-		// bBeat 表示当前时间是否在“拍子”上
-		bool bBeat = abs(m_fMusicTime - int(m_fMusicTime / m_fMusicBeatTime) * m_fMusicBeatTime) < 0.05f;
-		if (bBeat)
-		{
+
 			for (auto& itr : m_animDanceVec)
 			{
-				if (int(eDanceAnim) >= int(EA_BONE_DANCE_0))
+				if (m_eLastDanceAnim != eDanceAnim)
 				{
+					bChangeDance = true;
 					if (eDanceAnim == itr.eAnimation)
 					{
 						itr.bAnimOn = true;
@@ -390,6 +392,10 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 				if (1.0f == itr.fWeightNow)
 					m_bStartDance = false;
 			}
+			if (bChangeDance)
+			{
+				m_eLastDanceAnim = eDanceAnim;
+			}
 		}
 	}
 }
@@ -397,15 +403,15 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 void CGMCharacter::_ChangeArm(const double dDeltaTime)
 {
 	static float s_fWaveSumTime = 0.0f;	// 目标挥舞的时间，单位：秒
-	static float s_fArmUpAcceThreshold = 6.0f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
+	static float s_fArmUpAcceThreshold = 4.0f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
 
 	// 目标加速度大于某个阈值时，才会抬手，
 	if(m_fDeltaVelocity > s_fArmUpAcceThreshold)
 		s_fWaveSumTime += dDeltaTime;
 	else
 		s_fWaveSumTime = 0.0f;
-	// 目标挥舞的时间大于2秒，才会有一定的概率抬手
-	bool bArmUp = s_fWaveSumTime > 2.0f && (m_iPseudoNoise(m_iRandom) > 50 );
+	// 目标挥舞的时间大于1秒，才会有一定的概率抬手
+	bool bArmUp = s_fWaveSumTime > 1.0f && (m_iPseudoNoise(m_iRandom) > 50 );
 	if (bArmUp)
 		s_fWaveSumTime = 0.0f;
 
@@ -595,7 +601,7 @@ void CGMCharacter::_ChangeLookAround(const double dDeltaTime)
 		s_fLookAroundTime = 0.0;
 		//重置混合时间，开始混合动画
 		m_fTurnMixTime = 0.0f;
-		m_fLookDuration = max(0, m_iPseudoNoise(m_iRandom) * 0.001 / max(0.01, m_fInterest)) + 0.5;
+		m_fLookDuration = max(0, m_iPseudoNoise(m_iRandom) * 0.001 / max(0.05, m_fInterest)) + 0.5;
 		m_fTurnDuration = ((m_iPseudoNoise(m_iRandom) * 0.00001 + 0.001) * fDeltaAngle + 0.03) / max(0.1, m_fInterest);
 	}
 	s_fLookAroundTime += dDeltaTime;
@@ -692,7 +698,7 @@ void CGMCharacter::_UpdateDance(const double dDeltaTime)
 	{
 		float fFadeSpeed = 1.0f;
 		if (m_bStartDance) // 如果是第一次跳舞，则需要慢慢淡入
-			fFadeSpeed = 0.5f;
+			fFadeSpeed = 0.2f;
 		else if(!m_bMusicOn || m_bReStartDance) // 停下音乐或重新调整音乐时间时，需要稍微快一点淡出
 			fFadeSpeed = 1.5f;
 		else

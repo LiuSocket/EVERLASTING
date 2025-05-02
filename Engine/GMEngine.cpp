@@ -318,6 +318,7 @@ void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)
 
 bool CGMEngine::Play()
 {
+	m_bAudioOver = false;
 	std::wstring wstrCurrentFile = m_pAudio->GetCurrentAudio();
 	if (L"" == wstrCurrentFile)
 	{
@@ -350,6 +351,7 @@ bool CGMEngine::Stop()
 /** @brief 下一首 */
 bool CGMEngine::Next()
 {
+	m_bAudioOver = false;
 	_Next(m_ePlayMode);
 
 	return true;
@@ -569,10 +571,17 @@ void CGMEngine::_Next(const EGMA_MODE eMode)
 
 void CGMEngine::_InnerUpdate(const float updateStep)
 {
+	// 由于可能在同一帧内出现先设置开启音乐后又设置关闭音乐的情况
+	// 所以在这里需要两次判断音乐是否结束
 	if (m_pAudio->IsAudioOver())
 	{
-		m_pCharacter->SetMusicEnable(false);
+		if (m_bAudioOver && m_pCharacter->GetMusicEnable())
+		{
+			m_pCharacter->SetMusicEnable(false);
+		}
+		m_bAudioOver = true;
 	}
+
 }
 
 bool CGMEngine::_UpdateLater(const double dDeltaTime)

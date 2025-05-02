@@ -66,7 +66,6 @@ namespace GM
 	 Structs
 	*************************************************************************/
 	/*!
-	 *  @struct SGMAnimData
 	 *  @brief 动画数据结构体
 	 */
 	struct SGMAnimData
@@ -116,6 +115,23 @@ namespace GM
 		float fWeightTarget = 0;
 		EGMANIMATION_BONE eAnimation = EA_BONE_HEAD_L;
 		bool bAnimOn = false;
+	};
+
+	/*!
+	 *  @brief 用于存储“在第几个小节开始播放的某个舞蹈动作”的数据结构体
+	 */
+	struct SGMDanceSequence
+	{
+		SGMDanceSequence(int barStart, int barEnd, EGMANIMATION_BONE dance)
+			: iBarStart(barStart), iBarEnd(barEnd), eDance(dance)
+		{}
+
+		// 在某个“小节”开始，0代表第一个“小节”（4个“拍子”组成1个“小节”）
+		int iBarStart = 0;
+		// 在某个“小节”结束，在这个小节内进行过渡操作
+		int iBarEnd = 1;
+		// 舞蹈动作的枚举值
+		EGMANIMATION_BONE eDance = EA_BONE_DANCE_1;
 	};
 
 	/*************************************************************************
@@ -190,6 +206,7 @@ namespace GM
 		* @param bEnable：开启/关闭
 		*/
 		void SetMusicEnable(bool bEnable);
+		inline bool GetMusicEnable() const { return m_bMusicOn; }
 		/**
 		* @brief 设置音频的总时长，单位：ms
 		* @param iDuration: 音频的总时长
@@ -308,6 +325,7 @@ namespace GM
 		float m_fTargetHeading = 0.0f;							//!< 眼睛偏航角，左正右负，单位：°
 		float m_fTargetPitch = 0.0f;							//!< 眼睛俯仰角，上正下负，单位：°
 
+		std::vector<SGMDanceSequence> m_danceSequenceVec;			//!< 存储舞蹈动作的顺序
 		std::vector<SGMAnimData> m_animDanceVec;					//!< 舞蹈
 		SGMAnimData m_animHeadL = SGMAnimData(EA_BONE_HEAD_L);		//!< left动作
 		SGMAnimData m_animHeadR = SGMAnimData(EA_BONE_HEAD_R);		//!< right动作
@@ -318,6 +336,7 @@ namespace GM
 
 		EGMANIMATION_BONE m_eNextHeadingAnim = EA_BONE_HEAD_L;	//!< 下一个转向动画
 		EGMANIMATION_BONE m_eNextPitchAnim = EA_BONE_HEAD_U;	//!< 下一个俯仰动画
+		EGMANIMATION_BONE m_eLastDanceAnim = EA_BONE_IDLE;		//!< 上一个舞蹈动画
 
 		std::vector<std::string> m_strBoneAnimNameVec;			//!< 骨骼动画名称vector
 		std::vector<std::string> m_strMorphAnimNameVec;			//!< 变形动画名称vector
@@ -329,13 +348,21 @@ namespace GM
 		float m_fEyeBallHeading = 0.0f;							//!< 眼球当前偏航角，左正右负，单位：弧度
 		float m_fEyeBallPitch = 0.0f;							//!< 眼球当前俯仰角，上正下负，单位：弧度
 
-		//!< 好奇，[0.0, 1.0]，0.0 == 清心寡欲，无视目标；1.0 == 强烈的好奇心，会完全被目标吸引
+		//!< 好奇
+		//! [0.0, 1.0]
+		//! 0.0 == 清心寡欲，无视目标；1.0 == 强烈的好奇心，会完全被目标吸引
 		float m_fInterest = 0.0f;
-		//!< 开心，[0.0, 1.0]，0.0 == 悲痛欲绝；0.5 == 平静; 1.0 == 欣喜若狂
+		//!< 开心
+		//! [0.0, 1.0]
+		//! 0.0 == 悲痛欲绝；0.5 == 平静; 1.0 == 欣喜若狂
 		float m_fHappy = 0.5f;
-		//!< 愤怒，[0.0, 1.0]，0.0 == 平静；1.0 == 非常愤怒
+		//!< 愤怒
+		//! [0.0, 1.0]
+		//! 0.0 == 平静；1.0 == 非常愤怒
 		float m_fAngry = 0.0f;
-		//!< 害怕，[0.0, 1.0]，0.0 == 平静；1.0 == 感到恐怖
+		//!< 害怕
+		//! [0.0, 1.0]
+		//! 0.0 == 平静；1.0 == 感到恐怖
 		float m_fScared = 0.0f;
 
 		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
@@ -345,10 +372,11 @@ namespace GM
 		bool m_bReStartDance = false;							//!< 是否被打断舞蹈，需要重新开始舞蹈
 
 		float m_fMusicTime = 0.0f;								//!< 音乐播放的时间，单位：秒
-		float m_fMusicBeatTime = 1.0f;							//!< 音乐的拍子，单位：秒
-		float m_fMusicBarTime = 4.0f;							//!< 音乐的小节（4拍子），单位：秒
-		float m_fMusicPhraseTime = 16.0f;						//!< 音乐的乐段（4小节），单位：秒
+		float m_fMusicBeatTime = 0.5f;							//!< 音乐的拍子，单位：秒
+		float m_fMusicBarTime = 2.0f;							//!< 音乐的小节（4拍子），单位：秒
+		float m_fMusicPhraseTime = 8.0f;						//!< 音乐的乐段（4小节），单位：秒
 		float m_fMusicDuration = 1.0f;							//!< 音乐的总时长，单位：秒
+		int m_iBarCount = -1;									//!< 小节编号，从0开始，默认-1
 
 		float m_fDeltaVelocity = 0;								//!< 目标点的速度差，单位：cm/s
 		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm

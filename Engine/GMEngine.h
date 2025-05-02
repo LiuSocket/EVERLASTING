@@ -232,9 +232,10 @@ namespace GM
 		SGMConfigData*						m_pConfigData = nullptr;		//!< 配置数据
 		CGMBaseManipulator*					m_pManipulator = nullptr;		//!< 基础操作器
 
-		bool								m_bInit = false;                //!< 初始化标志
-		bool								m_bRendering = true;            //!< 是否渲染
-		double								m_dTimeLastFrame = 0.0;         //!< 上一帧时间
+		bool								m_bInit = false;				//!< 初始化标志
+		bool								m_bRendering = true;			//!< 是否渲染
+		bool								m_bAudioOver = false;			//!< 音频是否结束
+		double								m_dTimeLastFrame = 0.0;			//!< 上一帧时间
 
 		CGMModel*							m_pModel = nullptr;				//!< 模型模块
 		CGMCharacter*						m_pCharacter = nullptr;			//!< 角色模块

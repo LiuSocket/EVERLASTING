@@ -403,15 +403,15 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 void CGMCharacter::_ChangeArm(const double dDeltaTime)
 {
 	static float s_fWaveSumTime = 0.0f;	// 目标挥舞的时间，单位：秒
-	static float s_fArmUpAcceThreshold = 4.0f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
+	static float s_fArmUpAcceThreshold = 0.1f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
 
 	// 目标加速度大于某个阈值时，才会抬手，
 	if(m_fDeltaVelocity > s_fArmUpAcceThreshold)
 		s_fWaveSumTime += dDeltaTime;
 	else
 		s_fWaveSumTime = 0.0f;
-	// 目标挥舞的时间大于1秒，才会有一定的概率抬手
-	bool bArmUp = s_fWaveSumTime > 1.0f && (m_iPseudoNoise(m_iRandom) > 50 );
+	// 目标挥舞的时间大于1秒，才会抬手
+	bool bArmUp = s_fWaveSumTime > 1.0f;
 	if (bArmUp)
 		s_fWaveSumTime = 0.0f;
 

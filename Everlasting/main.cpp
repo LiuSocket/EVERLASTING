@@ -49,6 +49,5 @@ int main(int argc, char **argv)
 	a.installTranslator(&tran);
 
 	GM_SYSTEM_MANAGER_PTR->Init();
-
 	return a.exec();
 }

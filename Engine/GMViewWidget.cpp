@@ -12,9 +12,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GMViewWidget.h"
-#include <QtGui>
-#include <QtCore/QTimer>
 #include <QWidget>
+#include <QKeyEvent>
+#include <QApplication>
 #include <QGridLayout>
 
 CGMViewWidget::CGMViewWidget(osgViewer::View* pView,QWidget* parent, Qt::WindowFlags f,
@@ -27,9 +27,9 @@ CGMViewWidget::CGMViewWidget(osgViewer::View* pView,QWidget* parent, Qt::WindowF
 	addView(pView);
 
 	osgQt::GraphicsWindowQt* gw = createGraphicsWindow(0, 0, 100, 100);
-	QWidget* widget1 = gw->getGLWidget();
+	osgQt::GLWidget* pGLWidget = gw->getGLWidget();
 	QGridLayout* grid = new QGridLayout;
-	grid->addWidget(widget1, 0, 0);
+	grid->addWidget(pGLWidget, 0, 0);
 	setLayout(grid);
 	grid->setMargin(0);
 	grid->setSpacing(0);
@@ -40,7 +40,6 @@ CGMViewWidget::CGMViewWidget(osgViewer::View* pView,QWidget* parent, Qt::WindowF
 
 CGMViewWidget::~CGMViewWidget()
 {
-	_timer.stop();
 	stopThreading();
 }
 
@@ -66,7 +65,32 @@ osgQt::GraphicsWindowQt* CGMViewWidget::createGraphicsWindow(
 	return new osgQt::GraphicsWindowQt(traits.get());
 }
 
-void CGMViewWidget::enterEvent(QEvent* event)
+void CGMViewWidget::keyPressEvent(QKeyEvent* event)
 {
-	emit _signalEnter3D();
+	// 子窗口自己的处理逻辑
+
+	// 传递给父窗口
+	if (parentWidget())
+	{
+		QApplication::sendEvent(parentWidget(), event);
+	}
+	else
+	{
+		QWidget::keyPressEvent(event);
+	}
+}
+
+void CGMViewWidget::keyReleaseEvent(QKeyEvent* event)
+{
+	// 子窗口自己的处理逻辑
+
+	// 传递给父窗口
+	if (parentWidget())
+	{
+		QApplication::sendEvent(parentWidget(), event);
+	}
+	else
+	{
+		QWidget::keyPressEvent(event);
+	}
 }

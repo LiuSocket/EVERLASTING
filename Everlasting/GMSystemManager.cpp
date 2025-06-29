@@ -53,14 +53,6 @@ CGMSystemManager& CGMSystemManager::getSingleton(void)
 	return (*msSingleton);
 }
 
-CGMSystemManager* CGMSystemManager::getSingletonPtr(void)
-{
-	if (!msSingleton)
-		msSingleton = GM_NEW(CGMSystemManager);
-	assert(msSingleton);
-	return msSingleton;
-}
-
 /** @brief 初始化 */
 bool CGMSystemManager::Init()
 {
@@ -69,7 +61,6 @@ bool CGMSystemManager::Init()
 
 	// 初始化引擎
 	GM_ENGINE.Init();
-
 	// 初始化界面
 	GM_UI_MANAGER.Init();
 
@@ -86,41 +77,10 @@ bool CGMSystemManager::Release()
 	if (!m_bInit)
 		return true;
 
+	GM_UI_MANAGER.Release();
 	GM_ENGINE.Release();
+
 	m_bInit = false;
-	return true;
-}
-
-/** @brief 键盘按键按下事件 */
-bool CGMSystemManager::GMKeyDown(EGMKeyCode eKC)
-{
-	switch (eKC)
-	{
-	case EGMKeyCode::EGM_KC_F11:
-	{
-		GM_UI_MANAGER.SetFullScreen(!GM_UI_MANAGER.GetFullScreen());
-	}
-	break;
-	case EGMKeyCode::EGM_KC_Escape:
-	{
-		GM_UI_MANAGER.SetFullScreen(false);
-	}
-	break;
-	}
-	return true;
-}
-
-/** @brief 键盘按键弹起事件 */
-bool CGMSystemManager::GMKeyUp(EGMKeyCode eKC)
-{
-	switch (eKC)
-	{
-	case EGMKeyCode::EGM_KC_Up:
-	case EGMKeyCode::EGM_KC_Down:
-	{
-	}
-	break;
-	}
 	return true;
 }
 

@@ -197,7 +197,7 @@
     <QtMoc Include="UI\GMUIManager.h" />
     <QtMoc Include="UI\GMMainWindow.h" />
     <QtMoc Include="GMSystemManager.h" />
-    <QtMoc Include="..\Engine\GMViewWidget.h" />
+    <ClInclude Include="..\Engine\GMViewWidget.h" />
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="UI\GMMainWindow.ui" />

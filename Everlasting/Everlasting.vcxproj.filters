@@ -202,11 +202,11 @@
     <ClInclude Include="..\Engine\GMAudio.h">
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\Engine\GMViewWidget.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="..\Engine\GMViewWidget.h">
-      <Filter>GMEngine\Core\Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="GMSystemManager.h">
       <Filter>Everlasting</Filter>
     </QtMoc>

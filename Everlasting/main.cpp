@@ -48,6 +48,6 @@ int main(int argc, char **argv)
 	tran.load(":/Resources/qt_zh_CN.qm");
 	a.installTranslator(&tran);
 
-	GM_SYSTEM_MANAGER_PTR->Init();
+	GM_SYSTEM_MANAGER.Init();
 	return a.exec();
 }

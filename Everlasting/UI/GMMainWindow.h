@@ -31,7 +31,7 @@ public:
 	* @brief 获取界面全屏状态
 	* @return bool		是否处于全屏状态
 	*/
-	bool GetFullScreen();
+	inline bool CGMMainWindow::GetFullScreen() const{ return m_bFull; }
 
 	/**
 	* @brief 更新音频的所有信息
@@ -81,22 +81,14 @@ public slots:
 	*/
 	void _slotFullScreen();
 
-	/**
-	* @brief 进入三维界面
-	*/
-	void _slotEnter3D();
-
 protected:
 	void changeEvent(QEvent* event);
 	void resizeEvent(QResizeEvent* event);
-	void closeEvent(QCloseEvent* event);
 	void mouseDoubleClickEvent(QMouseEvent *event);
 	void mousePressEvent(QMouseEvent *event);
 	void mouseReleaseEvent(QMouseEvent *event);
 	void mouseMoveEvent(QMouseEvent* event);
-	/** @brief 界面上的键盘事件 */
-	void keyPressEvent(QKeyEvent *event);
-	void keyReleaseEvent(QKeyEvent *event);
+	bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
 	/**

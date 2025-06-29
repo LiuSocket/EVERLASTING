@@ -49,14 +49,6 @@ CGMUIManager& CGMUIManager::getSingleton(void)
 	return (*msSingleton);
 }
 
-CGMUIManager* CGMUIManager::getSingletonPtr(void)
-{
-	if (!msSingleton)
-		msSingleton = GM_NEW(CGMUIManager);
-	assert(msSingleton);
-	return msSingleton;
-}
-
 /** @brief ≥ı ºªØ */
 void CGMUIManager::Init()
 {

@@ -20,7 +20,6 @@
 Macro Defines
 *************************************************************************/
 #define GM_UI_MANAGER					CGMUIManager::getSingleton()
-#define GM_UI_MANAGER_PTR				CGMUIManager::getSingletonPtr()
 
 /*************************************************************************
 Struct
@@ -49,7 +48,6 @@ public:
 
 	/** @brief 获取单例 */
 	static CGMUIManager& getSingleton(void);
-	static CGMUIManager* getSingletonPtr(void);
 
 	/** @brief 初始化 */
 	void Init();

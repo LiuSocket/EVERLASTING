@@ -13,12 +13,9 @@
 
 #include "osgQt/GraphicsWindowQt.h"
 #include <osgViewer/CompositeViewer>
-#include <QtCore/QTimer>
 
 class CGMViewWidget : public QWidget, public osgViewer::CompositeViewer
 {
-	Q_OBJECT;
-
 public:
 	CGMViewWidget(osgViewer::View* pView,
 		QWidget* parent = 0, Qt::WindowFlags f = 0,
@@ -30,19 +27,7 @@ protected:
 		int x, int y, int w, int h,
 		const std::string& name = "",
 		bool windowDecoration = false);
-
-	void enterEvent(QEvent* event);
-
-signals:
-
-	/**
-	* _signalEnter3D
-	* @brief 进入三维界面
-	* @param void
-	* @return void
-	*/
-	void _signalEnter3D();
-
-protected:
-	QTimer _timer;
+	/** @brief 界面上的键盘事件 */
+	void keyPressEvent(QKeyEvent* event);
+	void keyReleaseEvent(QKeyEvent* event);
 };

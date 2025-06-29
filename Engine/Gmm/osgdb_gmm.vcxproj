@@ -146,8 +146,9 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>$(SolutionDir)Lib/Release/osgPlugins-3.6.5/osgdb_gmm.lib</ImportLibrary>
-      <ProgramDataBaseFile>$(SolutionDir)Bin/Release/osgPlugins-3.6.5/osgdb_gmm.pdb</ProgramDataBaseFile>
-      <SubSystem>Console</SubSystem>
+      <ProgramDataBaseFile>
+      </ProgramDataBaseFile>
+      <SubSystem>Windows</SubSystem>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>false</LinkLibraryDependencies>

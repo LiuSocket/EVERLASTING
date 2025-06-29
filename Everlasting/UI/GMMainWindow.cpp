@@ -1,6 +1,5 @@
 #include "GMMainWindow.h"
 #include "GMVolumeWidget.h"
-#include "GMUIManager.h"
 #include "../Engine/GMEngine.h"
 #include <QKeyEvent>
 #include <QScreen>
@@ -16,6 +15,8 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	ui.setupUi(this);
 	setWindowFlags(Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_Mapped);
+
+	qApp->installEventFilter(this); // 对全局应用安装过滤器
 
 	ui.centralWidget->setLayout(ui.centralVLayout);
 	ui.titleWidget->setLayout(ui.titleHLayout);
@@ -52,7 +53,6 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 
 CGMMainWindow::~CGMMainWindow()
 {
-	GM_UI_MANAGER_PTR->Release();
 }
 
 /** @brief 初始化 */
@@ -63,8 +63,6 @@ bool CGMMainWindow::Init()
 
 	m_pSceneWidget = GM_ENGINE.CreateViewWidget(this);
 	ui.centralVLayout->insertWidget(2,(QWidget*)m_pSceneWidget);
-
-	connect(m_pSceneWidget, SIGNAL(_signalEnter3D()), this, SLOT(_slotEnter3D()));
 
 	QImage* pAudioImg = new QImage;
 	pAudioImg->load(":/Resources/default_Image.png");
@@ -122,11 +120,6 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 			ui.toolEdgeLab->show();
 		}
 	}
-}
-
-bool CGMMainWindow::GetFullScreen()
-{
-	return m_bFull;
 }
 
 void CGMMainWindow::UpdateAudioInfo()
@@ -297,11 +290,6 @@ void CGMMainWindow::_slotFullScreen()
 	SetFullScreen(true);
 }
 
-void CGMMainWindow::_slotEnter3D()
-{
-	m_pVolumeWidget->hide();
-}
-
 void CGMMainWindow::changeEvent(QEvent* event)
 {
 	if (GM_ENGINE.GetRendering() && isMinimized())
@@ -321,13 +309,6 @@ void CGMMainWindow::changeEvent(QEvent* event)
 void CGMMainWindow::resizeEvent(QResizeEvent* event)
 {
 	m_pVolumeWidget->hide();
-
-	GM_UI_MANAGER_PTR->Resize();
-}
-
-void CGMMainWindow::closeEvent(QCloseEvent* event)
-{
-	GM_UI_MANAGER_PTR->Release();
 }
 
 void CGMMainWindow::mouseDoubleClickEvent(QMouseEvent *event)
@@ -412,42 +393,52 @@ void CGMMainWindow::mouseMoveEvent(QMouseEvent* event)
 	QWidget::mouseMoveEvent(event);
 }
 
-void CGMMainWindow::keyPressEvent(QKeyEvent* event)
+bool CGMMainWindow::eventFilter(QObject* obj, QEvent* event)
 {
-	if ((event->modifiers() == Qt::ControlModifier) && (event->key() == Qt::Key_S))
+	if (event->type() == QEvent::KeyPress)
 	{
-		GM_ENGINE.Save();
-	}
+		QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
 
-	switch (event->key())
-	{
-	case Qt::Key_F2:
-	{
-		GM_ENGINE.SetPlayMode(EGMA_MOD_CIRCLE);
-		GM_ENGINE.Next();
-	}
-	break;
-	case Qt::Key_F3:
-	{
-		GM_ENGINE.SetPlayMode(EGMA_MOD_RANDOM);
-		GM_ENGINE.Next();
-	}
-	break;
-	case Qt::Key_F11:
-	{
-		GM_UI_MANAGER_PTR->SetFullScreen(!GM_UI_MANAGER_PTR->GetFullScreen());
-	}
-	break;
-	default:
+		if ((keyEvent->modifiers() == Qt::ControlModifier) && (keyEvent->key() == Qt::Key_S))
+		{
+			GM_ENGINE.Save();
+			return true; // 事件已处理，不再传递
+		}
+
+		switch (keyEvent->key())
+		{
+		case Qt::Key_F2:
+		{
+			GM_ENGINE.SetPlayMode(EGMA_MOD_CIRCLE);
+			GM_ENGINE.Next();
+			return true; // 事件已处理，不再传递
+		}
 		break;
+		case Qt::Key_F3:
+		{
+			GM_ENGINE.SetPlayMode(EGMA_MOD_RANDOM);
+			GM_ENGINE.Next();
+			return true; // 事件已处理，不再传递
+		}
+		break;
+		case Qt::Key_F11:
+		{
+			SetFullScreen(!m_bFull);
+			return true; // 事件已处理，不再传递
+		}
+		break;
+		case Qt::Key_Escape:
+		{
+			SetFullScreen(false);
+			return true; // 事件已处理，不再传递
+		}
+		break;
+		default:
+			break;
+		}
 	}
-
-	QWidget::keyPressEvent(event);
-}
-
-void CGMMainWindow::keyReleaseEvent(QKeyEvent* event)
-{
-	QWidget::keyReleaseEvent(event);
+	// 其他事件交给基类处理
+	return QMainWindow::eventFilter(obj, event);
 }
 
 void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & seconds)

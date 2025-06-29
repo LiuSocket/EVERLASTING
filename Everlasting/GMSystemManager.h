@@ -13,6 +13,7 @@
 
 #include <windows.h>
 #include <QObject>
+#include <QKeyEvent>
 #include "../Engine/GMPrerequisites.h"
 #include "../Engine/GMEngine.h"
 
@@ -20,7 +21,6 @@
 Macro Defines
 *************************************************************************/
 #define GM_SYSTEM_MANAGER					CGMSystemManager::getSingleton()
-#define GM_SYSTEM_MANAGER_PTR				CGMSystemManager::getSingletonPtr()
 
 /*************************************************************************
 Enums
@@ -52,11 +52,6 @@ public:
 	/** @brief 释放 */
 	bool Release();
 
-	/** @brief 键盘按键按下事件 */
-	bool GMKeyDown(GM::EGMKeyCode eKC);
-	/** @brief 键盘按键弹起事件 */
-	bool GMKeyUp(GM::EGMKeyCode eKC);
-
 	/** @brief 设置鼠标显示/隐藏 */
 	void SetCursorVisible(bool bVisible);
 
@@ -71,7 +66,6 @@ private:
 public:
 	/** @brief 获取单例 */
 	static CGMSystemManager& getSingleton(void);
-	static CGMSystemManager* getSingletonPtr(void);
 
 private:
 	bool							m_bInit = false;				//!< 初始化标识

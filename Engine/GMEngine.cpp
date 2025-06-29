@@ -293,13 +293,10 @@ void CGMEngine::ResizeScreen(const int iW, const int iH)
 		m_pPost->ResizeScreen(iW, iH);
 }
 
-void CGMEngine::SetLookTargetVisible(bool bVisible)
+void CGMEngine::SetLookTargetPos(const SGMVector2f& vTargetScreenPos)
 {
-	m_pCharacter->SetLookTargetVisible(bVisible);
-}
+	osg::Vec2f vTargetScreePos(vTargetScreenPos.x, vTargetScreenPos.y);
 
-void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)
-{
 	double fovy, aspectRatio, zNear, zFar;
 	GM_View->getCamera()->getProjectionMatrixAsPerspective(fovy, aspectRatio, zNear, zFar);
 	osg::Vec3d vEye, vCenter, vUp;
@@ -307,12 +304,12 @@ void CGMEngine::SetLookTargetPos(const osg::Vec2f& vTargetScreenPos)
 	osg::Vec3d vFrontDir = vCenter - vEye;
 	vFrontDir.normalize();
 
-	// 假设目标在相机前方68cm处
-	const double fLen = 68;
+	// 假设目标在相机前方80cm处
+	const double fLen = 80;
 	double fHalfH = fLen * tan(osg::DegreesToRadians(fovy * 0.5));
 	osg::Vec3d vTargetWorldPos = vEye + vFrontDir * fLen;
-	vTargetWorldPos.x() += (vTargetScreenPos.x() / m_pConfigData->iScreenWidth - 0.5) * 2 * fHalfH * aspectRatio;
-	vTargetWorldPos.z() += (vTargetScreenPos.y()/m_pConfigData->iScreenHeight-0.5) * 2 * fHalfH;
+	vTargetWorldPos.x() += (vTargetScreePos.x() / m_pConfigData->iScreenWidth - 0.5) * 2 * fHalfH * aspectRatio;
+	vTargetWorldPos.z() += (vTargetScreePos.y() / m_pConfigData->iScreenHeight-0.5) * 2 * fHalfH;
 	m_pCharacter->SetLookTargetPos(vTargetWorldPos);
 }
 
@@ -434,6 +431,7 @@ bool CGMEngine::_LoadConfig()
 	m_pConfigData->strMediaPath = sNode.GetPropWStr("mediaPath", m_pConfigData->strMediaPath.c_str());
 	m_pConfigData->eRenderQuality = EGMRENDER_QUALITY(sNode.GetPropInt("renderQuality", m_pConfigData->eRenderQuality));
 	m_pConfigData->fFovy = sNode.GetPropFloat("fovy", m_pConfigData->fFovy);
+	m_pConfigData->bWallpaper = sNode.GetPropBool("wallpaper", m_pConfigData->bWallpaper);
 
 	return true;
 }

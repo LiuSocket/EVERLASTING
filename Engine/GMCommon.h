@@ -54,5 +54,6 @@ namespace GM
 		float							fVolume = 0.5f;							//!< 音量
 		int								iScreenWidth = 1920;					//!< 屏幕宽度，单位：像素
 		int								iScreenHeight = 1080;					//!< 屏幕高度，单位：像素
+		bool							bWallpaper = false;						//!< 是否变成“桌面壁纸”
 	};
 }	// GM

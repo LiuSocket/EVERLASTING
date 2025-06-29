@@ -101,16 +101,19 @@ private:
 	*/
 	void _Million2MinutesSeconds(const int ms, int& minutes, int& seconds);
 
+	// 获取桌面窗口（WorkerW 或 Progman）
+	HWND _GetDesktopHWND();
+
 private:
 	Ui::GMMainWindow					ui;
-	CGMVolumeWidget*					m_pVolumeWidget;
-	CGMViewWidget*						m_pSceneWidget;
+	CGMVolumeWidget*					m_pVolumeWidget = nullptr;
+	CGMViewWidget*						m_pSceneWidget = nullptr;
 
-	bool								m_bInit;
-	bool								m_bFull;				//!< 是否全屏
-	bool								m_bPressed;				//!< 是否按下鼠标
-	bool								m_bShowVolume;			//!< 是否显示实时变化的音量
-	QPoint								m_vPos;					//!< 窗口的位置
-	int									m_iAudioDuration;		//!< 音频总时长，单位：ms
-	QString								m_strName;				//!< 音频文件名称，包含后缀名
+	bool								m_bInit = false;
+	bool								m_bFull = false;					//!< 是否全屏
+	bool								m_bPressed = false;				//!< 是否按下鼠标
+	bool								m_bShowVolume = false;			//!< 是否显示实时变化的音量
+	QPoint								m_vPos = QPoint(0, 0);			//!< 窗口的位置
+	int									m_iAudioDuration = 5000;		//!< 音频总时长，单位：ms
+	QString								m_strName = QString();			//!< 音频文件名称，包含后缀名
 };

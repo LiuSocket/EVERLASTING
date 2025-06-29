@@ -30,7 +30,6 @@ Global Constants
 #define  MORPH_PRIORITY_HIGH				(2)			// 变形动画“高”优先级
 #define  MORPH_PRIORITY_NORMAL				(1)			// 变形动画“普通”优先级
 
-#define  SEEK_TARGET_TIME					(2.0f)		// 搜索目标最长时间，单位：秒
 #define  IDLE_ADD_FADE_TIME					(0.5f)		// idle附加动画的淡入淡出时间，单位：秒
 #define  ARM_FADE_TIME						(0.8f)		// 手部动画的淡入淡出时间，单位：秒
 
@@ -87,6 +86,12 @@ bool CGMCharacter::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 
 bool CGMCharacter::Update(double dDeltaTime)
 {
+	// 程序开始的时候，角色必须忽视目标一段时间
+	if (osg::Timer::instance()->time_s() < 7)
+	{
+		return true;
+	}
+
 	static double s_fConstantStep = 0.05;
 	static double s_fDeltaStep = 0.0;
 	if (s_fDeltaStep > s_fConstantStep)
@@ -105,8 +110,6 @@ bool CGMCharacter::Update(double dDeltaTime)
 	// 更新手部动画权重
 	_UpdateArmAnimation(dDeltaTime);
 
-	// 每帧累加搜索时间
-	m_fSeekTargetTime += dDeltaTime;
 	// 每帧累加音乐播放时间
 	if(m_bMusicOn) m_fMusicTime += dDeltaTime;
 
@@ -253,8 +256,6 @@ void CGMCharacter::SetMusicCurrentTime(int iTime)
 	m_vTargetWorldPos = osg::Vec3d(20 * (m_fMusicTime - 0.3f*m_fMusicDuration) / m_fMusicDuration, -20, -20);
 	// 重置上一帧的注视目标位置
 	m_vTargetLastWorldPos = m_vTargetWorldPos;
-	m_bTargetVisible = true;
-	m_fSeekTargetTime = 0;
 }
 
 void CGMCharacter::_InnerUpdate(const double dDeltaTime)
@@ -467,17 +468,16 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 {
 	// 刚鄙视完，气还没消，直接无视目标
-	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.45;
-	// 如果强迫角色注视目标点，则注视一段时间
-	if (m_bTargetVisible && !bIgnoreTarget)
-	{
-		_ChangeLookAtTarget(dDeltaTime);
-	}
-	else if(m_fSeekTargetTime > SEEK_TARGET_TIME)// 否则则执行“四处张望”的功能
+	bool bIgnoreTarget = m_bDisdain && (m_fAngry > 0.45);
+	// 如果忽视目标，则执行“四处张望”的功能
+	if (bIgnoreTarget)
 	{
 		_ChangeLookAround(dDeltaTime);
 	}
-	else {}
+	else// 否则角色会注视目标点一段时间
+	{
+		_ChangeLookAtTarget(dDeltaTime);
+	}
 }
 
 void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
@@ -498,7 +498,7 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 		}
 
 		// 如果变化不剧烈，则不会增加愤怒，超过一定的速度后才会增加
-		float fAddAngry = fmax(0.0f, m_fDeltaVelocity - 10.0f);
+		float fAddAngry = fmax(0.0f, m_fDeltaVelocity - 20.0f);
 		// 如果短时间内加速度模的累计值过大，说明目标在剧烈运动，可以认为在耍自己，愤怒值飙升
 		m_fAngry = fmin(m_fAngry + fAddAngry * fAddAngry * 1e-6f, 1.0f);
 
@@ -509,7 +509,7 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 	osg::Vec3d vDir = osg::Vec3d(0, -1, 0);
 	// 愤怒值超过一个阈值后，角色会放弃注视目标并看向前方一段时间，这时会减少愤怒值
 	// 愤怒值小于一个阈值后才会继续随意看四周，此时愤怒值会继续减小一直到0，然后才能继续注视
-	if (m_fAngry > 0.6)
+	if (m_fAngry > 0.9)
 	{
 		if (!m_bDisdain)
 		{
@@ -522,6 +522,8 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 	else if(m_fAngry < 0.55)
 	{
 		vDir = m_vTargetWorldPos - osg::Vec3d(0.0, -1.0, 12.0);
+		// 保证角色不会看向后方
+		vDir.y() = std::fmin(vDir.y(), 0.0);
 		vDir.normalize();
 
 		_SetEyeFinalDir(0, 0);
@@ -713,20 +715,24 @@ void CGMCharacter::_UpdateDance(const double dDeltaTime)
 		{
 			_StopAnimation(itr);
 			m_bReStartDance = false;
-			m_bTargetVisible = false;
+			// 这里需要让角色不看向鼠标
+			// to do
 		}
 	}
 }
 
 void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
 {
-	if (m_bTargetVisible || m_fSeekTargetTime < SEEK_TARGET_TIME)
+	// 刚鄙视完，气还没消，直接无视目标
+	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.45;
+	// 如果强迫角色注视目标点，则注视一段时间
+	if (bIgnoreTarget)
 	{
-		_UpdateLookAt(dDeltaTime);
+		_UpdateLookAround(dDeltaTime);
 	}
 	else
 	{
-		_UpdateLookAround(dDeltaTime);
+		_UpdateLookAt(dDeltaTime);
 	}
 }
 

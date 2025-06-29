@@ -7,10 +7,7 @@
 using namespace GM;
 
 CGMMainWindow::CGMMainWindow(QWidget *parent)
-	: QMainWindow(parent),
-	m_pVolumeWidget(nullptr), m_pSceneWidget(nullptr),
-	m_bInit(false), m_bFull(false), m_bPressed(false), m_bShowVolume(false),
-	m_vPos(QPoint(0,0)), m_iAudioDuration(5000), m_strName(QString())
+	: QMainWindow(parent)
 {
 	ui.setupUi(this);
 	setWindowFlags(Qt::FramelessWindowHint);
@@ -68,8 +65,24 @@ bool CGMMainWindow::Init()
 	pAudioImg->load(":/Resources/default_Image.png");
 	ui.audioImgLab->setPixmap(QPixmap::fromImage(*pAudioImg));
 
-	m_bInit = true;
+	// 设置成桌面壁纸
+	if (GM_ENGINE.IsWallpaper())
+	{
+		SetFullScreen(true);
+		HWND hwnd = (HWND)winId();
+		HWND desktopHwnd = _GetDesktopHWND();
+		SetParent(hwnd, desktopHwnd);
+		// 去除窗口装饰
+		LONG style = GetWindowLong(hwnd, GWL_STYLE);
+		style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
+		SetWindowLong(hwnd, GWL_STYLE, style);
+		// 设置全屏
+		SetWindowPos(hwnd, HWND_TOP,
+			0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+			SWP_SHOWWINDOW);
+	}
 
+	m_bInit = true;
 	return m_bInit;
 }
 
@@ -79,6 +92,17 @@ void CGMMainWindow::Update()
 	if (m_bShowVolume)
 	{
 		m_pVolumeWidget->SetVolume(GM_ENGINE.GetVolume() * 100);
+	}
+
+	// 壁纸模式下，需要在这里更新鼠标位置
+	if (GM_ENGINE.IsWallpaper())
+	{
+		POINT pt;
+		GetCursorPos(&pt);
+		// pt.x, pt.y 就是当前鼠标的屏幕坐标
+		QPoint globalPos(pt.x, pt.y);
+		QPoint localPos = mapFromGlobal(globalPos);
+		GM_ENGINE.SetLookTargetPos(SGMVector2f(localPos.x(), GetSystemMetrics(SM_CYSCREEN) - localPos.y()));
 	}
 }
 
@@ -446,4 +470,32 @@ void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & s
 	int iAllSeconds = ms / 1000;
 	minutes = max(0, min(59, iAllSeconds / 60));
 	seconds = max(0, min(59, iAllSeconds % 60));
+}
+
+HWND CGMMainWindow::_GetDesktopHWND()
+{
+	HWND progman = FindWindow(L"Progman", NULL);
+	HWND desktop = NULL;
+
+	// 向Progman发送消息，创建WorkerW
+	SendMessageTimeout(progman, 0x052C, 0, 0, SMTO_NORMAL, 1000, nullptr);
+
+	// 枚举WorkerW窗口
+	HWND workerw = NULL;
+	EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
+		HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
+		if (shellView != NULL) {
+			HWND* pWorkerw = (HWND*)lParam;
+			*pWorkerw = FindWindowEx(NULL, hwnd, L"WorkerW", NULL);
+			return FALSE;
+		}
+		return TRUE;
+		}, (LPARAM)&workerw);
+
+	if (workerw)
+		desktop = workerw;
+	else
+		desktop = progman;
+
+	return desktop;
 }

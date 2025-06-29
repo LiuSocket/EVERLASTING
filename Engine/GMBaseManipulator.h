@@ -109,38 +109,29 @@ namespace GM
 			return vMin * (1 - fX) + vMax * fX;
 		}
 
-		/**
-		* @brief SGMVector3 转 osg::Vec3d
-		* @param vGM:				输入的GM向量
-		* @return osg::Vec3d:		输出的osg向量
-		*/
+		/* @brief SGMVector 转 osg::Vec */
+		inline osg::Vec2f _GM2OSG(const SGMVector2f& vGM) const
+		{
+			return osg::Vec2f(vGM.x, vGM.y);
+		}
 		inline osg::Vec3d _GM2OSG(const SGMVector3& vGM) const
 		{
 			return osg::Vec3d(vGM.x, vGM.y, vGM.z);
 		}
-		/**
-		* @brief SGMVector4 转 osg::Vec4d
-		* @param vGM:				输入的GM向量
-		* @return osg::Vec4d:		输出的osg向量
-		*/
 		inline osg::Vec4d _GM2OSG(const SGMVector4& vGM) const
 		{
 			return osg::Vec4d(vGM.x, vGM.y, vGM.z, vGM.w);
 		}
-		/**
-		* @brief SGMVector3 转 osg::Vec3d
-		* @param vGM:				输入的GM向量
-		* @return osg::Vec3d:		输出的osg向量
-		*/
+
+		/* @brief osg::Vec 转 SGMVector */
+		inline SGMVector2f _OSG2GM(const osg::Vec2f& vOSG) const
+		{
+			return SGMVector2f(vOSG.x(), vOSG.y());
+		}
 		inline SGMVector3 _OSG2GM(const osg::Vec3d& vOSG) const
 		{
 			return SGMVector3(vOSG.x(), vOSG.y(), vOSG.z());
 		}
-		/**
-		* @brief SGMVector4 转 osg::Vec4d
-		* @param vGM:				输入的GM向量
-		* @return osg::Vec4d:		输出的osg向量
-		*/
 		inline SGMVector4 _OSG2GM(const osg::Vec4d& vOSG) const
 		{
 			return SGMVector4(vOSG.x(), vOSG.y(), vOSG.z(), vOSG.w());

@@ -175,31 +175,12 @@ namespace GM
 		void Welcome();
 
 		/**
-		* @brief 显示/隐藏目标，目标不可见后，角色还会在那个方向疑惑片刻
-		* @param bVisible 显示/隐藏
-		*/
-		inline void SetLookTargetVisible(bool bVisible)
-		{
-			m_bTargetVisible = bVisible;	
-			if (bVisible)
-			{
-				// 如果目标可见，则重置上一帧的注视目标位置
-				m_vTargetLastWorldPos = m_vTargetWorldPos;
-			}
-			else
-			{
-				// 如果目标突然消失，则开始搜寻目标，并计时
-				m_fSeekTargetTime = 0;
-			}
-		}
-		/**
 		* @brief 如果目标可见，则设置注视目标位置
 		* @param vTargetWorldPos 目标点的世界空间坐标，单位：cm
 		*/
 		inline void SetLookTargetPos(const osg::Vec3d& vTargetWorldPos)
 		{
-			if(m_bTargetVisible)
-				m_vTargetWorldPos = vTargetWorldPos;
+			m_vTargetWorldPos = vTargetWorldPos;
 		}
 		/**
 		* @brief 开启/关闭音频
@@ -316,7 +297,6 @@ namespace GM
 		float m_fArmDurationL = 4.0f;							//!< 左手动画周期，单位：秒
 		float m_fArmDurationR = 4.0f;							//!< 右手动画周期，单位：秒
 
-		float m_fSeekTargetTime = 0.0f;							//!< 搜索目标这个动作花了多长时间，单位：秒
 		float m_fLookDuration = 2.0f;							//!< 四处观望时，盯在某个方向的时间，单位：秒
 		float m_fTurnDuration = 1.0f;							//!< 转头周期，单位：秒
 		float m_fFastTurnDuration = 0.5f;						//!< 快速转头周期，单位：秒
@@ -366,7 +346,6 @@ namespace GM
 		float m_fScared = 0.0f;
 
 		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
-		bool m_bTargetVisible = false;							//!< 注视目标是否可见
 		bool m_bMusicOn = false;								//!< 音乐是否开启
 		bool m_bStartDance = true;								//!< 是否刚开始舞蹈
 		bool m_bReStartDance = false;							//!< 是否被打断舞蹈，需要重新开始舞蹈

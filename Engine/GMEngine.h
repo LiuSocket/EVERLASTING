@@ -87,34 +87,23 @@ namespace GM
 		* @param iH: 屏幕高度
 		*/
 		void ResizeScreen(const int iW, const int iH);
-		/**
-		* @brief 显示/隐藏目标
-		* @param bVisible 显示/隐藏
-		*/
-		void SetLookTargetVisible(bool bVisible);
+
 		/**
 		* @brief 设置注视目标位置
 		* @param vTargetScreenPos 目标点的屏幕XY坐标
 		*/
-		void SetLookTargetPos(const osg::Vec2f& vTargetScreenPos);
+		void SetLookTargetPos(const SGMVector2f& vTargetScreenPos);
 		/**
 		* @brief 开启/暂停渲染，最小化或者其他软件置顶时可以关闭渲染
 		*  关闭是为了最小化时不浪费显卡资源
 		* @param bEnable: 是否开启渲染
 		*/
-		inline void SetRendering(const bool bEnable)
-		{
-			m_bRendering = bEnable;
-		}
-		/**
-		* @brief 是否开启渲染
-		* @return bool: 是否开启渲染
-		*/
-		inline bool GetRendering() const
-		{
-			return m_bRendering;
-		}
-		
+		inline void SetRendering(const bool bEnable){ m_bRendering = bEnable;}
+		/* @brief 是否开启渲染 */
+		inline bool GetRendering() const{ return m_bRendering;}
+		/* @brief 是否变成桌面背景 */
+		inline bool IsWallpaper() const { return m_pConfigData->bWallpaper; }
+
 		/** @brief 播放 */
 		bool Play();
 		/** @brief 暂停 */
@@ -182,12 +171,6 @@ namespace GM
 		*/
 		bool IsWelcomeFinished() const;
 
-		/**
-		* @brief 获取音频播放的顺序列表，back位置为最新的音频
-		* @return std::vector<std::wstring>：	音频播放的顺序列表
-		*/
-		const std::vector<std::wstring> GetPlayingOrder() const;
-
 		/** @brief 创建视口(QT:QWidget) */
 		CGMViewWidget* CreateViewWidget(QWidget* parent);
 
@@ -215,15 +198,6 @@ namespace GM
 		void _InnerUpdate(const float updateStep);
 		/** @brief 更新(在主相机更新姿态之后) */
 		bool _UpdateLater(const double dDeltaTime);
-		
-		/**
-		* @brief SGMVector3 转 osg::Vec3d
-		* @param vGM:				输入的GM向量
-		* @return osg::Vec3d:		输出的osg向量 */
-		inline SGMVector3 _OSG2GM(const osg::Vec3d& vOSG) const
-		{
-			return SGMVector3(vOSG.x(), vOSG.y(), vOSG.z());
-		}
 
 		// 变量
 	private:

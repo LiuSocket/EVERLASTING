@@ -288,6 +288,7 @@ namespace GM
 
 		std::string m_strName = "";								//!< 角色名称
 
+		double m_fSyncTime = 0.0;								//!< 当前时间，单位：秒
 		float m_fIdleDuration = 5.0f;							//!< idle动画周期，单位：秒
 		float m_fIdleAddDuration = 1.0f;						//!< idle附加动画周期，单位：秒
 		float m_fIdleTime = 0.0f;								//!< idle动作经过了多长时间，单位：秒
@@ -345,6 +346,7 @@ namespace GM
 		//! 0.0 == 平静；1.0 == 感到恐怖
 		float m_fScared = 0.0f;
 
+		bool m_bLookAtTarget = false;							//!< 是否注视目标
 		bool m_bDisdain = false;								//!< 是否在鄙视（以后考虑加入性格）
 		bool m_bMusicOn = false;								//!< 音乐是否开启
 		bool m_bStartDance = true;								//!< 是否刚开始舞蹈

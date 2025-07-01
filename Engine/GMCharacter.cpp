@@ -87,10 +87,9 @@ bool CGMCharacter::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 bool CGMCharacter::Update(double dDeltaTime)
 {
 	// 程序开始的时候，角色必须忽视目标一段时间
-	if (osg::Timer::instance()->time_s() < 7)
-	{
-		return true;
-	}
+	m_fSyncTime += dDeltaTime;
+	// 刚鄙视完，气还没消，直接无视目标
+	m_bLookAtTarget = (m_fSyncTime > 2) && (!m_bDisdain || (m_fAngry < 0.5));
 
 	static double s_fConstantStep = 0.05;
 	static double s_fDeltaStep = 0.0;
@@ -467,16 +466,14 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 
 void CGMCharacter::_ChangeLookDir(const double dDeltaTime)
 {
-	// 刚鄙视完，气还没消，直接无视目标
-	bool bIgnoreTarget = m_bDisdain && (m_fAngry > 0.45);
-	// 如果忽视目标，则执行“四处张望”的功能
-	if (bIgnoreTarget)
-	{
-		_ChangeLookAround(dDeltaTime);
-	}
-	else// 否则角色会注视目标点一段时间
+	// 角色注视目标点一段时间
+	if (m_bLookAtTarget)
 	{
 		_ChangeLookAtTarget(dDeltaTime);
+	}
+	else// 否则忽视目标，则执行“四处张望”的功能
+	{
+		_ChangeLookAround(dDeltaTime);
 	}
 }
 
@@ -723,16 +720,14 @@ void CGMCharacter::_UpdateDance(const double dDeltaTime)
 
 void CGMCharacter::_UpdateLookAnimation(const double dDeltaTime)
 {
-	// 刚鄙视完，气还没消，直接无视目标
-	bool bIgnoreTarget = m_bDisdain && m_fAngry > 0.45;
 	// 如果强迫角色注视目标点，则注视一段时间
-	if (bIgnoreTarget)
+	if (m_bLookAtTarget)
 	{
-		_UpdateLookAround(dDeltaTime);
+		_UpdateLookAt(dDeltaTime);
 	}
 	else
 	{
-		_UpdateLookAt(dDeltaTime);
+		_UpdateLookAround(dDeltaTime);
 	}
 }
 

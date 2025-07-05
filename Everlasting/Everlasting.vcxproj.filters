@@ -36,9 +36,6 @@
     <Filter Include="GMEngine\Animation">
       <UniqueIdentifier>{69cfbde1-9780-4b32-9cb2-9710f5805d51}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Cipher">
-      <UniqueIdentifier>{ec96a356-2a03-4f80-9fb4-42d08e4738a0}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Engine\Assist\tinystr.cpp">
@@ -243,5 +240,10 @@
     <QtRcc Include="Everlasting.qrc">
       <Filter>Everlasting\Resource Files</Filter>
     </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\GM_logo.ico">
+      <Filter>Everlasting\Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

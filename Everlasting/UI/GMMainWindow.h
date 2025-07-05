@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QSystemTrayIcon>
 #include "ui_GMMainWindow.h"
 
 /*************************************************************************
@@ -44,7 +45,7 @@ public:
 	*/
 	void SetVolumeVisible(const bool bVisible);
 
-public slots:
+private slots:
 
 	/** @brief 上一首 */
 	void _slotLast();
@@ -80,6 +81,11 @@ public slots:
 	* @brief 启用全屏
 	*/
 	void _slotFullScreen();
+
+	/**
+	* @brief 系统托盘图标被激活
+	*/
+	void _OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
 protected:
 	void changeEvent(QEvent* event);

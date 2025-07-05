@@ -89,7 +89,7 @@ bool CGMCharacter::Update(double dDeltaTime)
 	// 程序开始的时候，角色必须忽视目标一段时间
 	m_fSyncTime += dDeltaTime;
 	// 刚鄙视完，气还没消，直接无视目标
-	m_bLookAtTarget = (m_fSyncTime > 2) && (!m_bDisdain || (m_fAngry < 0.5));
+	m_bLookAtTarget = (m_fSyncTime > 5) && (!m_bDisdain || (m_fAngry < 0.5));
 
 	static double s_fConstantStep = 0.05;
 	static double s_fDeltaStep = 0.0;

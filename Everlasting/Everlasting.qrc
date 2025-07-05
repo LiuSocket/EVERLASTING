@@ -40,5 +40,6 @@
         <file>Resources/btn_play.png</file>
         <file>Resources/btn_play_hover.png</file>
         <file>Resources/volumeLab.png</file>
+        <file>Resources/playKit.png</file>
     </qresource>
 </RCC>

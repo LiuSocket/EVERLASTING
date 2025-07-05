@@ -3,6 +3,7 @@
 #include "../Engine/GMEngine.h"
 #include <QKeyEvent>
 #include <QScreen>
+#include <QMenu>
 
 using namespace GM;
 
@@ -46,6 +47,20 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 		m_pVolumeWidget->setStyleSheet(style);
 		qssFile.close();
 	}
+
+	// 系统托盘图标
+	QSystemTrayIcon* trayIcon = new QSystemTrayIcon(this);
+	trayIcon->setIcon(QIcon(":/Resources/GM_logo.ico"));
+	trayIcon->setToolTip("EVERLASTING");
+	// 添加右键菜单
+	QMenu* trayMenu = new QMenu(this);
+	trayMenu->addAction(QString::fromLocal8Bit("主界面"), this, SLOT(show()));
+	trayMenu->addAction(QString::fromLocal8Bit("退出"), qApp, SLOT(quit()));
+	trayIcon->setContextMenu(trayMenu);
+	trayIcon->show();
+
+	connect(trayIcon, &QSystemTrayIcon::activated, this, &CGMMainWindow::_OnTrayIconActivated);
+
 }
 
 CGMMainWindow::~CGMMainWindow()
@@ -312,6 +327,23 @@ void CGMMainWindow::_slotSetVolume(int iVolume)
 void CGMMainWindow::_slotFullScreen()
 {
 	SetFullScreen(true);
+}
+
+void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+	if (reason == QSystemTrayIcon::Trigger) // 单击
+	{
+		if (isVisible() && !isMinimized())
+		{
+			hide();
+		}
+		else
+		{
+			showNormal();
+			activateWindow();
+			raise();
+		}
+	}
 }
 
 void CGMMainWindow::changeEvent(QEvent* event)

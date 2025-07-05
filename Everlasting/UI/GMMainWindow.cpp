@@ -1,5 +1,6 @@
 #include "GMMainWindow.h"
 #include "GMVolumeWidget.h"
+#include "GMPlayKitWidget.h"
 #include "../Engine/GMEngine.h"
 #include <QKeyEvent>
 #include <QScreen>
@@ -33,10 +34,17 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	connect(ui.volumeBtn, SIGNAL(clicked()), this, SLOT(_slotSetMute()));
 	connect(ui.fullScreenBtn, SIGNAL(clicked()), this, SLOT(_slotFullScreen()));
 
+	// 音量控件
 	m_pVolumeWidget = new CGMVolumeWidget(this);
 	m_pVolumeWidget->raise();
 	m_pVolumeWidget->hide();
 	connect(m_pVolumeWidget, SIGNAL(_signalSetVolume(int)), this, SLOT(_slotSetVolume(int)));
+
+	// 播放器工具控件
+	m_pPlayKitWidget = new CGMPlayKitWidget(this);
+	m_pPlayKitWidget->move(GetSystemMetrics(SM_CXSCREEN) - 300, GetSystemMetrics(SM_CYSCREEN) - 200);
+	m_pPlayKitWidget->raise();
+	m_pPlayKitWidget->hide();
 
 	// 加载QSS
 	QFile qssFile(":/Resources/MainWindow.qss");
@@ -54,13 +62,12 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	trayIcon->setToolTip("EVERLASTING");
 	// 添加右键菜单
 	QMenu* trayMenu = new QMenu(this);
-	trayMenu->addAction(QString::fromLocal8Bit("主界面"), this, SLOT(show()));
+	trayMenu->addAction(QString::fromLocal8Bit("播放器"), m_pPlayKitWidget, SLOT(show()));
 	trayMenu->addAction(QString::fromLocal8Bit("退出"), qApp, SLOT(quit()));
 	trayIcon->setContextMenu(trayMenu);
 	trayIcon->show();
 
 	connect(trayIcon, &QSystemTrayIcon::activated, this, &CGMMainWindow::_OnTrayIconActivated);
-
 }
 
 CGMMainWindow::~CGMMainWindow()
@@ -109,15 +116,18 @@ void CGMMainWindow::Update()
 		m_pVolumeWidget->SetVolume(GM_ENGINE.GetVolume() * 100);
 	}
 
-	// 壁纸模式下，需要在这里更新鼠标位置
 	if (GM_ENGINE.IsWallpaper())
 	{
+		// 壁纸模式下，需要在这里更新鼠标位置
 		POINT pt;
 		GetCursorPos(&pt);
 		// pt.x, pt.y 就是当前鼠标的屏幕坐标
 		QPoint globalPos(pt.x, pt.y);
 		QPoint localPos = mapFromGlobal(globalPos);
 		GM_ENGINE.SetLookTargetPos(SGMVector2f(localPos.x(), GetSystemMetrics(SM_CYSCREEN) - localPos.y()));
+
+		// 更新mini播放控件
+		m_pPlayKitWidget->Update();
 	}
 }
 
@@ -333,15 +343,14 @@ void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reaso
 {
 	if (reason == QSystemTrayIcon::Trigger) // 单击
 	{
-		if (isVisible() && !isMinimized())
+		if (m_pPlayKitWidget->isVisible())
 		{
-			hide();
+			m_pPlayKitWidget->hide();
 		}
 		else
 		{
-			showNormal();
-			activateWindow();
-			raise();
+			m_pPlayKitWidget->raise();
+			m_pPlayKitWidget->show();
 		}
 	}
 }
@@ -451,7 +460,7 @@ void CGMMainWindow::mouseMoveEvent(QMouseEvent* event)
 
 bool CGMMainWindow::eventFilter(QObject* obj, QEvent* event)
 {
-	if (event->type() == QEvent::KeyPress)
+	if (!GM_ENGINE.IsWallpaper() && event->type() == QEvent::KeyPress)
 	{
 		QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
 

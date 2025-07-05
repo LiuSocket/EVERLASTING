@@ -330,16 +330,13 @@ QSlider::handle:horizontal:hover{
 	width:400px;
 }
 
-/* 流浪地球控件 */
-#GMWanderingEarthWidget{
+/* mini播放器控件 */
+#playKitWidget{
 	background:transparent;
 }
-#WEBackLab{
+#playKitBackground{
 	background:transparent;
-	background-image: url(:/Resources/WELab.png);
-}
-#WEProgressSlider::groove:horizontal{
-	width:1000px;
+	background-image: url(:/Resources/playKit.png);
 }
 
 /* 音量控件背景 */

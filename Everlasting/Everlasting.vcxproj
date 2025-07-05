@@ -34,14 +34,12 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>5.7_msvc2015_64</QtInstall>
-    <QtModules>
-    </QtModules>
+    <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>5.7_msvc2015_64</QtInstall>
-    <QtModules>
-    </QtModules>
+    <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -160,6 +158,7 @@
     <ClCompile Include="GMSystemManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="UI\GMMainWindow.cpp" />
+    <ClCompile Include="UI\GMPlayKitWidget.cpp" />
     <ClCompile Include="UI\GMSlider.cpp" />
     <ClCompile Include="UI\GMTextScroller.cpp" />
     <ClCompile Include="UI\GMUIManager.cpp" />
@@ -191,6 +190,7 @@
     <ClInclude Include="..\Engine\GMXml.h" />
     <ClInclude Include="..\Engine\osgQt\GraphicsWindowQt.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="UI\GMPlayKitWidget.h" />
     <QtMoc Include="UI\GMVolumeWidget.h" />
     <QtMoc Include="UI\GMTextScroller.h" />
     <QtMoc Include="UI\GMSlider.h" />
@@ -201,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="UI\GMMainWindow.ui" />
+    <QtUic Include="UI\GMPlayKitWidget.ui" />
     <QtUic Include="UI\GMVolumeWidget.ui" />
   </ItemGroup>
   <ItemGroup>

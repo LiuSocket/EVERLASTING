@@ -9,6 +9,7 @@ Class
 *************************************************************************/
 class CGMVolumeWidget;
 class CGMViewWidget;
+class CGMPlayKitWidget;
 
 class CGMMainWindow : public QMainWindow
 {
@@ -114,6 +115,7 @@ private:
 	Ui::GMMainWindow					ui;
 	CGMVolumeWidget*					m_pVolumeWidget = nullptr;
 	CGMViewWidget*						m_pSceneWidget = nullptr;
+	CGMPlayKitWidget*					m_pPlayKitWidget = nullptr;		//!< 播放器工具控件
 
 	bool								m_bInit = false;
 	bool								m_bFull = false;					//!< 是否全屏

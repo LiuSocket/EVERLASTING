@@ -527,29 +527,19 @@ HWND CGMMainWindow::_GetDesktopHWND()
 		if (shellView != NULL)
 		{
 			HWND* pDesktop = (HWND*)lParam;
-			*pDesktop = hwnd;
+			//*pDesktop = hwnd;
+			*pDesktop = shellView;
 			return FALSE;
-		}
-		// µÝ¹é²éÕÒ×Ó´°¿Ú
-		HWND child = FindWindowEx(hwnd, NULL, NULL, NULL);
-		while (child) {
-			HWND shellView = FindWindowEx(child, NULL, L"SHELLDLL_DefView", NULL);
-			if (shellView != NULL)
-			{
-				HWND* pDesktop = (HWND*)lParam;
-				*pDesktop = child;
-				return FALSE;
-			}
-			child = FindWindowEx(hwnd, child, NULL, NULL);
 		}
 		return TRUE;
 		}, (LPARAM)&desktop);
 
 	if (desktop != NULL)
 	{
-		HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
-		if (workerw)
-			return workerw;
+		return desktop;
+		//HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
+		//if (workerw)
+		//	return workerw;
 	}
 	return progman;
 }

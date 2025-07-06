@@ -101,7 +101,7 @@ bool CGMMainWindow::Init()
 		// 设置全屏
 		SetWindowPos(hwnd, HWND_TOP,
 			0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
-			SWP_SHOWWINDOW);
+			SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 	}
 
 	m_bInit = true;
@@ -516,7 +516,6 @@ void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & s
 HWND CGMMainWindow::_GetDesktopHWND()
 {
 	HWND progman = FindWindow(L"Progman", NULL);
-	HWND desktop = NULL;
 
 	// 向Progman发送消息，创建WorkerW
 	SendMessageTimeout(progman, 0x052C, 0, 0, SMTO_NORMAL, 1000, nullptr);
@@ -533,10 +532,6 @@ HWND CGMMainWindow::_GetDesktopHWND()
 		return TRUE;
 		}, (LPARAM)&workerw);
 
-	if (workerw)
-		desktop = workerw;
-	else
-		desktop = progman;
-
-	return desktop;
+	if (workerw) return workerw;
+	return progman;
 }

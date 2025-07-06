@@ -513,6 +513,32 @@ void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & s
 	seconds = max(0, min(59, iAllSeconds % 60));
 }
 
+HWND CGMMainWindow::_FindShellDefView()
+{
+	HWND desktop = NULL;
+	EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
+		HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
+		if (shellView != NULL) {
+			HWND* pDesktop = (HWND*)lParam;
+			*pDesktop = hwnd;
+			return FALSE;
+		}
+		// 递归查找子窗口
+		HWND child = FindWindowEx(hwnd, NULL, NULL, NULL);
+		while (child) {
+			HWND shellView = FindWindowEx(child, NULL, L"SHELLDLL_DefView", NULL);
+			if (shellView != NULL) {
+				HWND* pDesktop = (HWND*)lParam;
+				*pDesktop = child;
+				return FALSE;
+			}
+			child = FindWindowEx(hwnd, child, NULL, NULL);
+		}
+		return TRUE;
+		}, (LPARAM)&desktop);
+	return desktop;
+}
+
 HWND CGMMainWindow::_GetDesktopHWND()
 {
 	HWND progman = FindWindow(L"Progman", NULL);
@@ -522,16 +548,12 @@ HWND CGMMainWindow::_GetDesktopHWND()
 
 	// 枚举WorkerW窗口
 	HWND workerw = NULL;
-	EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
-		HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
-		if (shellView != NULL) {
-			HWND* pWorkerw = (HWND*)lParam;
-			*pWorkerw = FindWindowEx(NULL, hwnd, L"WorkerW", NULL);
-			return FALSE;
-		}
-		return TRUE;
-		}, (LPARAM)&workerw);
-
-	if (workerw) return workerw;
+	// 24H2 下，SHELLDLL_DefView 和 WorkerW 的关系不再固定，桌面窗口层级更复杂。
+	// 开发动态壁纸时，必须动态查找实际的桌面父窗口，不能硬编码假设。
+	HWND shellView = _FindShellDefView();
+	if (shellView != NULL)
+		workerw = FindWindowEx(NULL, shellView, L"WorkerW", NULL);
+	if (workerw)
+		return workerw;
 	return progman;
 }

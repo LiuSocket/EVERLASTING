@@ -108,8 +108,6 @@ private:
 	*/
 	void _Million2MinutesSeconds(const int ms, int& minutes, int& seconds);
 
-	// 获取Shell的桌面窗口
-	HWND _FindShellDefView();
 	// 获取桌面窗口（WorkerW 或 Progman）
 	HWND _GetDesktopHWND();
 

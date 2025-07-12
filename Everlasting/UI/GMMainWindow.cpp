@@ -14,6 +14,9 @@ Global Constants
 // 构建号从26100开始，桌面窗口规则大变，需要单独处理
 static bool g_bSinceWin11_24H2 = false;
 
+/*************************************************************************
+ CGMMainWindow Methods
+*************************************************************************/
 CGMMainWindow::CGMMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -110,8 +113,8 @@ bool CGMMainWindow::Init()
 	{
 		SetFullScreen(true);
 		HWND hwnd = (HWND)winId();
-		HWND desktopHwnd = _GetDesktopHWND();
-		SetParent(hwnd, desktopHwnd);
+		_SetAsWallpaper(hwnd);
+	
 		// 去除窗口装饰
 		LONG style = GetWindowLong(hwnd, GWL_STYLE);
 		style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
@@ -531,41 +534,112 @@ void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & s
 	seconds = max(0, min(59, iAllSeconds % 60));
 }
 
+bool CGMMainWindow::_SetAsWallpaper(HWND hPlayer)
+{
+	HWND hProgman = FindWindow(L"Progman", 0);// 找到PI窗口
+	SendMessageTimeout(hProgman, 0x052C, 0, 0, SMTO_NORMAL, 1000, 0);// 给它发特殊消息
+
+	// 24H2之前，SHELLDLL_DefView 和 WorkerW 的关系固定。
+	// 24H2之后，WorkerW直接放在Progman下
+	// 开发动态壁纸时，必须动态查找实际的桌面父窗口，不能硬编码假设。
+	if (g_bSinceWin11_24H2)// win11 24H2之后的版本
+	{
+		HWND hDefView = FindWindowEx(hProgman, NULL, L"SHELLDLL_DefView", NULL);
+		if (hDefView != NULL)
+		{
+			HWND hWorkerW = FindWindowEx(hProgman, NULL, L"WorkerW", NULL);
+			if (hWorkerW != NULL)
+			{
+				SetParent(hPlayer, hWorkerW);
+				ShowWindow(hDefView, SW_HIDE);
+				Sleep(0);
+				ShowWindow(hDefView, SW_SHOWNORMAL);
+				return true;
+			}
+		}
+		else
+		{
+			SetParent(hPlayer, hProgman);// 将视频窗口设苦为PM的子窗口
+			HWND desktop = NULL;
+			// 找到第二个workerw窗口并隐藏它
+			EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
+				HWND hDefView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
+				if (hDefView != NULL)
+				{
+					HWND* pDesktop = (HWND*)lParam;
+					*pDesktop = FindWindowEx(NULL, hwnd, L"WorkerW", NULL);
+					return FALSE;
+				}
+				return TRUE;
+				}, (LPARAM)&desktop);
+
+			if (desktop)
+			{
+				ShowWindow(desktop, SW_HIDE);
+				return true;
+			}
+		}
+	}
+	else// win11 24H2之前的版本
+	{
+		HWND desktop = NULL;
+		EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
+			HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
+			if (shellView != NULL)
+			{
+				HWND* pDesktop = (HWND*)lParam;
+				*pDesktop = hwnd;
+				return FALSE;
+			}
+			return TRUE;
+			}, (LPARAM)&desktop);
+
+		if (desktop != NULL)
+		{
+			HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
+			if (workerw)
+			{
+				SetParent(hPlayer, workerw);
+				return true;
+			}
+		}
+		else
+		{
+			SetParent(hPlayer, hProgman);
+			return true;
+		}
+	}
+	return false;
+}
+
 HWND CGMMainWindow::_GetDesktopHWND()
 {
 	HWND progman = FindWindow(L"Progman", NULL);
 	// 向Progman发送消息，创建WorkerW
 	SendMessageTimeout(progman, 0x052C, 0, 0, SMTO_NORMAL, 1000, nullptr);
 
-	// 24H2 下，SHELLDLL_DefView 和 WorkerW 的关系不再固定，桌面窗口层级更复杂。
+	// 24H2之前，SHELLDLL_DefView 和 WorkerW 的关系固定。
+	// 24H2之后，WorkerW直接放在Progman下
 	// 开发动态壁纸时，必须动态查找实际的桌面父窗口，不能硬编码假设。
-	HWND desktop = NULL;
-	EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
-		HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
-		if (shellView != NULL)
-		{
-			HWND* pDesktop = (HWND*)lParam;
-			if (g_bSinceWin11_24H2)
-			{
-				*pDesktop = shellView;
-			}
-			else
-			{
-				*pDesktop = hwnd;
-			}
-			
-			return FALSE;
-		}
-		return TRUE;
-		}, (LPARAM)&desktop);
-
-	if (desktop != NULL)
+	if (g_bSinceWin11_24H2)// win11 24H2之后的版本
 	{
-		if (g_bSinceWin11_24H2)
-		{
-			return desktop;
-		}
-		else
+
+	}
+	else// win11 24H2之前的版本
+	{
+		HWND desktop = NULL;
+		EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
+			HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
+			if (shellView != NULL)
+			{
+				HWND* pDesktop = (HWND*)lParam;
+				*pDesktop = hwnd;
+				return FALSE;
+			}
+			return TRUE;
+			}, (LPARAM)&desktop);
+
+		if (desktop != NULL)
 		{
 			HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
 			if (workerw)

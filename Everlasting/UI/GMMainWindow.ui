@@ -26,7 +26,7 @@
    <enum>Qt::ClickFocus</enum>
   </property>
   <property name="windowTitle">
-   <string>星音乐</string>
+   <string>EVERLASTING</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="mouseTracking">

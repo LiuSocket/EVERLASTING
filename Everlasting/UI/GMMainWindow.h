@@ -107,6 +107,13 @@ private:
 	void _Million2MinutesSeconds(const int ms, int& minutes, int& seconds);
 
 	/**
+	* @brief 将hPlayer变成桌面窗口，构建号从26100开始，桌面窗口规则大变，需要单独处理
+	* @param hPlayer: 我们程序的窗口句柄
+	* @return bool 是否成功
+	*/
+	bool _SetAsWallpaper(HWND hPlayer);
+
+	/**
 	* @brief 获取桌面窗口（WorkerW 或 Progman），构建号从26100开始，桌面窗口规则大变，需要单独处理
 	* @return HWND 桌面窗口
 	*/

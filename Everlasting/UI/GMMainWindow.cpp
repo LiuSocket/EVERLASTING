@@ -113,7 +113,7 @@ bool CGMMainWindow::Init()
 	{
 		SetFullScreen(true);
 		HWND hwnd = (HWND)winId();
-		_SetAsWallpaper(hwnd);
+		_SetWallPaper(hwnd);
 	
 		// 去除窗口装饰
 		LONG style = GetWindowLong(hwnd, GWL_STYLE);
@@ -534,7 +534,7 @@ void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & s
 	seconds = max(0, min(59, iAllSeconds % 60));
 }
 
-bool CGMMainWindow::_SetAsWallpaper(HWND hPlayer)
+bool CGMMainWindow::_SetWallPaper(HWND hPlayer)
 {
 	HWND hProgman = FindWindow(L"Progman", 0);// 找到PI窗口
 	SendMessageTimeout(hProgman, 0x052C, 0, 0, SMTO_NORMAL, 1000, 0);// 给它发特殊消息
@@ -610,41 +610,4 @@ bool CGMMainWindow::_SetAsWallpaper(HWND hPlayer)
 		}
 	}
 	return false;
-}
-
-HWND CGMMainWindow::_GetDesktopHWND()
-{
-	HWND progman = FindWindow(L"Progman", NULL);
-	// 向Progman发送消息，创建WorkerW
-	SendMessageTimeout(progman, 0x052C, 0, 0, SMTO_NORMAL, 1000, nullptr);
-
-	// 24H2之前，SHELLDLL_DefView 和 WorkerW 的关系固定。
-	// 24H2之后，WorkerW直接放在Progman下
-	// 开发动态壁纸时，必须动态查找实际的桌面父窗口，不能硬编码假设。
-	if (g_bSinceWin11_24H2)// win11 24H2之后的版本
-	{
-
-	}
-	else// win11 24H2之前的版本
-	{
-		HWND desktop = NULL;
-		EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
-			HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
-			if (shellView != NULL)
-			{
-				HWND* pDesktop = (HWND*)lParam;
-				*pDesktop = hwnd;
-				return FALSE;
-			}
-			return TRUE;
-			}, (LPARAM)&desktop);
-
-		if (desktop != NULL)
-		{
-			HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
-			if (workerw)
-				return workerw;
-		}
-	}
-	return progman;
 }

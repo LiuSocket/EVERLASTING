@@ -111,13 +111,7 @@ private:
 	* @param hPlayer: 我们程序的窗口句柄
 	* @return bool 是否成功
 	*/
-	bool _SetAsWallpaper(HWND hPlayer);
-
-	/**
-	* @brief 获取桌面窗口（WorkerW 或 Progman），构建号从26100开始，桌面窗口规则大变，需要单独处理
-	* @return HWND 桌面窗口
-	*/
-	HWND _GetDesktopHWND();
+	bool _SetWallPaper(HWND hPlayer);
 
 private:
 	Ui::GMMainWindow					ui;

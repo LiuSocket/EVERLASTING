@@ -99,16 +99,17 @@ protected:
 
 private:
 	/**
-	* _Million2MinutesSeconds
 	* @brief 毫秒数 转 分钟:秒数
 	* @param ms: 输入毫秒数
 	* @param minutes: 输出分钟数
 	* @param seconds: 输出秒数
-	* @return void
 	*/
 	void _Million2MinutesSeconds(const int ms, int& minutes, int& seconds);
 
-	// 获取桌面窗口（WorkerW 或 Progman）
+	/**
+	* @brief 获取桌面窗口（WorkerW 或 Progman），构建号从26100开始，桌面窗口规则大变，需要单独处理
+	* @return HWND 桌面窗口
+	*/
 	HWND _GetDesktopHWND();
 
 private:

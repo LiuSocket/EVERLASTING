@@ -8,9 +8,27 @@
 
 using namespace GM;
 
+/*************************************************************************
+Global Constants
+*************************************************************************/
+// 构建号从26100开始，桌面窗口规则大变，需要单独处理
+static bool g_bSinceWin11_24H2 = false;
+
 CGMMainWindow::CGMMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
+	DWORD major, minor, build = 0;
+	HMODULE hNtDll = GetModuleHandle(L"ntdll.dll");
+	auto RtlGetNtVersionNumbers = reinterpret_cast<void(WINAPI*)(DWORD*, DWORD*, DWORD*)>(
+		GetProcAddress(hNtDll, "RtlGetNtVersionNumbers"));
+	// 获取内核主版本、副班
+	if (RtlGetNtVersionNumbers) {
+		RtlGetNtVersionNumbers(&major, &minor, &build);
+		build &= 0xFFFF; // 提取低16位作为构建号
+	}
+	// 构建号从26100开始，桌面窗口规则大变，需要单独处理
+	g_bSinceWin11_24H2 = (major >= 10) && (build >= 26100);
+
 	ui.setupUi(this);
 	setWindowFlags(Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_Mapped);
@@ -527,8 +545,15 @@ HWND CGMMainWindow::_GetDesktopHWND()
 		if (shellView != NULL)
 		{
 			HWND* pDesktop = (HWND*)lParam;
-			//*pDesktop = hwnd;
-			*pDesktop = shellView;
+			if (g_bSinceWin11_24H2)
+			{
+				*pDesktop = shellView;
+			}
+			else
+			{
+				*pDesktop = hwnd;
+			}
+			
 			return FALSE;
 		}
 		return TRUE;
@@ -536,10 +561,16 @@ HWND CGMMainWindow::_GetDesktopHWND()
 
 	if (desktop != NULL)
 	{
-		return desktop;
-		//HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
-		//if (workerw)
-		//	return workerw;
+		if (g_bSinceWin11_24H2)
+		{
+			return desktop;
+		}
+		else
+		{
+			HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
+			if (workerw)
+				return workerw;
+		}
 	}
 	return progman;
 }

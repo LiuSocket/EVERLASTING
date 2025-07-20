@@ -110,6 +110,11 @@ void CGMUIManager::UpdateAudioInfo()
 	m_pMainWindow->UpdateAudioInfo();
 }
 
+void CGMUIManager::UpdateWallpaper()
+{
+	m_pMainWindow->UpdateWallpaper();
+}
+
 void CGMUIManager::SetVolumeVisible(const bool bVisible)
 {
 	m_pMainWindow->SetVolumeVisible(bVisible);

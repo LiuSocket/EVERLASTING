@@ -241,6 +241,63 @@ void CGMMainWindow::UpdateAudioInfo()
 	ui.timePassedLab->setText(strPassed);
 }
 
+void CGMMainWindow::UpdateWallpaper()
+{
+	if (m_bVersion24H2)
+	{
+		// 24H2 上,我们需要检查窗口次序,确保在桌面切换时候我们的窗口也显示在图标的正下方,
+		// 而不被 Worker或者任何其他遮挡
+		const int maxConsecutiveFixes = 5;
+		int consecutiveFixCount = 0;
+		HWND lastConflictHwnd = nullptr;
+		HWND conflictHwnd = nullptr;
+		HWND hEmbedWnd = (HWND)winId();
+		//std::wcout << L"[Info] Start monitoring Z-order between embed window and ShellDefView...\n";
+
+		bool ok = _EnsureEmbedWindowBelow(m_hShellDefView, hEmbedWnd, conflictHwnd);
+		if (!ok)
+		{
+			if (!conflictHwnd)
+			{
+				consecutiveFixCount = 0;
+			}
+			else if (conflictHwnd == lastConflictHwnd)
+			{
+				consecutiveFixCount++;
+			}
+			else
+			{
+				lastConflictHwnd = conflictHwnd;
+				consecutiveFixCount = 1;
+			}
+
+			if (conflictHwnd)
+			{
+				//std::wcout << L"[Warning] Detected conflict hwnd: " << conflictHwnd
+				//	<< L", consecutive fix count: " << consecutiveFixCount << L"\n";
+			}
+
+			if (consecutiveFixCount >= maxConsecutiveFixes)
+			{
+				//std::wcerr << L"[Error] Detected repeated Z-order conflict! Exiting monitor.\n";
+				MessageBoxW(NULL,
+					L"可能存在竞争的窗口,出于保护,自动退出上升沉浸式桌面!",
+					L"上升沉浸式桌面错误",
+					MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL | MB_TOPMOST);
+				PostMessageW(hEmbedWnd, WM_CLOSE, 0, 0);
+				Sleep(1000);
+				PostMessageW(hEmbedWnd, WM_DESTROY, 0, 0);
+			}
+		}
+		else
+		{
+			// 没冲突，重置
+			consecutiveFixCount = 0;
+			lastConflictHwnd = nullptr;
+		}
+	}
+}
+
 void CGMMainWindow::SetVolumeVisible(const bool bVisible)
 {
 	if (bVisible)
@@ -618,26 +675,26 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	if (!hTopDeskWnd) return;
 	if (!_RaiseDesktop(hTopDeskWnd)) return;
 
-	HWND hShellDefView = FindWindowExW(hTopDeskWnd, 0, L"SHELLDLL_DefView", L"");
+	m_hShellDefView = FindWindowExW(hTopDeskWnd, 0, L"SHELLDLL_DefView", L"");
 
 	HWND hWorker1 = nullptr, hWorker2 = nullptr;
-	if (!hShellDefView)
+	if (!m_hShellDefView)
 	{  // 如果没有找到,则回退 23H2 的搜索模式
 		HWND hWorker_p1 = GetWindow(hTopDeskWnd, GW_HWNDPREV);
 
 		if (hWorker_p1)
 		{
-			hShellDefView = FindWindowExW(hWorker_p1, 0, L"SHELLDLL_DefView", L"");
+			m_hShellDefView = FindWindowExW(hWorker_p1, 0, L"SHELLDLL_DefView", L"");
 
-			if (!hShellDefView)
+			if (!m_hShellDefView)
 			{
 				hWorker2 = hWorker_p1;
 				HWND hWorker_p2 = GetWindow(hWorker_p1, GW_HWNDPREV);
 				if (hWorker_p1)
 				{
-					hShellDefView = FindWindowExW(hWorker_p2, 0, L"SHELLDLL_DefView", L"");
+					m_hShellDefView = FindWindowExW(hWorker_p2, 0, L"SHELLDLL_DefView", L"");
 
-					if (hShellDefView)
+					if (m_hShellDefView)
 					{
 						hWorker1 = hWorker_p2;
 					}
@@ -654,11 +711,10 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	if (!hWorker) hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerA", L"");
 
 	// 23H2
-	bool bVersion24H2 = true;
 	if (!hWorker)
 	{
 		hWorker = !hWorker2 ? hTopDeskWnd : hWorker2;
-		bVersion24H2 = false;
+		m_bVersion24H2 = false;
 	}
 
 	SetParent(hEmbedWnd, NULL);
@@ -679,18 +735,18 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 
 	SetLayeredWindowAttributes(hEmbedWnd, 0, 0xFF, LWA_ALPHA);
 	// 不建议设置窗口为 WorkerW 的子窗口,切换壁纸时候会被意外销毁!
-	//if (bVersion24H2)
+	//if (m_bVersion24H2)
 	//{
 	//    SetWindowLongPtrW(hWorker, GWL_EXSTYLE,
 	//        GetWindowLongPtrW(hWorker, GWL_EXSTYLE) | WS_EX_LAYERED);
 	//    SetLayeredWindowAttributes(hWorker, RGB(0,0,0), 255, LWA_ALPHA | LWA_COLORKEY);
 	//}
 
-	SetParent(hEmbedWnd, bVersion24H2 ? hTopDeskWnd : hWorker);
+	SetParent(hEmbedWnd, m_bVersion24H2 ? hTopDeskWnd : hWorker);
 	SetWindowPos(hEmbedWnd, HWND_TOP, 0, 0, 0, 0,
 		SWP_NOMOVE | SWP_NOSIZE
 		| SWP_NOACTIVATE | SWP_DRAWFRAME);
-	SetWindowPos(hShellDefView, HWND_TOP, 0, 0, 0, 0,
+	SetWindowPos(m_hShellDefView, HWND_TOP, 0, 0, 0, 0,
 		SWP_NOMOVE | SWP_NOSIZE
 		| SWP_NOACTIVATE);
 	SetWindowPos(hWorker, HWND_BOTTOM, 0, 0, 0, 0,
@@ -726,63 +782,4 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	ShowWindow(hTopDeskWnd, SW_SHOW);
 	ShowWindow(hEmbedWnd, SW_SHOW);
 	ShowWindow(hWorker, SW_SHOW);
-
-	// 24H2 上,我们需要检查窗口次序,确保在桌面切换时候我们的窗口也显示在图标的正下方,
-	// 而不被 Worker或者任何其他遮挡
-	const int maxConsecutiveFixes = 5;
-	int consecutiveFixCount = 0;
-	HWND lastConflictHwnd = nullptr;
-	HWND conflictHwnd = nullptr;
-	if (bVersion24H2)
-	{
-		//std::wcout << L"[Info] Start monitoring Z-order between embed window and ShellDefView...\n";
-		while (true)
-		{
-			bool ok = _EnsureEmbedWindowBelow(hShellDefView, hEmbedWnd, conflictHwnd);
-			if (!ok)
-			{
-				if (!conflictHwnd)
-				{
-					consecutiveFixCount = 0;
-				}
-				else if (conflictHwnd == lastConflictHwnd)
-				{
-					consecutiveFixCount++;
-				}
-				else
-				{
-					lastConflictHwnd = conflictHwnd;
-					consecutiveFixCount = 1;
-				}
-
-				if (conflictHwnd)
-				{
-					//std::wcout << L"[Warning] Detected conflict hwnd: " << conflictHwnd
-					//	<< L", consecutive fix count: " << consecutiveFixCount << L"\n";
-				}
-
-				if (consecutiveFixCount >= maxConsecutiveFixes)
-				{
-					//std::wcerr << L"[Error] Detected repeated Z-order conflict! Exiting monitor.\n";
-					MessageBoxW(NULL,
-						L"可能存在竞争的窗口,出于保护,自动退出上升沉浸式桌面!",
-						L"上升沉浸式桌面错误",
-						MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL | MB_TOPMOST);
-					PostMessageW(hEmbedWnd, WM_CLOSE, 0, 0);
-					Sleep(1000);
-					PostMessageW(hEmbedWnd, WM_DESTROY, 0, 0);
-					return;
-				}
-			}
-			else
-			{
-				// 没冲突，重置
-				consecutiveFixCount = 0;
-				lastConflictHwnd = nullptr;
-				return;
-			}
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		}
-	}
 }

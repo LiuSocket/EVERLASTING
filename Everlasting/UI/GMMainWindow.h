@@ -35,10 +35,10 @@ public:
 	*/
 	inline bool CGMMainWindow::GetFullScreen() const{ return m_bFull; }
 
-	/**
-	* @brief 更新音频的所有信息
-	*/
+	/** @brief 更新音频的所有信息 */
 	void UpdateAudioInfo();
+	/** @brief 更新壁纸的顺序，不用每帧更新 */
+	void UpdateWallpaper();
 
 	/**
 	* @brief 设置是否显示实时变化的音量
@@ -122,8 +122,10 @@ private:
 	CGMViewWidget*						m_pSceneWidget = nullptr;
 	CGMPlayKitWidget*					m_pPlayKitWidget = nullptr;		//!< 播放器工具控件
 
+	HWND								m_hShellDefView = nullptr;
+	bool								m_bVersion24H2 = true;
 	bool								m_bInit = false;
-	bool								m_bFull = false;					//!< 是否全屏
+	bool								m_bFull = false;				//!< 是否全屏
 	bool								m_bPressed = false;				//!< 是否按下鼠标
 	bool								m_bShowVolume = false;			//!< 是否显示实时变化的音量
 	QPoint								m_vPos = QPoint(0, 0);			//!< 窗口的位置

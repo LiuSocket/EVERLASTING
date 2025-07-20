@@ -106,6 +106,7 @@ void CGMSystemManager::timerEvent(QTimerEvent *event)
 		{
 			GM_UI_MANAGER.UpdateAudioInfo();
 		}
+		GM_UI_MANAGER.UpdateWallpaper();
 
 		m_iFrameCount = 0;
 	}

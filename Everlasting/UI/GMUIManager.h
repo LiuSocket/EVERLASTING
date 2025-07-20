@@ -63,39 +63,24 @@ public:
 	void Update();
 
 	/**
-	* SetFullScreen
 	* @brief 界面全屏切换
-	* @author LiuTao
-	* @since 2021.09.05
 	* @param bFull true为全屏，false 为非全屏
-	* @return void
 	*/
 	void SetFullScreen(const bool bFull);
 	/**
-	* GetFullScreen
 	* @brief 获取界面全屏状态
-	* @author LiuTao
-	* @since 2021.10.23
 	* @return bool		是否处于全屏状态
 	*/
 	bool GetFullScreen();
 
-	/**
-	* UpdateAudioInfo
-	* 更新音频的所有信息
-	* @author LiuTao
-	* @since 2021.09.05
-	* @return void
-	*/
+	/** @brief 更新音频的所有信息 */
 	void UpdateAudioInfo();
+	/** @brief 更新壁纸的顺序，不用每帧更新 */
+	void UpdateWallpaper();
 
 	/**
-	* SetVolumeVisible
-	* 设置是否显示实时变化的音量
-	* @author LiuTao
-	* @since 2022.04.10
+	* @brief 设置是否显示实时变化的音量
 	* @param bVisible 是否显示实时变化的音量
-	* @return void
 	*/
 	void SetVolumeVisible(const bool bVisible);
 

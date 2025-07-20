@@ -106,12 +106,17 @@ private:
 	*/
 	void _Million2MinutesSeconds(const int ms, int& minutes, int& seconds);
 
+	// 此函数不再考虑对早期系统的兼容性,仅适用于 Win10,11
+	bool _RaiseDesktop(HWND hProgmanWnd);
+	bool _IsExplorerWorker(HWND hwnd);
+	bool _EnsureEmbedWindowBelow(HWND hShellDefView, HWND hEmbedWnd, HWND& lpConflictWindow);
+
 	/**
 	* @brief 将hPlayer变成桌面窗口，构建号从26100开始，桌面窗口规则大变，需要单独处理
-	* @param hPlayer: 我们程序的窗口句柄
-	* @return bool 是否成功
+	* @param hPlayer: 需要变成桌面壁纸的程序的窗口句柄
 	*/
-	bool _SetWallPaper(HWND hPlayer);
+	void _SetWallPaper24H2(HWND hPlayer);
+	void _SetWallPaper(HWND hPlayer);
 
 private:
 	Ui::GMMainWindow					ui;

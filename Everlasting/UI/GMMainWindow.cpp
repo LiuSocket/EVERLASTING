@@ -5,6 +5,20 @@
 #include <QKeyEvent>
 #include <QScreen>
 #include <QMenu>
+#include <dwmapi.h>
+#include <psapi.h>
+
+#include <functional>
+#include <thread>
+#include <chrono>
+
+#pragma comment(lib, "dwmapi.lib")
+#pragma comment(lib, "psapi.lib")
+
+// 建议用程序清单设置
+#pragma comment(linker, "\"/manifestdependency:type='win32' \
+name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
+processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 using namespace GM;
 
@@ -112,17 +126,17 @@ bool CGMMainWindow::Init()
 	if (GM_ENGINE.IsWallpaper())
 	{
 		SetFullScreen(true);
-		HWND hwnd = (HWND)winId();
-		_SetWallPaper(hwnd);
-	
-		// 去除窗口装饰
-		LONG style = GetWindowLong(hwnd, GWL_STYLE);
-		style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
-		SetWindowLong(hwnd, GWL_STYLE, style);
-		// 设置全屏
-		SetWindowPos(hwnd, HWND_TOP,
-			0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
-			SWP_SHOWWINDOW | SWP_FRAMECHANGED);
+		// 24H2之前，SHELLDLL_DefView 和 WorkerW 的关系固定。
+		// 24H2之后，WorkerW直接放在Progman下
+		// 开发动态壁纸时，必须动态查找实际的桌面父窗口，不能硬编码假设。
+		if (g_bSinceWin11_24H2)// win11 24H2之后的版本
+		{
+			_SetWallPaper24H2((HWND)winId());
+		}
+		else// win11 24H2之前的版本
+		{
+			_SetWallPaper((HWND)winId());
+		}
 	}
 
 	m_bInit = true;
@@ -534,80 +548,313 @@ void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & s
 	seconds = max(0, min(59, iAllSeconds % 60));
 }
 
-bool CGMMainWindow::_SetWallPaper(HWND hPlayer)
+bool CGMMainWindow::_RaiseDesktop(HWND hProgmanWnd)
+{
+	// See: https://github.com/valinet/ExplorerPatcher/issues/525
+	if (hProgmanWnd)
+	{
+		DWORD_PTR res0 = -1, res1 = -1, res2 = -1, res3 = -1;
+		// Call CDesktopBrowser::_IsDesktopWallpaperInitialized
+		SendMessageTimeoutW(hProgmanWnd, 0x052C, 0xA, 0, SMTO_NORMAL, 1000, &res0);
+		if (FAILED(res0))
+		{
+			return FALSE;
+		}
+
+		// Prepare to generate wallpaper window
+		SendMessageTimeoutW(hProgmanWnd, 0x052C, 0xD, 0, SMTO_NORMAL, 1000, &res1);
+		SendMessageTimeoutW(hProgmanWnd, 0x052C, 0XD, 1, SMTO_NORMAL, 1000, &res2);
+		// "Animate desktop", which will make sure the wallpaper window is there
+		SendMessageTimeoutW(hProgmanWnd, 0x052C, 0, 0, SMTO_NORMAL, 1000, &res3);  // 0 参数是必须的，对于早期系统(win7) 0xD 参数会导致处理失败。	
+		return !res1 && !res2 && !res3;
+	}
+	return FALSE;
+}
+
+bool CGMMainWindow::_IsExplorerWorker(HWND hwnd)
+{
+	WCHAR className[256];
+	GetClassNameW(hwnd, className, 256);
+	if (wcscmp(className, L"WorkerW") != 0) {
+		return false;
+	}
+
+	DWORD pid = 0;
+	GetWindowThreadProcessId(hwnd, &pid);
+	HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+	if (!hProc) {
+		return false;
+	}
+
+	WCHAR exeName[MAX_PATH];
+	if (GetModuleBaseNameW(hProc, nullptr, exeName, MAX_PATH)) {
+		_wcslwr_s(exeName, MAX_PATH);
+		CloseHandle(hProc);
+		return wcsstr(exeName, L"explorer.exe") != nullptr;
+	}
+	CloseHandle(hProc);
+	return false;
+}
+
+bool CGMMainWindow::_EnsureEmbedWindowBelow(HWND hShellDefView, HWND hEmbedWnd, HWND& lpConflictWindow)
+{
+	HWND prev = GetWindow(hEmbedWnd, GW_HWNDPREV);
+	if (prev == hShellDefView) {
+		// 顺序已正确，无需操作
+		lpConflictWindow = nullptr;
+		return true;
+	}
+
+	//std::wcout << L"[Info] Fixing Z-order: moving embed window below ShellDefView\n";
+	SetWindowPos(hEmbedWnd, hShellDefView, 0, 0, 0, 0,
+		SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
+	if (_IsExplorerWorker(prev))
+	{
+		lpConflictWindow = nullptr;
+		return true;
+	}
+
+	lpConflictWindow = prev;
+	return false;
+}
+
+void CGMMainWindow::_SetWallPaper24H2(HWND hEmbedWnd)
+{
+	if (!hEmbedWnd) return;
+
+	LONG_PTR style_tw = GetWindowLongPtrW(hEmbedWnd, GWL_STYLE);
+	LONG_PTR exstyle_tw = GetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE);
+
+	if (!(exstyle_tw & WS_EX_LAYERED)) exstyle_tw |= WS_EX_LAYERED;
+	if ((exstyle_tw & WS_EX_TOOLWINDOW)) exstyle_tw &= ~WS_EX_TOOLWINDOW;
+	if ((style_tw & WS_CHILDWINDOW)) style_tw &= ~WS_CHILDWINDOW;
+	if ((style_tw & WS_POPUP)) style_tw &= ~WS_CHILDWINDOW;
+	if ((style_tw & WS_OVERLAPPED)) style_tw &= ~WS_OVERLAPPED;
+	if ((style_tw & WS_CAPTION)) style_tw &= ~WS_CAPTION;
+	if ((style_tw & WS_BORDER))style_tw &= ~WS_BORDER;
+	if ((style_tw & WS_SYSMENU)) style_tw &= ~WS_SYSMENU;
+	if ((style_tw & WS_THICKFRAME)) style_tw &= ~WS_THICKFRAME;
+
+	SetWindowLongPtrW(hEmbedWnd, GWL_STYLE, style_tw);
+	SetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE, exstyle_tw);
+
+	// 24H2
+
+	HWND hTopDeskWnd = FindWindowW(L"Progman", L"Program Manager");
+
+	if (!hTopDeskWnd) return;
+	if (!_RaiseDesktop(hTopDeskWnd)) return;
+
+	HWND hShellDefView = FindWindowExW(hTopDeskWnd, 0, L"SHELLDLL_DefView", L"");
+
+	HWND hWorker1 = nullptr, hWorker2 = nullptr;
+	if (!hShellDefView)
+	{  // 如果没有找到,则回退 23H2 的搜索模式
+		HWND hWorker_p1 = GetWindow(hTopDeskWnd, GW_HWNDPREV);
+
+		if (hWorker_p1)
+		{
+			hShellDefView = FindWindowExW(hWorker_p1, 0, L"SHELLDLL_DefView", L"");
+
+			if (!hShellDefView)
+			{
+				hWorker2 = hWorker_p1;
+				HWND hWorker_p2 = GetWindow(hWorker_p1, GW_HWNDPREV);
+				if (hWorker_p1)
+				{
+					hShellDefView = FindWindowExW(hWorker_p2, 0, L"SHELLDLL_DefView", L"");
+
+					if (hShellDefView)
+					{
+						hWorker1 = hWorker_p2;
+					}
+				}
+			}
+			else
+			{
+				hWorker1 = hWorker_p1;
+			}
+		}
+	}
+
+	HWND hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerW", L"");
+
+	if (!hWorker)
+	{
+		hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerA", L"");
+	}
+
+	// 23H2
+	bool bIsVersion1_2 = false;
+	if (!hWorker)
+	{
+		hWorker = !hWorker2 ? hTopDeskWnd : hWorker2;
+		bIsVersion1_2 = true;
+	}
+
+	SetParent(hEmbedWnd, NULL);
+	// 可以通过窗口透明化实现背景透明(务必作为顶级窗口,欺骗 DWM, 否则 DWM 将不允许透明窗口)
+	// 有点像是 hack 生产环境不建议使用!
+	{
+		MARGINS margins{ 0, 0, -1, -1 };
+		DwmExtendFrameIntoClientArea(hEmbedWnd, &margins);
+
+		DWM_BLURBEHIND bb = { 0 };
+		HRGN hRgn = CreateRectRgn(0, 0, -1, -1); //应用毛玻璃的矩形范围，
+		//参数(0,0,-1,-1)可以让整个窗口客户区变成透明的，而鼠标是可以捕获到透明的区域
+		bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
+		bb.hRgnBlur = hRgn;
+		bb.fEnable = TRUE;
+		DwmEnableBlurBehindWindow(hEmbedWnd, &bb);
+	}
+
+	SetLayeredWindowAttributes(hEmbedWnd, 0, 0xFF, LWA_ALPHA);
+	// 不建议设置窗口为 WorkerW 的子窗口,切换壁纸时候会被意外销毁!
+	//if (!bIsVersion1_2)
+	//{
+	//    SetWindowLongPtrW(hWorker, GWL_EXSTYLE,
+	//        GetWindowLongPtrW(hWorker, GWL_EXSTYLE) | WS_EX_LAYERED);
+	//    SetLayeredWindowAttributes(hWorker, RGB(0,0,0), 255, LWA_ALPHA | LWA_COLORKEY);
+	//}
+
+	SetParent(hEmbedWnd, bIsVersion1_2 ? hWorker : hTopDeskWnd);
+	SetWindowPos(hEmbedWnd, HWND_TOP, 0, 0, 0, 0,
+		SWP_NOMOVE | SWP_NOSIZE
+		| SWP_NOACTIVATE | SWP_DRAWFRAME);
+	SetWindowPos(hShellDefView, HWND_TOP, 0, 0, 0, 0,
+		SWP_NOMOVE | SWP_NOSIZE
+		| SWP_NOACTIVATE);
+	SetWindowPos(hWorker, HWND_BOTTOM, 0, 0, 0, 0,
+		SWP_NOMOVE | SWP_NOSIZE
+		| SWP_NOACTIVATE | SWP_DRAWFRAME);
+
+	RECT rchTestOld{};
+	GetWindowRect(hEmbedWnd, &rchTestOld);
+
+	int rcx = GetSystemMetrics(SM_CXSCREEN);
+	int rcy = GetSystemMetrics(SM_CYSCREEN);
+
+	if (rcx <= 0 || rcy <= 0) return;
+
+	RECT rcFullScreen{ 0, 0, (LONG)rcx, (LONG)rcy };
+	AdjustWindowRect(&rcFullScreen, style_tw, FALSE);
+
+	UINT rcfx = rcFullScreen.right - rcFullScreen.left;
+	UINT rcfy = rcFullScreen.bottom - rcFullScreen.top;
+
+	MoveWindow(hEmbedWnd, rcFullScreen.left, rcFullScreen.top, rcfx, rcfy, TRUE);
+
+	WINDOWPLACEMENT wp{};
+
+	wp.length = sizeof(WINDOWPLACEMENT);
+	wp.flags = WPF_SETMINPOSITION;
+	wp.showCmd = SW_SHOWNORMAL;
+	wp.ptMinPosition = { rcFullScreen.left, rcFullScreen.top };
+	wp.ptMaxPosition = { rcFullScreen.left, rcFullScreen.top };
+	wp.rcNormalPosition = rcFullScreen;
+	SetWindowPlacement(hEmbedWnd, &wp);
+
+	ShowWindow(hTopDeskWnd, SW_SHOW);
+	ShowWindow(hEmbedWnd, SW_SHOW);
+	ShowWindow(hWorker, SW_SHOW);
+
+	// 24H2 上,我们需要检查窗口次序,确保在桌面切换时候我们的窗口也显示在图标的正下方,
+	// 而不被 Worker或者任何其他遮挡
+	const int maxConsecutiveFixes = 5;
+	int consecutiveFixCount = 0;
+	HWND lastConflictHwnd = nullptr;
+	HWND conflictHwnd = nullptr;
+	if (!bIsVersion1_2)
+	{
+		//std::wcout << L"[Info] Start monitoring Z-order between embed window and ShellDefView...\n";
+		while (true)
+		{
+			bool ok = _EnsureEmbedWindowBelow(hShellDefView, hEmbedWnd, conflictHwnd);
+			if (!ok)
+			{
+				if (!conflictHwnd)
+				{
+					consecutiveFixCount = 0;
+				}
+				else if (conflictHwnd == lastConflictHwnd)
+				{
+					consecutiveFixCount++;
+				}
+				else
+				{
+					lastConflictHwnd = conflictHwnd;
+					consecutiveFixCount = 1;
+				}
+
+				if (conflictHwnd)
+				{
+					//std::wcout << L"[Warning] Detected conflict hwnd: " << conflictHwnd
+					//	<< L", consecutive fix count: " << consecutiveFixCount << L"\n";
+				}
+
+				if (consecutiveFixCount >= maxConsecutiveFixes)
+				{
+					//std::wcerr << L"[Error] Detected repeated Z-order conflict! Exiting monitor.\n";
+					MessageBoxW(NULL,
+						L"可能存在竞争的窗口,出于保护,自动退出上升沉浸式桌面!",
+						L"上升沉浸式桌面错误",
+						MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL | MB_TOPMOST);
+					PostMessageW(hEmbedWnd, WM_CLOSE, 0, 0);
+					Sleep(1000);
+					PostMessageW(hEmbedWnd, WM_DESTROY, 0, 0);
+					return;
+				}
+			}
+			else
+			{
+				// 没冲突，重置
+				consecutiveFixCount = 0;
+				lastConflictHwnd = nullptr;
+				return;
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		}
+	}
+}
+
+void CGMMainWindow::_SetWallPaper(HWND hPlayer)
 {
 	HWND hProgman = FindWindow(L"Progman", 0);// 找到PI窗口
-	SendMessageTimeout(hProgman, 0x052C, 0, 0, SMTO_NORMAL, 1000, 0);// 给它发特殊消息
+	// 发特殊消息，生成WorkerW
+	SendMessageTimeout(hProgman, 0x052C, 0, 0, SMTO_NORMAL, 1000, 0);
 
-	// 24H2之前，SHELLDLL_DefView 和 WorkerW 的关系固定。
-	// 24H2之后，WorkerW直接放在Progman下
-	// 开发动态壁纸时，必须动态查找实际的桌面父窗口，不能硬编码假设。
-	if (g_bSinceWin11_24H2)// win11 24H2之后的版本
-	{
-		HWND hDefView = FindWindowEx(hProgman, NULL, L"SHELLDLL_DefView", NULL);
-		if (hDefView != NULL)
+	HWND desktop = NULL;
+	EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
+		HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
+		if (shellView != NULL)
 		{
-			HWND hWorkerW = FindWindowEx(hProgman, NULL, L"WorkerW", NULL);
-			if (hWorkerW != NULL)
-			{
-				SetParent(hPlayer, hWorkerW);
-				ShowWindow(hDefView, SW_HIDE);
-				Sleep(0);
-				ShowWindow(hDefView, SW_SHOWNORMAL);
-				return true;
-			}
+			HWND* pDesktop = (HWND*)lParam;
+			*pDesktop = hwnd;
+			return FALSE;
 		}
-		else
-		{
-			SetParent(hPlayer, hProgman);// 将视频窗口设苦为PM的子窗口
-			HWND desktop = NULL;
-			// 找到第二个workerw窗口并隐藏它
-			EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
-				HWND hDefView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
-				if (hDefView != NULL)
-				{
-					HWND* pDesktop = (HWND*)lParam;
-					*pDesktop = FindWindowEx(NULL, hwnd, L"WorkerW", NULL);
-					return FALSE;
-				}
-				return TRUE;
-				}, (LPARAM)&desktop);
+		return TRUE;
+		}, (LPARAM)&desktop);
 
-			if (desktop)
-			{
-				ShowWindow(desktop, SW_HIDE);
-				return true;
-			}
+	if (desktop != NULL)
+	{
+		HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
+		if (workerw)
+		{
+			SetParent(hPlayer, workerw);
 		}
 	}
-	else// win11 24H2之前的版本
+	else
 	{
-		HWND desktop = NULL;
-		EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
-			HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
-			if (shellView != NULL)
-			{
-				HWND* pDesktop = (HWND*)lParam;
-				*pDesktop = hwnd;
-				return FALSE;
-			}
-			return TRUE;
-			}, (LPARAM)&desktop);
-
-		if (desktop != NULL)
-		{
-			HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
-			if (workerw)
-			{
-				SetParent(hPlayer, workerw);
-				return true;
-			}
-		}
-		else
-		{
-			SetParent(hPlayer, hProgman);
-			return true;
-		}
+		SetParent(hPlayer, hProgman);
 	}
-	return false;
+
+	// 去除窗口装饰
+	LONG style = GetWindowLong(hPlayer, GWL_STYLE);
+	style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
+	SetWindowLong(hPlayer, GWL_STYLE, style);
+	// 设置全屏
+	SetWindowPos(hPlayer, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+
 }

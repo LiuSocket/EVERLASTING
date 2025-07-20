@@ -601,7 +601,7 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	if (!(exstyle_tw & WS_EX_LAYERED)) exstyle_tw |= WS_EX_LAYERED;
 	if ((exstyle_tw & WS_EX_TOOLWINDOW)) exstyle_tw &= ~WS_EX_TOOLWINDOW;
 	if ((style_tw & WS_CHILDWINDOW)) style_tw &= ~WS_CHILDWINDOW;
-	if ((style_tw & WS_POPUP)) style_tw &= ~WS_CHILDWINDOW;
+	if ((style_tw & WS_POPUP)) style_tw &= ~WS_POPUP;
 	if ((style_tw & WS_OVERLAPPED)) style_tw &= ~WS_OVERLAPPED;
 	if ((style_tw & WS_CAPTION)) style_tw &= ~WS_CAPTION;
 	if ((style_tw & WS_BORDER))style_tw &= ~WS_BORDER;
@@ -651,18 +651,14 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	}
 
 	HWND hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerW", L"");
-
-	if (!hWorker)
-	{
-		hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerA", L"");
-	}
+	if (!hWorker) hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerA", L"");
 
 	// 23H2
-	bool bIsVersion1_2 = false;
+	bool bVersion24H2 = true;
 	if (!hWorker)
 	{
 		hWorker = !hWorker2 ? hTopDeskWnd : hWorker2;
-		bIsVersion1_2 = true;
+		bVersion24H2 = false;
 	}
 
 	SetParent(hEmbedWnd, NULL);
@@ -683,14 +679,14 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 
 	SetLayeredWindowAttributes(hEmbedWnd, 0, 0xFF, LWA_ALPHA);
 	// 不建议设置窗口为 WorkerW 的子窗口,切换壁纸时候会被意外销毁!
-	//if (!bIsVersion1_2)
+	//if (bVersion24H2)
 	//{
 	//    SetWindowLongPtrW(hWorker, GWL_EXSTYLE,
 	//        GetWindowLongPtrW(hWorker, GWL_EXSTYLE) | WS_EX_LAYERED);
 	//    SetLayeredWindowAttributes(hWorker, RGB(0,0,0), 255, LWA_ALPHA | LWA_COLORKEY);
 	//}
 
-	SetParent(hEmbedWnd, bIsVersion1_2 ? hWorker : hTopDeskWnd);
+	SetParent(hEmbedWnd, bVersion24H2 ? hTopDeskWnd : hWorker);
 	SetWindowPos(hEmbedWnd, HWND_TOP, 0, 0, 0, 0,
 		SWP_NOMOVE | SWP_NOSIZE
 		| SWP_NOACTIVATE | SWP_DRAWFRAME);
@@ -737,7 +733,7 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	int consecutiveFixCount = 0;
 	HWND lastConflictHwnd = nullptr;
 	HWND conflictHwnd = nullptr;
-	if (!bIsVersion1_2)
+	if (bVersion24H2)
 	{
 		//std::wcout << L"[Info] Start monitoring Z-order between embed window and ShellDefView...\n";
 		while (true)

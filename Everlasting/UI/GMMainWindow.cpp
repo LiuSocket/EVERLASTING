@@ -678,22 +678,19 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	m_hShellDefView = FindWindowExW(hTopDeskWnd, 0, L"SHELLDLL_DefView", L"");
 
 	HWND hWorker1 = nullptr, hWorker2 = nullptr;
-	if (!m_hShellDefView)
-	{  // 如果没有找到,则回退 23H2 的搜索模式
+	if (!m_hShellDefView)  // 如果没有找到,则回退 23H2 的搜索模式
+	{
 		HWND hWorker_p1 = GetWindow(hTopDeskWnd, GW_HWNDPREV);
-
 		if (hWorker_p1)
 		{
 			m_hShellDefView = FindWindowExW(hWorker_p1, 0, L"SHELLDLL_DefView", L"");
-
 			if (!m_hShellDefView)
 			{
 				hWorker2 = hWorker_p1;
 				HWND hWorker_p2 = GetWindow(hWorker_p1, GW_HWNDPREV);
-				if (hWorker_p1)
+				if (hWorker_p2)
 				{
 					m_hShellDefView = FindWindowExW(hWorker_p2, 0, L"SHELLDLL_DefView", L"");
-
 					if (m_hShellDefView)
 					{
 						hWorker1 = hWorker_p2;

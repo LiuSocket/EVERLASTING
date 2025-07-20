@@ -110,12 +110,10 @@ private:
 	bool _RaiseDesktop(HWND hProgmanWnd);
 	bool _IsExplorerWorker(HWND hwnd);
 	bool _EnsureEmbedWindowBelow(HWND hShellDefView, HWND hEmbedWnd, HWND& lpConflictWindow);
-
 	/**
 	* @brief 将hPlayer变成桌面窗口，构建号从26100开始，桌面窗口规则大变，需要单独处理
 	* @param hPlayer: 需要变成桌面壁纸的程序的窗口句柄
 	*/
-	void _SetWallPaper24H2(HWND hPlayer);
 	void _SetWallPaper(HWND hPlayer);
 
 private:

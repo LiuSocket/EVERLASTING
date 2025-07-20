@@ -23,29 +23,11 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 using namespace GM;
 
 /*************************************************************************
-Global Constants
-*************************************************************************/
-// 构建号从26100开始，桌面窗口规则大变，需要单独处理
-static bool g_bSinceWin11_24H2 = false;
-
-/*************************************************************************
  CGMMainWindow Methods
 *************************************************************************/
 CGMMainWindow::CGMMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	DWORD major, minor, build = 0;
-	HMODULE hNtDll = GetModuleHandle(L"ntdll.dll");
-	auto RtlGetNtVersionNumbers = reinterpret_cast<void(WINAPI*)(DWORD*, DWORD*, DWORD*)>(
-		GetProcAddress(hNtDll, "RtlGetNtVersionNumbers"));
-	// 获取内核主版本、副班
-	if (RtlGetNtVersionNumbers) {
-		RtlGetNtVersionNumbers(&major, &minor, &build);
-		build &= 0xFFFF; // 提取低16位作为构建号
-	}
-	// 构建号从26100开始，桌面窗口规则大变，需要单独处理
-	g_bSinceWin11_24H2 = (major >= 10) && (build >= 26100);
-
 	ui.setupUi(this);
 	setWindowFlags(Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_Mapped);
@@ -126,17 +108,7 @@ bool CGMMainWindow::Init()
 	if (GM_ENGINE.IsWallpaper())
 	{
 		SetFullScreen(true);
-		// 24H2之前，SHELLDLL_DefView 和 WorkerW 的关系固定。
-		// 24H2之后，WorkerW直接放在Progman下
-		// 开发动态壁纸时，必须动态查找实际的桌面父窗口，不能硬编码假设。
-		if (g_bSinceWin11_24H2)// win11 24H2之后的版本
-		{
-			_SetWallPaper24H2((HWND)winId());
-		}
-		else// win11 24H2之前的版本
-		{
-			_SetWallPaper((HWND)winId());
-		}
+		_SetWallPaper((HWND)winId());
 	}
 
 	m_bInit = true;
@@ -619,7 +591,7 @@ bool CGMMainWindow::_EnsureEmbedWindowBelow(HWND hShellDefView, HWND hEmbedWnd, 
 	return false;
 }
 
-void CGMMainWindow::_SetWallPaper24H2(HWND hEmbedWnd)
+void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 {
 	if (!hEmbedWnd) return;
 
@@ -817,44 +789,4 @@ void CGMMainWindow::_SetWallPaper24H2(HWND hEmbedWnd)
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		}
 	}
-}
-
-void CGMMainWindow::_SetWallPaper(HWND hPlayer)
-{
-	HWND hProgman = FindWindow(L"Progman", 0);// 找到PI窗口
-	// 发特殊消息，生成WorkerW
-	SendMessageTimeout(hProgman, 0x052C, 0, 0, SMTO_NORMAL, 1000, 0);
-
-	HWND desktop = NULL;
-	EnumWindows([](HWND hwnd, LPARAM lParam) -> BOOL {
-		HWND shellView = FindWindowEx(hwnd, NULL, L"SHELLDLL_DefView", NULL);
-		if (shellView != NULL)
-		{
-			HWND* pDesktop = (HWND*)lParam;
-			*pDesktop = hwnd;
-			return FALSE;
-		}
-		return TRUE;
-		}, (LPARAM)&desktop);
-
-	if (desktop != NULL)
-	{
-		HWND workerw = FindWindowEx(NULL, desktop, L"WorkerW", NULL);
-		if (workerw)
-		{
-			SetParent(hPlayer, workerw);
-		}
-	}
-	else
-	{
-		SetParent(hPlayer, hProgman);
-	}
-
-	// 去除窗口装饰
-	LONG style = GetWindowLong(hPlayer, GWL_STYLE);
-	style &= ~(WS_CAPTION | WS_THICKFRAME | WS_MINIMIZE | WS_MAXIMIZE | WS_SYSMENU);
-	SetWindowLong(hPlayer, GWL_STYLE, style);
-	// 设置全屏
-	SetWindowPos(hPlayer, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
 }

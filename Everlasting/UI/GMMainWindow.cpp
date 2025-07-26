@@ -655,32 +655,35 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	LONG_PTR style_tw = GetWindowLongPtrW(hEmbedWnd, GWL_STYLE);
 	LONG_PTR exstyle_tw = GetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE);
 
-	if (!(exstyle_tw & WS_EX_LAYERED)) exstyle_tw |= WS_EX_LAYERED;
-	if ((exstyle_tw & WS_EX_TOOLWINDOW)) exstyle_tw &= ~WS_EX_TOOLWINDOW;
-	if ((style_tw & WS_CHILDWINDOW)) style_tw &= ~WS_CHILDWINDOW;
-	if ((style_tw & WS_POPUP)) style_tw &= ~WS_POPUP;
-	if ((style_tw & WS_OVERLAPPED)) style_tw &= ~WS_OVERLAPPED;
-	if ((style_tw & WS_CAPTION)) style_tw &= ~WS_CAPTION;
-	if ((style_tw & WS_BORDER))style_tw &= ~WS_BORDER;
-	if ((style_tw & WS_SYSMENU)) style_tw &= ~WS_SYSMENU;
-	if ((style_tw & WS_THICKFRAME)) style_tw &= ~WS_THICKFRAME;
+	style_tw |= WS_POPUP;
+	style_tw |= WS_VISIBLE;
+	style_tw |= WS_DISABLED;
+	style_tw |= WS_CLIPSIBLINGS;
+	style_tw |= WS_CLIPCHILDREN;
+	style_tw |= WS_SYSMENU;
+
+	exstyle_tw |= WS_EX_LEFT;
+	exstyle_tw |= WS_EX_LTRREADING;
+	exstyle_tw |= WS_EX_RIGHTSCROLLBAR;
+	exstyle_tw |= WS_EX_CONTEXTHELP;
+	exstyle_tw |= WS_EX_LAYERED;
 
 	SetWindowLongPtrW(hEmbedWnd, GWL_STYLE, style_tw);
 	SetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE, exstyle_tw);
 
 	// 24H2
 
-	HWND hTopDeskWnd = FindWindowW(L"Progman", L"Program Manager");
+	HWND hProgman = FindWindowW(L"Progman", L"Program Manager");
 
-	if (!hTopDeskWnd) return;
-	if (!_RaiseDesktop(hTopDeskWnd)) return;
+	if (!hProgman) return;
+	if (!_RaiseDesktop(hProgman)) return;
 
-	m_hShellDefView = FindWindowExW(hTopDeskWnd, 0, L"SHELLDLL_DefView", L"");
+	m_hShellDefView = FindWindowExW(hProgman, 0, L"SHELLDLL_DefView", L"");
 
 	HWND hWorker1 = nullptr, hWorker2 = nullptr;
 	if (!m_hShellDefView)  // 如果没有找到,则回退 23H2 的搜索模式
 	{
-		HWND hWorker_p1 = GetWindow(hTopDeskWnd, GW_HWNDPREV);
+		HWND hWorker_p1 = GetWindow(hProgman, GW_HWNDPREV);
 		if (hWorker_p1)
 		{
 			m_hShellDefView = FindWindowExW(hWorker_p1, 0, L"SHELLDLL_DefView", L"");
@@ -704,31 +707,31 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 		}
 	}
 
-	HWND hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerW", L"");
-	if (!hWorker) hWorker = FindWindowExW(hTopDeskWnd, 0, L"WorkerA", L"");
+	HWND hWorker = FindWindowExW(hProgman, 0, L"WorkerW", L"");
+	if (!hWorker) hWorker = FindWindowExW(hProgman, 0, L"WorkerA", L"");
 
 	// 23H2
 	if (!hWorker)
 	{
-		hWorker = !hWorker2 ? hTopDeskWnd : hWorker2;
+		hWorker = !hWorker2 ? hProgman : hWorker2;
 		m_bVersion24H2 = false;
 	}
 
 	SetParent(hEmbedWnd, NULL);
 	// 可以通过窗口透明化实现背景透明(务必作为顶级窗口,欺骗 DWM, 否则 DWM 将不允许透明窗口)
 	// 有点像是 hack 生产环境不建议使用!
-	{
-		MARGINS margins{ 0, 0, -1, -1 };
-		DwmExtendFrameIntoClientArea(hEmbedWnd, &margins);
+	//{
+	//	MARGINS margins{ 0, 0, -1, -1 };
+	//	DwmExtendFrameIntoClientArea(hEmbedWnd, &margins);
 
-		DWM_BLURBEHIND bb = { 0 };
-		HRGN hRgn = CreateRectRgn(0, 0, -1, -1); //应用毛玻璃的矩形范围，
-		//参数(0,0,-1,-1)可以让整个窗口客户区变成透明的，而鼠标是可以捕获到透明的区域
-		bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
-		bb.hRgnBlur = hRgn;
-		bb.fEnable = TRUE;
-		DwmEnableBlurBehindWindow(hEmbedWnd, &bb);
-	}
+	//	DWM_BLURBEHIND bb = { 0 };
+	//	HRGN hRgn = CreateRectRgn(0, 0, -1, -1); //应用毛玻璃的矩形范围，
+	//	//参数(0,0,-1,-1)可以让整个窗口客户区变成透明的，而鼠标是可以捕获到透明的区域
+	//	bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
+	//	bb.hRgnBlur = hRgn;
+	//	bb.fEnable = TRUE;
+	//	DwmEnableBlurBehindWindow(hEmbedWnd, &bb);
+	//}
 
 	SetLayeredWindowAttributes(hEmbedWnd, 0, 0xFF, LWA_ALPHA);
 	// 不建议设置窗口为 WorkerW 的子窗口,切换壁纸时候会被意外销毁!
@@ -739,7 +742,8 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	//    SetLayeredWindowAttributes(hWorker, RGB(0,0,0), 255, LWA_ALPHA | LWA_COLORKEY);
 	//}
 
-	SetParent(hEmbedWnd, m_bVersion24H2 ? hTopDeskWnd : hWorker);
+	SetParent(hEmbedWnd, m_bVersion24H2 ? hProgman : hWorker);
+
 	SetWindowPos(hEmbedWnd, HWND_TOP, 0, 0, 0, 0,
 		SWP_NOMOVE | SWP_NOSIZE
 		| SWP_NOACTIVATE | SWP_DRAWFRAME);
@@ -776,7 +780,7 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	wp.rcNormalPosition = rcFullScreen;
 	SetWindowPlacement(hEmbedWnd, &wp);
 
-	ShowWindow(hTopDeskWnd, SW_SHOW);
+	ShowWindow(hProgman, SW_SHOW);
 	ShowWindow(hEmbedWnd, SW_SHOW);
 	ShowWindow(hWorker, SW_SHOW);
 }

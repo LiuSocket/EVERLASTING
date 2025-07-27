@@ -30,8 +30,10 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 {
 	ui.setupUi(this);
 
+	m_b24H2OrGreater = _Is24H2OrGreater(); // 检查当前操作系统是否是win11 24H2版本或更高版本
+
 	// 如果设置无边框模式，就没办法在win11 24H2上实现动态壁纸
-	if (!GM_ENGINE.IsWallpaper())
+	if (!GM_ENGINE.IsWallpaper() || !m_b24H2OrGreater)
 	{
 		setWindowFlags(Qt::FramelessWindowHint);
 		setAttribute(Qt::WA_Mapped);
@@ -152,7 +154,11 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 		// 全屏切换
 		if (m_bFull)
 		{
-			if (!GM_ENGINE.IsWallpaper())
+			if (GM_ENGINE.IsWallpaper() && m_b24H2OrGreater)
+			{
+				setGeometry(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+			}
+			else
 			{
 				QList<QScreen*> mScreen = qApp->screens();
 				setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
@@ -251,7 +257,7 @@ void CGMMainWindow::UpdateAudioInfo()
 
 void CGMMainWindow::UpdateWallpaper()
 {
-	if (m_bVersion24H2)
+	if (m_b24H2OrGreater)
 	{
 		// 24H2 上,我们需要检查窗口次序,确保在桌面切换时候我们的窗口也显示在图标的正下方,
 		// 而不被 Worker或者任何其他遮挡
@@ -367,7 +373,7 @@ void CGMMainWindow::_slotClose()
 	exit(0);
 }
 
-void CGMMainWindow::_slotSetAudioTime(int iTimeRatio)
+void CGMMainWindow::_slotSetAudioTime(int iTimeRatio) const
 {
 	// 当前音频播放的时刻
 	int iAudioCurrentTime = float(iTimeRatio)*0.0025*m_iAudioDuration;
@@ -722,7 +728,7 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	if (!hWorker)
 	{
 		hWorker = !hWorker2 ? hProgman : hWorker2;
-		m_bVersion24H2 = false;
+		m_b24H2OrGreater = false;
 	}
 
 	SetParent(hEmbedWnd, NULL);
@@ -744,20 +750,23 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	SetLayeredWindowAttributes(hEmbedWnd, 0, 0xFF, LWA_ALPHA);
 
 	// 不建议设置窗口为 WorkerW 的子窗口,切换壁纸时候会被意外销毁!
-	//if (m_bVersion24H2)
+	//if (m_b24H2OrGreater)
 	//{
 	//	SetWindowLongPtrW(hWorker, GWL_EXSTYLE, GetWindowLongPtrW(hWorker, GWL_EXSTYLE) | WS_EX_LAYERED);
 	//	SetLayeredWindowAttributes(hWorker, RGB(0,0,0), 255, LWA_ALPHA | LWA_COLORKEY);
 	//}
 
-	SetParent(hEmbedWnd, m_bVersion24H2 ? hProgman : hWorker);
+	SetParent(hEmbedWnd, m_b24H2OrGreater ? hProgman : hWorker);
 
 	SetWindowPos(hEmbedWnd, HWND_TOP, 0, 0, 0, 0,
 		SWP_NOMOVE | SWP_NOSIZE
 		| SWP_NOACTIVATE | SWP_DRAWFRAME);
-	SetWindowPos(m_hShellDefView, HWND_TOP, 0, 0, 0, 0,
-		SWP_NOMOVE | SWP_NOSIZE
-		| SWP_NOACTIVATE);
+	if (m_hShellDefView)
+	{
+		SetWindowPos(m_hShellDefView, HWND_TOP, 0, 0, 0, 0,
+			SWP_NOMOVE | SWP_NOSIZE
+			| SWP_NOACTIVATE);
+	}
 	SetWindowPos(hWorker, HWND_BOTTOM, 0, 0, 0, 0,
 		SWP_NOMOVE | SWP_NOSIZE
 		| SWP_NOACTIVATE | SWP_DRAWFRAME);
@@ -791,4 +800,21 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	ShowWindow(hProgman, SW_SHOW);
 	ShowWindow(hEmbedWnd, SW_SHOW);
 	ShowWindow(hWorker, SW_SHOW);
+}
+
+bool CGMMainWindow::_Is24H2OrGreater()
+{
+	typedef LONG(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+	HMODULE hMod = ::GetModuleHandleW(L"ntdll.dll");
+	if (!hMod) return false;
+
+	RtlGetVersionPtr fn = (RtlGetVersionPtr)::GetProcAddress(hMod, "RtlGetVersion");
+	if (!fn) return false;
+
+	RTL_OSVERSIONINFOW rovi = { 0 };
+	rovi.dwOSVersionInfoSize = sizeof(rovi);
+	if (fn(&rovi) != 0) return false;
+
+	// Windows 11 24H2: major=10, minor=0, build>=26100
+	return (rovi.dwMajorVersion == 10 && rovi.dwMinorVersion == 0 && rovi.dwBuildNumber >= 26100);
 }

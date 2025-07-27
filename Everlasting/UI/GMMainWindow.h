@@ -68,7 +68,7 @@ private slots:
 	* @brief 设置音频当前的时间
 	* @param iTimeRatio: 当前时间与总时间的比值,[0,100]
 	*/
-	void _slotSetAudioTime(int iTimeRatio);
+	void _slotSetAudioTime(int iTimeRatio) const;
 
 	/** @brief 开启声音/静音 */
 	void _slotSetMute();
@@ -115,6 +115,8 @@ private:
 	* @param hPlayer: 需要变成桌面壁纸的程序的窗口句柄
 	*/
 	void _SetWallPaper(HWND hPlayer);
+	/** @brief 判断当前操作系统是否是24H2 以及之后的版本 */
+	bool _Is24H2OrGreater();
 
 private:
 	Ui::GMMainWindow					ui;
@@ -123,7 +125,7 @@ private:
 	CGMPlayKitWidget*					m_pPlayKitWidget = nullptr;		//!< 播放器工具控件
 
 	HWND								m_hShellDefView = nullptr;
-	bool								m_bVersion24H2 = true;
+	bool								m_b24H2OrGreater = false;
 	bool								m_bInit = false;
 	bool								m_bFull = false;				//!< 是否全屏
 	bool								m_bPressed = false;				//!< 是否按下鼠标

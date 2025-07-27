@@ -45,30 +45,48 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	ui.titleWidget->setLayout(ui.titleHLayout);
 	ui.toolWidget->setLayout(ui.toolGLayout);
 
-	connect(ui.lastBtn, SIGNAL(clicked()), this, SLOT(_slotLast()));
-	connect(ui.playBtn, SIGNAL(clicked()), this, SLOT(_slotPlayOrPause()));
-	connect(ui.nextBtn, SIGNAL(clicked()), this, SLOT(_slotNext()));
+	if (GM_ENGINE.IsWallpaper())
+	{
+		// 播放器工具控件
+		m_pPlayKitWidget = new CGMPlayKitWidget(this);
+		m_pPlayKitWidget->move(GetSystemMetrics(SM_CXSCREEN) - 300, GetSystemMetrics(SM_CYSCREEN) - 200);
+		m_pPlayKitWidget->raise();
+		m_pPlayKitWidget->hide();
 
-	connect(ui.minBtn, SIGNAL(clicked()), this, SLOT(_slotMinimum()));
-	connect(ui.maxBtn, SIGNAL(clicked()), this, SLOT(_slotMaximum()));
-	connect(ui.closeBtn, SIGNAL(clicked()), this, SLOT(_slotClose()));
+		// 系统托盘图标
+		QSystemTrayIcon* trayIcon = new QSystemTrayIcon(this);
+		trayIcon->setIcon(QIcon(":/Resources/GM_logo.ico"));
+		trayIcon->setToolTip("EVERLASTING");
+		// 添加右键菜单
+		QMenu* trayMenu = new QMenu(this);
+		trayMenu->addAction(QString::fromLocal8Bit("播放器"), m_pPlayKitWidget, SLOT(show()));
+		trayMenu->addAction(QString::fromLocal8Bit("退出"), qApp, SLOT(quit()));
+		trayIcon->setContextMenu(trayMenu);
+		trayIcon->show();
 
-	connect(ui.timeSlider, SIGNAL(valueChanged(int)), this, SLOT(_slotSetAudioTime(int)));
+		connect(trayIcon, &QSystemTrayIcon::activated, this, &CGMMainWindow::_OnTrayIconActivated);
+	}
+	else
+	{
+		connect(ui.lastBtn, SIGNAL(clicked()), this, SLOT(_slotLast()));
+		connect(ui.playBtn, SIGNAL(clicked()), this, SLOT(_slotPlayOrPause()));
+		connect(ui.nextBtn, SIGNAL(clicked()), this, SLOT(_slotNext()));
 
-	connect(ui.volumeBtn, SIGNAL(clicked()), this, SLOT(_slotSetMute()));
-	connect(ui.fullScreenBtn, SIGNAL(clicked()), this, SLOT(_slotFullScreen()));
+		connect(ui.minBtn, SIGNAL(clicked()), this, SLOT(_slotMinimum()));
+		connect(ui.maxBtn, SIGNAL(clicked()), this, SLOT(_slotMaximum()));
+		connect(ui.closeBtn, SIGNAL(clicked()), this, SLOT(_slotClose()));
+
+		connect(ui.timeSlider, SIGNAL(valueChanged(int)), this, SLOT(_slotSetAudioTime(int)));
+
+		connect(ui.volumeBtn, SIGNAL(clicked()), this, SLOT(_slotSetMute()));
+		connect(ui.fullScreenBtn, SIGNAL(clicked()), this, SLOT(_slotFullScreen()));
+	}
 
 	// 音量控件
 	m_pVolumeWidget = new CGMVolumeWidget(this);
 	m_pVolumeWidget->raise();
 	m_pVolumeWidget->hide();
 	connect(m_pVolumeWidget, SIGNAL(_signalSetVolume(int)), this, SLOT(_slotSetVolume(int)));
-
-	// 播放器工具控件
-	m_pPlayKitWidget = new CGMPlayKitWidget(this);
-	m_pPlayKitWidget->move(GetSystemMetrics(SM_CXSCREEN) - 300, GetSystemMetrics(SM_CYSCREEN) - 200);
-	m_pPlayKitWidget->raise();
-	m_pPlayKitWidget->hide();
 
 	// 加载QSS
 	QFile qssFile(":/Resources/MainWindow.qss");
@@ -79,19 +97,6 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 		m_pVolumeWidget->setStyleSheet(style);
 		qssFile.close();
 	}
-
-	// 系统托盘图标
-	QSystemTrayIcon* trayIcon = new QSystemTrayIcon(this);
-	trayIcon->setIcon(QIcon(":/Resources/GM_logo.ico"));
-	trayIcon->setToolTip("EVERLASTING");
-	// 添加右键菜单
-	QMenu* trayMenu = new QMenu(this);
-	trayMenu->addAction(QString::fromLocal8Bit("播放器"), m_pPlayKitWidget, SLOT(show()));
-	trayMenu->addAction(QString::fromLocal8Bit("退出"), qApp, SLOT(quit()));
-	trayIcon->setContextMenu(trayMenu);
-	trayIcon->show();
-
-	connect(trayIcon, &QSystemTrayIcon::activated, this, &CGMMainWindow::_OnTrayIconActivated);
 }
 
 CGMMainWindow::~CGMMainWindow()
@@ -154,11 +159,7 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 		// 全屏切换
 		if (m_bFull)
 		{
-			if (GM_ENGINE.IsWallpaper() && m_b24H2OrGreater)
-			{
-				setGeometry(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-			}
-			else
+			if (!(GM_ENGINE.IsWallpaper() && m_b24H2OrGreater))
 			{
 				QList<QScreen*> mScreen = qApp->screens();
 				setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
@@ -669,18 +670,16 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	LONG_PTR style_tw = GetWindowLongPtrW(hEmbedWnd, GWL_STYLE);
 	LONG_PTR exstyle_tw = GetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE);
 
-	style_tw |= WS_POPUP;
-	style_tw |= WS_VISIBLE;
-	style_tw |= WS_DISABLED;
-	style_tw |= WS_CLIPSIBLINGS;
-	style_tw |= WS_CLIPCHILDREN;
-	style_tw |= WS_SYSMENU;
+	if (!(exstyle_tw & WS_EX_LAYERED)) exstyle_tw |= WS_EX_LAYERED;
+	if ((exstyle_tw & WS_EX_TOOLWINDOW)) exstyle_tw &= ~WS_EX_TOOLWINDOW;
 
-	exstyle_tw |= WS_EX_LEFT;
-	exstyle_tw |= WS_EX_LTRREADING;
-	exstyle_tw |= WS_EX_RIGHTSCROLLBAR;
-	exstyle_tw |= WS_EX_CONTEXTHELP;
-	exstyle_tw |= WS_EX_LAYERED;
+	if ((style_tw & WS_CHILDWINDOW)) style_tw &= ~WS_CHILDWINDOW;
+	if ((style_tw & WS_POPUP)) style_tw &= ~WS_POPUP;
+	if ((style_tw & WS_OVERLAPPED)) style_tw &= ~WS_OVERLAPPED;
+	if ((style_tw & WS_CAPTION)) style_tw &= ~WS_CAPTION;
+	if ((style_tw & WS_BORDER))style_tw &= ~WS_BORDER;
+	if ((style_tw & WS_SYSMENU)) style_tw &= ~WS_SYSMENU;
+	if ((style_tw & WS_THICKFRAME)) style_tw &= ~WS_THICKFRAME;
 
 	SetWindowLongPtrW(hEmbedWnd, GWL_STYLE, style_tw);
 	SetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE, exstyle_tw);
@@ -759,17 +758,14 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	SetParent(hEmbedWnd, m_b24H2OrGreater ? hProgman : hWorker);
 
 	SetWindowPos(hEmbedWnd, HWND_TOP, 0, 0, 0, 0,
-		SWP_NOMOVE | SWP_NOSIZE
-		| SWP_NOACTIVATE | SWP_DRAWFRAME);
+		SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_DRAWFRAME);
 	if (m_hShellDefView)
 	{
 		SetWindowPos(m_hShellDefView, HWND_TOP, 0, 0, 0, 0,
-			SWP_NOMOVE | SWP_NOSIZE
-			| SWP_NOACTIVATE);
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	}
 	SetWindowPos(hWorker, HWND_BOTTOM, 0, 0, 0, 0,
-		SWP_NOMOVE | SWP_NOSIZE
-		| SWP_NOACTIVATE | SWP_DRAWFRAME);
+		SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_DRAWFRAME);
 
 	RECT rchTestOld{};
 	GetWindowRect(hEmbedWnd, &rchTestOld);
@@ -784,11 +780,9 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 
 	UINT rcfx = rcFullScreen.right - rcFullScreen.left;
 	UINT rcfy = rcFullScreen.bottom - rcFullScreen.top;
-
 	MoveWindow(hEmbedWnd, rcFullScreen.left, rcFullScreen.top, rcfx, rcfy, TRUE);
 
 	WINDOWPLACEMENT wp{};
-
 	wp.length = sizeof(WINDOWPLACEMENT);
 	wp.flags = WPF_SETMINPOSITION;
 	wp.showCmd = SW_SHOWNORMAL;

@@ -28,9 +28,11 @@ CGMViewWidget::CGMViewWidget(osgViewer::View* pView,QWidget* parent, Qt::WindowF
 
 	osgQt::GraphicsWindowQt* gw = createGraphicsWindow(0, 0, 100, 100);
 	osgQt::GLWidget* pGLWidget = gw->getGLWidget();
+
 	QGridLayout* grid = new QGridLayout;
-	grid->addWidget(pGLWidget, 0, 0);
 	setLayout(grid);
+
+	grid->addWidget(pGLWidget, 0, 0);
 	grid->setMargin(0);
 	grid->setSpacing(0);
 

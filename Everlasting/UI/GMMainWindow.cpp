@@ -29,8 +29,13 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
 	ui.setupUi(this);
-	setWindowFlags(Qt::FramelessWindowHint);
-	setAttribute(Qt::WA_Mapped);
+
+	// 如果设置无边框模式，就没办法在win11 24H2上实现动态壁纸
+	if (!GM_ENGINE.IsWallpaper())
+	{
+		setWindowFlags(Qt::FramelessWindowHint);
+		setAttribute(Qt::WA_Mapped);
+	}
 
 	qApp->installEventFilter(this); // 对全局应用安装过滤器
 
@@ -147,8 +152,11 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 		// 全屏切换
 		if (m_bFull)
 		{
-			QList<QScreen*> mScreen = qApp->screens();
-			setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
+			if (!GM_ENGINE.IsWallpaper())
+			{
+				QList<QScreen*> mScreen = qApp->screens();
+				setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
+			}
 			show();
 
 			ui.titleWidget->hide();
@@ -734,12 +742,12 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	//}
 
 	SetLayeredWindowAttributes(hEmbedWnd, 0, 0xFF, LWA_ALPHA);
+
 	// 不建议设置窗口为 WorkerW 的子窗口,切换壁纸时候会被意外销毁!
 	//if (m_bVersion24H2)
 	//{
-	//    SetWindowLongPtrW(hWorker, GWL_EXSTYLE,
-	//        GetWindowLongPtrW(hWorker, GWL_EXSTYLE) | WS_EX_LAYERED);
-	//    SetLayeredWindowAttributes(hWorker, RGB(0,0,0), 255, LWA_ALPHA | LWA_COLORKEY);
+	//	SetWindowLongPtrW(hWorker, GWL_EXSTYLE, GetWindowLongPtrW(hWorker, GWL_EXSTYLE) | WS_EX_LAYERED);
+	//	SetLayeredWindowAttributes(hWorker, RGB(0,0,0), 255, LWA_ALPHA | LWA_COLORKEY);
 	//}
 
 	SetParent(hEmbedWnd, m_bVersion24H2 ? hProgman : hWorker);

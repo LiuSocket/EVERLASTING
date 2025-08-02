@@ -126,10 +126,7 @@ namespace GM
 		* @brief 获取播放模式	
 		* @return EGMA_MODE：	播放模式（单曲循环、随机播放、列表循环等）
 		*/
-		inline EGMA_MODE GetPlayMode() const
-		{
-			return m_ePlayMode;
-		}
+		inline EGMA_MODE GetPlayMode() const{ return m_ePlayMode;}
 
 		/**
 		* @brief 获取当前音频文件名称

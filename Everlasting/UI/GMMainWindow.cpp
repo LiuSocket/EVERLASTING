@@ -2,23 +2,16 @@
 #include "GMVolumeWidget.h"
 #include "GMPlayKitWidget.h"
 #include "../Engine/GMEngine.h"
+
 #include <QKeyEvent>
 #include <QScreen>
 #include <QMenu>
+
 #include <dwmapi.h>
 #include <psapi.h>
-
 #include <functional>
 #include <thread>
 #include <chrono>
-
-#pragma comment(lib, "dwmapi.lib")
-#pragma comment(lib, "psapi.lib")
-
-// 建议用程序清单设置
-#pragma comment(linker, "\"/manifestdependency:type='win32' \
-name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
-processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 using namespace GM;
 

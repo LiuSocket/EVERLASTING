@@ -1,3 +1,5 @@
+#pragma import_defines(SSS_BLUR)
+
 #ifdef SHADOW_CAST
 
 void main()
@@ -46,6 +48,14 @@ void main()
 	vec3 viewVertDir = normalize(vertOut.viewPos);
 	vec3 viewNorm = normalize(vertOut.viewNormal);
 	vec3 viewHalf = normalize(viewLight-viewVertDir);
+
+#ifdef SSS_BLUR
+
+	float dotNL = dot(viewNorm, viewLight);
+	gl_FragColor = vec4(dotNL*0.5+0.5,0,0,1);
+
+#else // not SSS_BLUR
+
 	const float minFact = 1e-8;
 	float dotNL = dot(viewNorm, viewLight);
 	float dotNL_1 = max(dotNL,minFact);
@@ -111,6 +121,7 @@ void main()
 	outColor.a = alpha + specularOut.a + mix(specularIn.a, 1.0, fresnelAlphaOut);
 
 	gl_FragColor = outColor;
+	
+#endif // SSS_BLUR
 }
-
 #endif // SHADOW_CAST or not

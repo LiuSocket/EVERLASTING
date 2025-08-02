@@ -251,7 +251,26 @@ bool CGMMaterial::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pEnvProbeTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 
+	_InitSSSBlur();
+
 	return true;
+}
+
+bool CGMMaterial::UpdatePost(double dDeltaTime)
+{
+	// 更新SSS模糊相机
+	if (m_pSSSBlurCamera.valid())
+	{
+		m_pSSSBlurCamera->setViewMatrix(GM_View->getCamera()->getViewMatrix());
+		m_pSSSBlurCamera->setProjectionMatrix(GM_View->getCamera()->getProjectionMatrix());
+	}
+
+	return false;
+}
+
+void CGMMaterial::ResizeScreen(const int width, const int height)
+{
+	m_pSSSBlurCamera->resize(width, height);
 }
 
 void CGMMaterial::SetPBRMaterial(osg::Node* pNode)
@@ -295,11 +314,19 @@ void CGMMaterial::SetHumanMaterial(osg::Node* pNode)
 {
 	HumanVisitor cHumanVisitor(this);
 	pNode->accept(cHumanVisitor);
+
+	// 将人物节点加到此表面模糊相机下，但只有SSS材质的节点才会被渲染
+	if (m_pSSSBlurCamera.valid())
+	{
+		pNode->setNodeMask(pNode->getNodeMask() | GM_SSS_MASK);
+		m_pSSSBlurCamera->addChild(pNode);
+	}
 }
 
 void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
 {
 	osg::ref_ptr<osg::StateSet> pStateSet = pNode->getOrCreateStateSet();
+
 	// Uniform
 	int iChannel = 0;
 	_PlusUnitUsed(iChannel);
@@ -322,6 +349,9 @@ void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
 	// 环境探针贴图
 	CGMKit::AddTexture(pStateSet.get(), m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);
 	_PlusUnitUsed(iChannel);
+	// SSS blur贴图
+	CGMKit::AddTexture(pStateSet.get(), m_pSSSBlurTexture.get(), "texSSSBlur", iChannel++);
+	_PlusUnitUsed(iChannel);
 
 	pStateSet->addUniform(GM_UNIFORM.GetScreenSize());
 
@@ -330,6 +360,11 @@ void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
 
 	// 设置光照
 	GM_LIGHT.SetLightEnable(pNode, true);
+
+	if (!GM_Root->containsNode(m_pSSSBlurCamera.get()))
+	{
+		GM_Root->addChild(m_pSSSBlurCamera.get());
+	}
 }
 
 void CGMMaterial::SetEyeMaterial(osg::Node* pNode)
@@ -425,4 +460,44 @@ bool CGMMaterial::_PlusUnitUsed(int& iUnit)
 		return false;
 	}
 	return true;
+}
+
+void CGMMaterial::_InitSSSBlur()
+{
+	// 次表面模糊贴图大小
+	int iW = m_pConfigData->iScreenWidth;
+	int iH = m_pConfigData->iScreenHeight;
+	m_pSSSBlurTexture = new osg::Texture2D;
+	m_pSSSBlurTexture->setTextureSize(iW, iH);
+	m_pSSSBlurTexture->setInternalFormat(GL_R8);
+	m_pSSSBlurTexture->setSourceFormat(GL_RED);
+	m_pSSSBlurTexture->setSourceType(GL_UNSIGNED_BYTE);
+	m_pSSSBlurTexture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
+	m_pSSSBlurTexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
+	m_pSSSBlurTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_BORDER);
+	m_pSSSBlurTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_BORDER);
+	m_pSSSBlurTexture->setBorderColor(osg::Vec4d(0, 0, 0, 0));
+	m_pSSSBlurTexture->setDataVariance(osg::Object::DYNAMIC);
+	m_pSSSBlurTexture->setResizeNonPowerOfTwoHint(false);
+
+	m_pSSSBlurCamera = new osg::Camera;
+	m_pSSSBlurCamera->setName("SSSBlurCamera");
+	m_pSSSBlurCamera->setCullMask(GM_SSS_MASK);
+	m_pSSSBlurCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
+	m_pSSSBlurCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	m_pSSSBlurCamera->setClearColor(osg::Vec4(0.5f, 0.0f, 0.0f, 0.0f));
+	m_pSSSBlurCamera->setViewport(0, 0, iW, iH);
+	m_pSSSBlurCamera->setRenderOrder(osg::Camera::PRE_RENDER, 0);
+	m_pSSSBlurCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);
+	m_pSSSBlurCamera->attach(osg::Camera::COLOR_BUFFER, m_pSSSBlurTexture.get());
+	m_pSSSBlurCamera->setAllowEventFocus(false);
+	m_pSSSBlurCamera->setProjectionMatrixAsPerspective(
+		m_pConfigData->fFovy,
+		double(iW) / double(iH),
+		2.0, 2e4);
+	m_pSSSBlurCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
+
+	osg::ref_ptr<osg::StateSet> pSSSBlurStateSet = m_pSSSBlurCamera->getOrCreateStateSet();
+	// 添加shader
+	pSSSBlurStateSet->setDefine("SSS_BLUR", osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
 }

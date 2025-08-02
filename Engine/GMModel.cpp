@@ -144,6 +144,7 @@ bool CGMModel::Update(double dDeltaTime)
 
 bool CGMModel::UpdatePost(double dDeltaTime)
 {
+	m_pMaterial->UpdatePost(dDeltaTime);
 	return true;
 }
 
@@ -199,6 +200,11 @@ bool CGMModel::Add(const SGMModelData& sData)
 		return true;
 	}
 	return false;
+}
+
+void CGMModel::ResizeScreen(const int width, const int height)
+{
+	m_pMaterial->ResizeScreen(width, height);
 }
 
 bool CGMModel::_SetMaterial(osg::Node* pNode, const SGMModelData& sData)

@@ -291,6 +291,7 @@ void CGMEngine::ResizeScreen(const int iW, const int iH)
 		m_pKernelData->pForegroundCam->resize(iW, iH);
 	if (m_pPost)
 		m_pPost->ResizeScreen(iW, iH);
+	m_pModel->ResizeScreen(iW, iH);
 }
 
 void CGMEngine::SetLookTargetPos(const SGMVector2f& vTargetScreenPos)

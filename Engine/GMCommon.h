@@ -24,6 +24,7 @@ namespace GM
 	 Macro Defines
 	*************************************************************************/
 	#define GM_MAIN_MASK					(0x1)			// 主相机掩码
+	#define GM_SSS_MASK						(0x1 << 1)		// SSS相机掩码
 	#define GM_SHADOW_CAST_MASK				(0x1 << 7)		// 投射阴影掩码
 
 	#define SHADOW_TEX_UNIT					6				// 阴影纹理单元

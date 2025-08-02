@@ -1,3 +1,5 @@
+#pragma import_defines(SSS_BLUR)
+
 const float CUT_ALPHA = 0.001;
 
 #ifdef SHADOW_CAST
@@ -16,6 +18,7 @@ uniform sampler2D		texMRAT;
 uniform sampler2D		texSSSC;
 uniform sampler2D		texNormal;
 uniform sampler2D		texEnvProbe;
+uniform sampler2D		texSSSBlur;
 
 in vData
 {
@@ -64,6 +67,13 @@ void main()
 	vec3 viewNorm = normalize(vertOut.viewNormal);
 	mat3 tang2View = mat3(viewTangent, viewBinorm, viewNorm);
 
+#ifdef SSS_BLUR
+
+	float dotNL = dot(viewNorm, viewLight);
+	gl_FragColor = vec4(dotNL*0.5+0.5,0,0,1);
+
+#else // not SSS_BLUR
+
 	vec4 texel_MRAT = texture(texMRAT, gl_TexCoord[0].st); // R = Metallic, G = Roughness, B = AO, A = Thickness
 	vec4 texel_SSSC = texture(texSSSC, gl_TexCoord[0].st); // RGB = SSS color, A = Curvature
 	vec4 texel_n = texture(texNormal, gl_TexCoord[0].st);
@@ -74,6 +84,36 @@ void main()
 	vec3 viewHalf = normalize(viewLight-viewVertDir);
 	const float minFact = 1e-8;
 	float dotNL = dot(viewTexNorm, viewLight);
+
+	vec2 coordCenter = gl_FragCoord.st;//-vec2(0.5);
+
+	vec4 blur00 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(-2,-2))/screenSize.xy, 0);
+	vec4 blur01 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(-2,0))/screenSize.xy, 0);
+	vec4 blur02 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(-2,2))/screenSize.xy, 0);
+
+	vec4 blur10 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(0,-2))/screenSize.xy, 0);
+	vec4 blur11 = textureGather(texSSSBlur, gl_FragCoord.st/screenSize.xy, 0);
+	vec4 blur12 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(0,2))/screenSize.xy, 0);
+
+	vec4 blur20 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(2,-2))/screenSize.xy, 0);
+	vec4 blur21 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(2,0))/screenSize.xy, 0);
+	vec4 blur22 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(2,2))/screenSize.xy, 0);
+
+	vec4 blurCenter = vec4(dotNL*0.5+0.5);
+	const vec4 cullValue = vec4(0.4);
+	blur00 = mix(blur00, blurCenter, step(cullValue, blur00-blurCenter));
+	blur01 = mix(blur01, blurCenter, step(cullValue, blur01-blurCenter));
+	blur02 = mix(blur02, blurCenter, step(cullValue, blur02-blurCenter));
+	blur10 = mix(blur10, blurCenter, step(cullValue, blur10-blurCenter));
+	blur11 = mix(blur11, blurCenter, step(cullValue, blur11-blurCenter));
+	blur12 = mix(blur12, blurCenter, step(cullValue, blur12-blurCenter));
+	blur20 = mix(blur20, blurCenter, step(cullValue, blur20-blurCenter));
+	blur21 = mix(blur21, blurCenter, step(cullValue, blur21-blurCenter));
+	blur22 = mix(blur22, blurCenter, step(cullValue, blur22-blurCenter));
+
+	vec4 sum4 = blur00 + blur01 + blur02 + blur10 + blur11 + blur12 + blur20 + blur21 + blur22;
+	float dotNLBlur = (sum4.x+sum4.y+sum4.z+sum4.w) / 18.0 - 1.0;
+	dotNL = dotNLBlur;
 	float dotNL_1 = max(dotNL,minFact);
 	float dotNH = max(dot(viewTexNorm, viewHalf),minFact);
 	float dotVN = max(dot(-viewVertDir, viewTexNorm),minFact);
@@ -120,7 +160,8 @@ void main()
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-	gl_FragColor = outColor;
-}
+	gl_FragColor = outColor;//vec4(dotNL,0,0,1);//
 
+#endif // SSS_BLUR
+}
 #endif // SHADOW_CAST or not

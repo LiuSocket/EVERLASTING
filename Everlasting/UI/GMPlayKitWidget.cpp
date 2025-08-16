@@ -10,7 +10,7 @@ CGMPlayKitWidget::CGMPlayKitWidget(QWidget *parent)
 	ui.setupUi(this);
 
 	setWindowFlags(Qt::FramelessWindowHint | Qt::Tool);
-	//setAttribute(Qt::WA_TranslucentBackground);
+	setAttribute(Qt::WA_TranslucentBackground);
 
 	connect(ui.playBtn, SIGNAL(clicked()), this, SLOT(_slotPlayOrPause()));
 }

@@ -84,9 +84,14 @@ private slots:
 	void _slotFullScreen();
 
 	/**
+	* @brief 桌面壁纸版本的 播放/关闭音乐
+	*/
+	void _slotWallpaperPlayOrPause();
+
+	/**
 	* @brief 系统托盘图标被激活
 	*/
-	void _OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
+	//void _OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
 protected:
 	void changeEvent(QEvent* event);
@@ -122,7 +127,8 @@ private:
 	Ui::GMMainWindow					ui;
 	CGMVolumeWidget*					m_pVolumeWidget = nullptr;
 	CGMViewWidget*						m_pSceneWidget = nullptr;
-	CGMPlayKitWidget*					m_pPlayKitWidget = nullptr;		//!< 播放器工具控件
+	//CGMPlayKitWidget*					m_pPlayKitWidget = nullptr;		//!< 播放器工具控件
+	QAction*							m_pWallpaperPlayAct = nullptr;	//!< 桌面壁纸版本的 播放/关闭音乐
 
 	HWND								m_hShellDefView = nullptr;
 	bool								m_b24H2OrGreater = false;

@@ -40,11 +40,12 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 
 	if (GM_ENGINE.IsWallpaper())
 	{
-		// 播放器工具控件
-		m_pPlayKitWidget = new CGMPlayKitWidget(this);
-		m_pPlayKitWidget->move(GetSystemMetrics(SM_CXSCREEN) - 300, GetSystemMetrics(SM_CYSCREEN) - 200);
-		m_pPlayKitWidget->raise();
-		m_pPlayKitWidget->hide();
+		//// 播放器工具控件
+		//m_pPlayKitWidget = new CGMPlayKitWidget();
+		//QList<QScreen*> mScreen = qApp->screens();
+		//m_pPlayKitWidget->move(mScreen[0]->geometry().width()-300, mScreen[0]->geometry().height()-200);
+		//m_pPlayKitWidget->raise();
+		//m_pPlayKitWidget->hide();
 
 		// 系统托盘图标
 		QSystemTrayIcon* trayIcon = new QSystemTrayIcon(this);
@@ -52,12 +53,13 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 		trayIcon->setToolTip("EVERLASTING");
 		// 添加右键菜单
 		QMenu* trayMenu = new QMenu(this);
-		trayMenu->addAction(QString::fromLocal8Bit("播放器"), m_pPlayKitWidget, SLOT(show()));
+		//trayMenu->addAction(QString::fromLocal8Bit("播放器"), m_pPlayKitWidget, SLOT(show()));
+		m_pWallpaperPlayAct = trayMenu->addAction(QString::fromLocal8Bit("播放音乐"), this, SLOT(_slotWallpaperPlayOrPause()));
 		trayMenu->addAction(QString::fromLocal8Bit("退出"), qApp, SLOT(quit()));
 		trayIcon->setContextMenu(trayMenu);
 		trayIcon->show();
 
-		connect(trayIcon, &QSystemTrayIcon::activated, this, &CGMMainWindow::_OnTrayIconActivated);
+		//connect(trayIcon, &QSystemTrayIcon::activated, this, &CGMMainWindow::_OnTrayIconActivated);
 	}
 	else
 	{
@@ -143,7 +145,7 @@ void CGMMainWindow::Update()
 		GM_ENGINE.SetLookTargetPos(SGMVector2f(localPos.x(), GetSystemMetrics(SM_CYSCREEN) - localPos.y()));
 
 		// 更新mini播放控件
-		m_pPlayKitWidget->Update();
+		//m_pPlayKitWidget->Update();
 	}
 }
 
@@ -415,21 +417,38 @@ void CGMMainWindow::_slotFullScreen()
 	SetFullScreen(true);
 }
 
-void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
+void CGMMainWindow::_slotWallpaperPlayOrPause()
 {
-	if (reason == QSystemTrayIcon::Trigger) // 单击
+	static bool s_bPlay = false;
+	if (s_bPlay)
 	{
-		if (m_pPlayKitWidget->isVisible())
-		{
-			m_pPlayKitWidget->hide();
-		}
-		else
-		{
-			m_pPlayKitWidget->raise();
-			m_pPlayKitWidget->show();
-		}
+		m_pWallpaperPlayAct->setText(QString::fromLocal8Bit("播放音乐"));
+		s_bPlay = false;
+		GM_ENGINE.Pause();
+	}
+	else
+	{
+		m_pWallpaperPlayAct->setText(QString::fromLocal8Bit("暂停音乐"));
+		s_bPlay = true;
+		GM_ENGINE.Play();
 	}
 }
+
+//void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
+//{
+//	if (reason == QSystemTrayIcon::Trigger) // 单击
+//	{
+//		if (m_pPlayKitWidget->isVisible())
+//		{
+//			m_pPlayKitWidget->hide();
+//		}
+//		else
+//		{
+//			m_pPlayKitWidget->raise();
+//			m_pPlayKitWidget->show();
+//		}
+//	}
+//}
 
 void CGMMainWindow::changeEvent(QEvent* event)
 {

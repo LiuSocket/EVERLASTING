@@ -102,18 +102,22 @@ bool CGMMainWindow::Init()
 	if (m_bInit)
 		return true;
 
-	m_pSceneWidget = GM_ENGINE.CreateViewWidget(this);
-	ui.centralVLayout->insertWidget(2,(QWidget*)m_pSceneWidget);
-
 	QImage* pAudioImg = new QImage;
 	pAudioImg->load(":/Resources/default_Image.png");
 	ui.audioImgLab->setPixmap(QPixmap::fromImage(*pAudioImg));
 
-	// 设置成桌面壁纸
-	if (GM_ENGINE.IsWallpaper())
+	m_pSceneWidget = GM_ENGINE.CreateViewWidget(this);
+	if (GM_ENGINE.IsWallpaper())// 设置成桌面壁纸
 	{
+		QList<QScreen*> mScreen = qApp->screens();
+		m_pSceneWidget->setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
+
 		SetFullScreen(true);
 		_SetWallPaper((HWND)winId());
+	}
+	else
+	{
+		ui.centralVLayout->insertWidget(2, (QWidget*)m_pSceneWidget);
 	}
 
 	m_bInit = true;
@@ -660,25 +664,16 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 {
 	if (!hEmbedWnd) return;
 
-	LONG_PTR style_tw = GetWindowLongPtrW(hEmbedWnd, GWL_STYLE);
 	LONG_PTR exstyle_tw = GetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE);
-
-	if (!(exstyle_tw & WS_EX_LAYERED)) exstyle_tw |= WS_EX_LAYERED;
-	if ((exstyle_tw & WS_EX_TOOLWINDOW)) exstyle_tw &= ~WS_EX_TOOLWINDOW;
-
-	if ((style_tw & WS_CHILDWINDOW)) style_tw &= ~WS_CHILDWINDOW;
-	if ((style_tw & WS_POPUP)) style_tw &= ~WS_POPUP;
-	if ((style_tw & WS_OVERLAPPED)) style_tw &= ~WS_OVERLAPPED;
-	if ((style_tw & WS_CAPTION)) style_tw &= ~WS_CAPTION;
-	if ((style_tw & WS_BORDER))style_tw &= ~WS_BORDER;
-	if ((style_tw & WS_SYSMENU)) style_tw &= ~WS_SYSMENU;
-	if ((style_tw & WS_THICKFRAME)) style_tw &= ~WS_THICKFRAME;
-
-	SetWindowLongPtrW(hEmbedWnd, GWL_STYLE, style_tw);
+	exstyle_tw |= WS_EX_LAYERED;
+	exstyle_tw &= ~WS_EX_TOOLWINDOW;
 	SetWindowLongPtrW(hEmbedWnd, GWL_EXSTYLE, exstyle_tw);
 
-	// 24H2
+	LONG_PTR style_tw = GetWindowLongPtrW(hEmbedWnd, GWL_STYLE);
+	style_tw &= ~(WS_CHILDWINDOW | WS_POPUP | WS_OVERLAPPED | WS_CAPTION | WS_BORDER | WS_SYSMENU | WS_THICKFRAME);
+	SetWindowLongPtrW(hEmbedWnd, GWL_STYLE, style_tw);
 
+	// 24H2
 	HWND hProgman = FindWindowW(L"Progman", L"Program Manager");
 
 	if (!hProgman) return;
@@ -787,6 +782,12 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	ShowWindow(hProgman, SW_SHOW);
 	ShowWindow(hEmbedWnd, SW_SHOW);
 	ShowWindow(hWorker, SW_SHOW);
+
+	if (m_b24H2OrGreater)
+	{
+		QList<QScreen*> mScreen = qApp->screens();
+		m_pSceneWidget->setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
+	}
 }
 
 bool CGMMainWindow::_Is24H2OrGreater()

@@ -135,6 +135,7 @@ private:
 	bool								m_bInit = false;
 	bool								m_bFull = false;				//!< 是否全屏
 	bool								m_bPressed = false;				//!< 是否按下鼠标
+	bool								m_bPlayingMusic = false;		//!< 是否正在播放音乐
 	bool								m_bShowVolume = false;			//!< 是否显示实时变化的音量
 	QPoint								m_vPos = QPoint(0, 0);			//!< 窗口的位置
 	int									m_iAudioDuration = 5000;		//!< 音频总时长，单位：ms

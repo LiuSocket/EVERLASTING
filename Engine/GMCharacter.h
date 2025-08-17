@@ -175,7 +175,7 @@ namespace GM
 		void Welcome();
 
 		/**
-		* @brief 如果目标可见，则设置注视目标位置
+		* @brief 设置注视目标位置
 		* @param vTargetWorldPos 目标点的世界空间坐标，单位：cm
 		*/
 		inline void SetLookTargetPos(const osg::Vec3d& vTargetWorldPos)

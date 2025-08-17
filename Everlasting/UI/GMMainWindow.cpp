@@ -146,6 +146,15 @@ void CGMMainWindow::Update()
 
 		// 更新mini播放控件
 		//m_pPlayKitWidget->Update();
+
+		const std::wstring wstrAudioName = GM_ENGINE.GetAudioName();
+		QString strFileName = QString::fromStdWString(wstrAudioName);
+		if ("" == strFileName || GM_ENGINE.IsAudioOver())
+		{
+			// 更新按钮
+			m_pWallpaperPlayAct->setText(QString::fromLocal8Bit("播放音乐"));
+			m_bPlayingMusic = false;
+		}
 	}
 }
 
@@ -200,6 +209,7 @@ void CGMMainWindow::UpdateAudioInfo()
 	{
 		// 将播放/暂停按钮设置成暂停状态
 		ui.playBtn->setChecked(false);
+		m_bPlayingMusic = false;
 		return;
 	}
 	if (m_strName != strFileName)
@@ -419,17 +429,16 @@ void CGMMainWindow::_slotFullScreen()
 
 void CGMMainWindow::_slotWallpaperPlayOrPause()
 {
-	static bool s_bPlay = false;
-	if (s_bPlay)
+	if (m_bPlayingMusic)
 	{
 		m_pWallpaperPlayAct->setText(QString::fromLocal8Bit("播放音乐"));
-		s_bPlay = false;
+		m_bPlayingMusic = false;
 		GM_ENGINE.Pause();
 	}
 	else
 	{
 		m_pWallpaperPlayAct->setText(QString::fromLocal8Bit("暂停音乐"));
-		s_bPlay = true;
+		m_bPlayingMusic = true;
 		GM_ENGINE.Play();
 	}
 }

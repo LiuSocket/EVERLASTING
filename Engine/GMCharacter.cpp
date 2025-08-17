@@ -89,7 +89,7 @@ bool CGMCharacter::Update(double dDeltaTime)
 	// 程序开始的时候，角色必须忽视目标一段时间
 	m_fSyncTime += dDeltaTime;
 	// 刚鄙视完，气还没消，直接无视目标
-	m_bLookAtTarget = (m_fSyncTime > 5) && (!m_bDisdain || (m_fAngry < 0.5));
+	m_bLookAtTarget = (m_fSyncTime > 5) && (!m_bDisdain || (m_fAngry < 0.5)) && (m_fInterest > 0.2);
 
 	static double s_fConstantStep = 0.05;
 	static double s_fDeltaStep = 0.0;
@@ -264,6 +264,9 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	osg::Vec3d vDeltaVelocity = vTargetVelocity - m_vTargetLastVelocity;
 	m_fDeltaVelocity = vDeltaVelocity.length();
 
+	// 更新兴趣值
+	m_fInterest = min(1.0f, m_fInterest + 0.001f * float(m_fDeltaVelocity));
+
 	if (m_bMusicOn)
 	{
 		m_fHappy = min(1.0f, m_fHappy + 0.01f*dDeltaTime);
@@ -287,8 +290,14 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	//{
 	//	std::cout << "Interest: " << m_fInterest << "   Angry:" << m_fAngry <<"   Scared: " << m_fScared << std::endl;
 	//}
-
-	//std::cout << "DeltaVelocity: " << m_fDeltaVelocity << std::endl;
+	//if (m_fInterest > 0)
+	//{
+	//	std::cout << "Interest: " << m_fInterest << std::endl;
+	//}
+	//if (m_fDeltaVelocity > 0)
+	//{
+	//	std::cout << "DeltaVelocity: " << m_fDeltaVelocity << std::endl;
+	//}
 
 	m_vTargetLastVelocity = vTargetVelocity;
 	m_vTargetLastWorldPos = m_vTargetWorldPos;
@@ -568,19 +577,11 @@ void CGMCharacter::_ChangeLookAround(const double dDeltaTime)
 		else if (fPitch > 30) fPitch -= 30;
 		else {}
 
-		// 如果好奇心过高，眼睛就会快速到处搜索，左右看
-		if (m_fInterest > 0.7)
-		{
-			fHeading = abs(fHeading) * ((m_fTargetHeading > 0) ? -1 : 1);
-		}
-		else
-		{
-			// 需要让眼睛大部分时间都朝前看，所以给俯仰角和偏转角乘了个系数
-			float fCenterCloser = m_iPseudoNoise(m_iRandom) * 0.01; // [0,1]
-			fHeading *= fCenterCloser;
-			fPitch *= fCenterCloser;
-		}
-
+		// 需要让眼睛大部分时间都朝前看，所以给俯仰角和偏转角乘了个系数
+		float fCenterCloser = m_iPseudoNoise(m_iRandom) * 0.01; // [0,1]
+		fHeading *= fCenterCloser;
+		fPitch *= fCenterCloser;
+		
 		// 计算当前朝向与下一个朝向的差值，以便于设置转向时间
 		fDeltaHeading = fHeading - m_fTargetHeading;
 		fDeltaPitch = fPitch - m_fTargetPitch;
@@ -600,8 +601,8 @@ void CGMCharacter::_ChangeLookAround(const double dDeltaTime)
 		s_fLookAroundTime = 0.0;
 		//重置混合时间，开始混合动画
 		m_fTurnMixTime = 0.0f;
-		m_fLookDuration = max(0, m_iPseudoNoise(m_iRandom) * 0.001 / max(0.05, m_fInterest)) + 0.5;
-		m_fTurnDuration = ((m_iPseudoNoise(m_iRandom) * 0.00001 + 0.001) * fDeltaAngle + 0.03) / max(0.1, m_fInterest);
+		m_fLookDuration = max(0, m_iPseudoNoise(m_iRandom) * 0.001 / max(0.05, 0.2*m_fInterest)) + 0.5;
+		m_fTurnDuration = ((m_iPseudoNoise(m_iRandom) * 0.00001 + 0.001) * fDeltaAngle + 0.03) / max(0.1, 0.15*m_fInterest);
 	}
 	s_fLookAroundTime += dDeltaTime;
 }

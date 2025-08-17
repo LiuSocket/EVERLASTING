@@ -27,7 +27,7 @@ using namespace GM;
 Macro Defines
 *************************************************************************/
 
-#define FRAME_UPDATE	30 	// 多少帧更新一次信息
+#define FRAME_UPDATE	15 	// 多少帧更新一次信息
 
 /*************************************************************************
 CGMSystemManager Methods
@@ -65,7 +65,7 @@ bool CGMSystemManager::Init()
 	GM_UI_MANAGER.Init();
 
 	// 启动定时器
-	startTimer(16);
+	startTimer(30);
 
 	m_bInit = true;
 	return true;

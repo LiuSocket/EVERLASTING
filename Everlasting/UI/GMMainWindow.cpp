@@ -55,7 +55,7 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 		QMenu* trayMenu = new QMenu(this);
 		//trayMenu->addAction(QString::fromLocal8Bit("播放器"), m_pPlayKitWidget, SLOT(show()));
 		m_pWallpaperPlayAct = trayMenu->addAction(QString::fromLocal8Bit("播放音乐"), this, SLOT(_slotWallpaperPlayOrPause()));
-		trayMenu->addAction(QString::fromLocal8Bit("退出"), qApp, SLOT(quit()));
+		trayMenu->addAction(QString::fromLocal8Bit("退出"), this, SLOT(_slotClose()));
 		trayIcon->setContextMenu(trayMenu);
 		trayIcon->show();
 
@@ -147,6 +147,7 @@ void CGMMainWindow::Update()
 		// 更新mini播放控件
 		//m_pPlayKitWidget->Update();
 
+		// 更新音频相关信息，后续会放到间隔更新函数中
 		const std::wstring wstrAudioName = GM_ENGINE.GetAudioName();
 		QString strFileName = QString::fromStdWString(wstrAudioName);
 		if ("" == strFileName || GM_ENGINE.IsAudioOver())
@@ -380,6 +381,11 @@ void CGMMainWindow::_slotMaximum()
 void CGMMainWindow::_slotClose()
 {
 	GM_ENGINE.Save();
+	if (GM_ENGINE.IsWallpaper())
+	{
+		// 触发系统重新应用当前壁纸
+		SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
+	}
 	exit(0);
 }
 

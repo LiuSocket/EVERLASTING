@@ -89,7 +89,7 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	GM_Root->addChild(m_pRootNode.get());
 
 	//…Ë÷√“ı”∞
-	GM_LIGHT.SetShadowEnable(m_pRootNode);
+	GM_LIGHT.SetCastShadowEnable(m_pRootNode, true);
 	unsigned int iValue = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
 	osg::ref_ptr<osg::StateSet> pStateset = m_pRootNode->getOrCreateStateSet();
 	pStateset->setTextureAttributeAndModes(SHADOW_TEX_UNIT, GM_LIGHT.GetShadowMap(), iValue);

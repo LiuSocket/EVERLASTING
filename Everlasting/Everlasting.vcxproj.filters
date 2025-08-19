@@ -125,6 +125,9 @@
     <ClCompile Include="UI\GMPlayKitWidget.cpp">
       <Filter>Everlasting\UI</Filter>
     </ClCompile>
+    <ClCompile Include="..\Engine\GMTerrain.cpp">
+      <Filter>GMEngine\Core\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Engine\Assist\tinystr.h">
@@ -203,6 +206,9 @@
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Engine\GMViewWidget.h">
+      <Filter>GMEngine\Core\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Engine\GMTerrain.h">
       <Filter>GMEngine\Core\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

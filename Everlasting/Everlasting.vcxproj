@@ -152,6 +152,7 @@
     <ClCompile Include="..\Engine\GMPost.cpp" />
     <ClCompile Include="..\Engine\GMStructs.cpp" />
     <ClCompile Include="..\Engine\GMTangentSpaceGenerator.cpp" />
+    <ClCompile Include="..\Engine\GMTerrain.cpp" />
     <ClCompile Include="..\Engine\GMViewWidget.cpp" />
     <ClCompile Include="..\Engine\GMXml.cpp" />
     <ClCompile Include="..\Engine\osgQt\GraphicsWindowQt.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="..\Engine\GMPrerequisites.h" />
     <ClInclude Include="..\Engine\GMStructs.h" />
     <ClInclude Include="..\Engine\GMTangentSpaceGenerator.h" />
+    <ClInclude Include="..\Engine\GMTerrain.h" />
     <ClInclude Include="..\Engine\GMXml.h" />
     <ClInclude Include="..\Engine\osgQt\GraphicsWindowQt.h" />
     <ClInclude Include="resource.h" />

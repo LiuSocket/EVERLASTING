@@ -265,7 +265,7 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	m_fDeltaVelocity = vDeltaVelocity.length();
 
 	// 更新兴趣值
-	m_fInterest = min(1.0f, m_fInterest + 0.001f * float(m_fDeltaVelocity));
+	m_fInterest = min(1.0f, m_fInterest + 0.002f * float(m_fDeltaVelocity));
 
 	if (m_bMusicOn)
 	{
@@ -343,8 +343,8 @@ void CGMCharacter::_ChangeIdle(const double dDeltaTime)
 		m_fIdleTime = 0.0;
 		// 开始在“Idle动画”中混入“转身动画”，也就是让转身动画时间不为0
 		m_fIdleAddTime += 1e-5;
-		m_fIdleDuration = (m_iPseudoNoise(m_iRandom) % 3 + 1) * 5.0;
-		m_fIdleAddDuration = m_iPseudoNoise(m_iRandom) * 0.1 + 4.0;
+		m_fIdleDuration = (m_iPseudoNoise(m_iRandom) % 4 + 1) * 4.0;
+		m_fIdleAddDuration = m_iPseudoNoise(m_iRandom) * 0.07 + 3.0;
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fIdleAddDuration, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
 		GM_ANIMATION.SetAnimationWeight(m_strName, 0.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));

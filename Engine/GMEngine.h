@@ -49,6 +49,7 @@ namespace GM
 	*************************************************************************/
 
 	class CGMPost;
+	class CGMTerrain;
 	class CGMModel;
 	class CGMCharacter;
 	class CGMBaseManipulator;
@@ -208,6 +209,7 @@ namespace GM
 		bool								m_bAudioOver = false;			//!< 音频是否结束
 		double								m_dTimeLastFrame = 0.0;			//!< 上一帧时间
 
+		CGMTerrain*							m_pTerrain = nullptr;			//!< 地形模块
 		CGMModel*							m_pModel = nullptr;				//!< 模型模块
 		CGMCharacter*						m_pCharacter = nullptr;			//!< 角色模块
 		CGMAudio*							m_pAudio = nullptr;				//!< 音频模块

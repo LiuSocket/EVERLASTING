@@ -16,6 +16,7 @@
 #include "GMBaseManipulator.h"
 #include "GMXml.h"
 #include "GMPost.h"
+#include "GMTerrain.h"
 #include "GMModel.h"
 #include "GMCharacter.h"
 #include "GMLight.h"
@@ -119,12 +120,14 @@ bool CGMEngine::Init()
 	_InitForeground();
 
 	m_pManipulator = new CGMBaseManipulator();
+	m_pTerrain = new CGMTerrain();
 	m_pModel = new CGMModel();
 	m_pCharacter = new CGMCharacter();
 	m_pAudio = new CGMAudio();
 	m_pPost = new CGMPost();
 
 	GM_UNIFORM.Init(m_pKernelData, m_pConfigData);
+	m_pTerrain->Init(m_pKernelData, m_pConfigData);
 	m_pModel->Init(m_pKernelData, m_pConfigData);
 	m_pCharacter->Init(m_pKernelData, m_pConfigData);
 	m_pAudio->Init(m_pConfigData);
@@ -192,6 +195,7 @@ void CGMEngine::Release()
 
 	GM_DELETE(m_pAudio);
 	GM_DELETE(m_pCharacter);
+	GM_DELETE(m_pTerrain);
 	GM_DELETE(m_pModel);
 	GM_DELETE(m_pPost);
 
@@ -232,6 +236,7 @@ bool CGMEngine::Update()
 
 			GM_UNIFORM.Update(dDeltaTime);
 			m_pPost->Update(dDeltaTime);
+			m_pTerrain->Update(dDeltaTime);
 			m_pModel->Update(dDeltaTime);
 			m_pCharacter->Update(dDeltaTime);
 
@@ -254,6 +259,7 @@ bool CGMEngine::Load()
 	GM_LIGHT.Clear();
 
 	m_pPost->Load();
+	m_pTerrain->Load();
 	m_pModel->Load();
 
 	return true;
@@ -291,6 +297,8 @@ void CGMEngine::ResizeScreen(const int iW, const int iH)
 		m_pKernelData->pForegroundCam->resize(iW, iH);
 	if (m_pPost)
 		m_pPost->ResizeScreen(iW, iH);
+
+	m_pTerrain->ResizeScreen(iW, iH);
 	m_pModel->ResizeScreen(iW, iH);
 }
 
@@ -305,8 +313,8 @@ void CGMEngine::SetLookTargetPos(const SGMVector2f& vTargetScreenPos)
 	osg::Vec3d vFrontDir = vCenter - vEye;
 	vFrontDir.normalize();
 
-	// 假设目标在相机前方80cm处
-	const double fLen = 80;
+	// 假设目标在相机前方60cm处
+	const double fLen = 60;
 	double fHalfH = fLen * tan(osg::DegreesToRadians(fovy * 0.5));
 	osg::Vec3d vTargetWorldPos = vEye + vFrontDir * fLen;
 	vTargetWorldPos.x() += (vTargetScreePos.x() / m_pConfigData->iScreenWidth - 0.5) * 2 * fHalfH * aspectRatio;
@@ -601,6 +609,7 @@ bool CGMEngine::_UpdateLater(const double dDeltaTime)
 	GM_UNIFORM.UpdatePost(dDeltaTime);
 
 	m_pPost->UpdatePost(dDeltaTime);
+	m_pTerrain->UpdatePost(dDeltaTime);
 	m_pModel->UpdatePost(dDeltaTime);
 	m_pCharacter->UpdatePost(dDeltaTime);
 

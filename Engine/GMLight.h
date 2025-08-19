@@ -178,14 +178,18 @@ namespace GM
 
 		/**
 		* @brief 设置多光源光照
-		* @param pNode:	需要添加多光源的节点
+		* @param pNode:		需要添加多光源的节点
 		* @param bEnable:	是否启用多光源
 		* @return bool: 成功返回true，失败返回false
 		*/
 		bool SetLightEnable(osg::Node* pNode, bool bEnable);
 
-		/** @brief 增加需要阴影的节点 */
-		void SetShadowEnable(osg::Node* pNode);
+		/**
+		* @brief 设置节点是否投射阴影
+		* @param pNode:		投射阴影的节点
+		* @param bEnable:	是否投射阴影
+		*/
+		void SetCastShadowEnable(osg::Node* pNode,bool bEnable);
 		/** @brief 获取阴影贴图 */
 		inline osg::Texture2D* GetShadowMap() const
 		{

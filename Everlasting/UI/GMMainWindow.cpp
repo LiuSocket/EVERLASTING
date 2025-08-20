@@ -7,6 +7,8 @@
 #include <QScreen>
 #include <QMenu>
 
+#include <atlbase.h> // Add this include to define CComPtr
+#include <ShObjIdl.h>
 #include <dwmapi.h>
 #include <psapi.h>
 #include <functional>
@@ -383,8 +385,30 @@ void CGMMainWindow::_slotClose()
 	GM_ENGINE.Save();
 	if (GM_ENGINE.IsWallpaper())
 	{
-		// 触发系统重新应用当前壁纸
-		SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
+		CComPtr<IDesktopWallpaper> pDesktopWallpaper;
+		HRESULT hr = CoCreateInstance(CLSID_DesktopWallpaper, NULL, CLSCTX_ALL, IID_PPV_ARGS(&pDesktopWallpaper));
+		if (SUCCEEDED(hr))
+		{
+			// 获取主显示器ID
+			LPWSTR monitorId = nullptr;
+			hr = pDesktopWallpaper->GetMonitorDevicePathAt(0, &monitorId);
+			if (SUCCEEDED(hr) && monitorId)
+			{
+				// 获取当前主显示器的壁纸路径
+				LPWSTR wallpaperPath = nullptr;
+				hr = pDesktopWallpaper->GetWallpaper(monitorId, &wallpaperPath);
+				if (SUCCEEDED(hr) && wallpaperPath)
+				{
+					// 重新设置壁纸为当前壁纸
+					pDesktopWallpaper->SetWallpaper(NULL, wallpaperPath);
+					CoTaskMemFree(wallpaperPath);
+				}
+				CoTaskMemFree(monitorId);
+			}
+		}
+
+		// 触发系统重新应用当前壁纸，但只能在单个显示器上有效
+		//SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
 	}
 	exit(0);
 }

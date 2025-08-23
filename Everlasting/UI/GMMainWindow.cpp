@@ -114,7 +114,11 @@ bool CGMMainWindow::Init()
 	if (GM_ENGINE.IsWallpaper())// …Ë÷√≥…◊¿√Ê±⁄÷Ω
 	{
 		QList<QScreen*> mScreen = qApp->screens();
-		m_pSceneWidget->setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
+		m_pSceneWidget->setGeometry(
+			mScreen[0]->geometry().topLeft().x(),
+			mScreen[0]->geometry().topLeft().y(),
+			mScreen[0]->geometry().width(),
+			mScreen[0]->geometry().height());
 
 		SetFullScreen(true);
 		_SetWallPaper((HWND)winId());
@@ -173,7 +177,11 @@ void CGMMainWindow::SetFullScreen(const bool bFull)
 			if (!(GM_ENGINE.IsWallpaper() && m_b24H2OrGreater))
 			{
 				QList<QScreen*> mScreen = qApp->screens();
-				setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
+				setGeometry(
+					mScreen[0]->geometry().topLeft().x(),
+					mScreen[0]->geometry().topLeft().y(),
+					mScreen[0]->geometry().width(),
+					mScreen[0]->geometry().height());
 			}
 			show();
 
@@ -816,12 +824,13 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	RECT rchTestOld{};
 	GetWindowRect(hEmbedWnd, &rchTestOld);
 
-	int rcx = GetSystemMetrics(SM_CXSCREEN);
-	int rcy = GetSystemMetrics(SM_CYSCREEN);
+	QList<QScreen*> mScreen = qApp->screens();
+	int iLeft = mScreen[0]->geometry().topLeft().x();
+	int iTop = mScreen[0]->geometry().topLeft().y();
+	int iWidth	= mScreen[0]->geometry().width();
+	int iHeight	= mScreen[0]->geometry().height();
+	RECT rcFullScreen{ (LONG)iLeft, (LONG)iTop, (LONG)iWidth, (LONG)iHeight };
 
-	if (rcx <= 0 || rcy <= 0) return;
-
-	RECT rcFullScreen{ 0, 0, (LONG)rcx, (LONG)rcy };
 	AdjustWindowRect(&rcFullScreen, style_tw, FALSE);
 
 	UINT rcfx = rcFullScreen.right - rcFullScreen.left;
@@ -844,7 +853,11 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	if (m_b24H2OrGreater)
 	{
 		QList<QScreen*> mScreen = qApp->screens();
-		m_pSceneWidget->setGeometry(0, 0, mScreen[0]->geometry().width(), mScreen[0]->geometry().height());
+		m_pSceneWidget->setGeometry(
+			mScreen[0]->geometry().topLeft().x(),
+			mScreen[0]->geometry().topLeft().y(),
+			mScreen[0]->geometry().width(),
+			mScreen[0]->geometry().height());
 	}
 }
 

@@ -88,6 +88,13 @@ private slots:
 	*/
 	void _slotWallpaperPlayOrPause();
 
+private:
+	/** @brief 检测是否有其他程序全屏 */
+	bool _IsOtherAppFullscreen();
+
+	/** @brief 检测是否全屏 */
+	bool _IsFullscreen(HWND hWindow) const;
+
 	/**
 	* @brief 系统托盘图标被激活
 	*/
@@ -128,8 +135,9 @@ private:
 	CGMVolumeWidget*					m_pVolumeWidget = nullptr;
 	CGMViewWidget*						m_pSceneWidget = nullptr;
 	//CGMPlayKitWidget*					m_pPlayKitWidget = nullptr;		//!< 播放器工具控件
+	QSystemTrayIcon*					m_pTrayIcon = nullptr;			//!< 系统托盘图标
 	QAction*							m_pWallpaperPlayAct = nullptr;	//!< 桌面壁纸版本的 播放/关闭音乐
-
+	std::vector<HWND>					m_vFullWnds;					//!< 用于存储所有可以全屏的窗口句柄
 	HWND								m_hShellDefView = nullptr;
 	bool								m_b24H2OrGreater = false;
 	bool								m_bInit = false;

@@ -50,16 +50,16 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 		//m_pPlayKitWidget->hide();
 
 		// 系统托盘图标
-		QSystemTrayIcon* trayIcon = new QSystemTrayIcon(this);
-		trayIcon->setIcon(QIcon(":/Resources/GM_logo.ico"));
-		trayIcon->setToolTip("EVERLASTING");
+		m_pTrayIcon = new QSystemTrayIcon(this);
+		m_pTrayIcon->setIcon(QIcon(":/Resources/GM_logo.ico"));
+		m_pTrayIcon->setToolTip("EVERLASTING");
 		// 添加右键菜单
 		QMenu* trayMenu = new QMenu(this);
 		//trayMenu->addAction(QString::fromLocal8Bit("播放器"), m_pPlayKitWidget, SLOT(show()));
 		m_pWallpaperPlayAct = trayMenu->addAction(QString::fromLocal8Bit("播放音乐"), this, SLOT(_slotWallpaperPlayOrPause()));
 		trayMenu->addAction(QString::fromLocal8Bit("退出"), this, SLOT(_slotClose()));
-		trayIcon->setContextMenu(trayMenu);
-		trayIcon->show();
+		m_pTrayIcon->setContextMenu(trayMenu);
+		m_pTrayIcon->show();
 
 		//connect(trayIcon, &QSystemTrayIcon::activated, this, &CGMMainWindow::_OnTrayIconActivated);
 	}
@@ -278,6 +278,15 @@ void CGMMainWindow::UpdateAudioInfo()
 
 void CGMMainWindow::UpdateWallpaper()
 {
+	if (_IsOtherAppFullscreen())
+	{
+		GM_ENGINE.SetRendering(false);
+	}
+	else
+	{
+		GM_ENGINE.SetRendering(true);
+	}
+
 	if (m_b24H2OrGreater)
 	{
 		// 24H2 上,我们需要检查窗口次序,确保在桌面切换时候我们的窗口也显示在图标的正下方,
@@ -415,8 +424,8 @@ void CGMMainWindow::_slotClose()
 			}
 		}
 
-		// 触发系统重新应用当前壁纸，但只能在单个显示器上有效
-		//SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
+		m_pTrayIcon->hide();
+		delete m_pTrayIcon;
 	}
 	exit(0);
 }
@@ -479,6 +488,62 @@ void CGMMainWindow::_slotWallpaperPlayOrPause()
 		m_bPlayingMusic = true;
 		GM_ENGINE.Play();
 	}
+}
+
+bool CGMMainWindow::_IsOtherAppFullscreen()
+{
+	HWND fgWindow = GetForegroundWindow();
+	if (fgWindow == (HWND)winId()) return false;
+
+	bool bHasFull = false;
+	if (fgWindow != NULL)
+	{
+		bool bFull = _IsFullscreen(fgWindow);
+		if (bFull)
+		{
+			TCHAR szClassName[256]; // 缓冲区
+			int len = GetClassName(fgWindow, szClassName, _countof(szClassName));
+			// 排除WorkerW窗口
+			if (len != 0 && _tcsstr(szClassName, _T("WorkerW")) == nullptr)
+			{
+				//查找m_vFullWnds中是否已经存在该窗口
+				bool bExist = false;
+				for (auto& itr : m_vFullWnds)
+				{
+					if (itr == fgWindow)
+					{
+						bExist = true;
+						break;
+					}
+				}
+				bHasFull = true;
+				if (!bExist) m_vFullWnds.push_back(fgWindow);
+			}
+		}
+	}
+	// 遍历m_vFullWnds，检查是否还有全屏窗口
+	for (auto& itr : m_vFullWnds)
+	{
+		if (itr != fgWindow && _IsFullscreen(itr))
+		{
+			bHasFull = true;
+			break;
+		}
+	}
+	return bHasFull;
+}
+
+bool CGMMainWindow::_IsFullscreen(HWND hWindow) const
+{
+	if (hWindow == NULL) return false;
+
+	RECT fgRect;
+	GetWindowRect(hWindow, &fgRect);
+
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	return (fgRect.right - fgRect.left >= screenWidth && fgRect.bottom - fgRect.top >= screenHeight);
 }
 
 //void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason)

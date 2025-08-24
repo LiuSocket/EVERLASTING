@@ -59,7 +59,6 @@ bool CGMTerrain::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 
 	// 强制设置半透明混合模式
 	pStateset->setMode(GL_BLEND, osg::StateAttribute::OFF);
-	pStateset->setMode(GL_ALPHA_TEST, osg::StateAttribute::OFF);
 	pStateset->setAttributeAndModes(new osg::BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA),iValue);
 
 	osg::ref_ptr<osg::Geode> pGeode = new osg::Geode();

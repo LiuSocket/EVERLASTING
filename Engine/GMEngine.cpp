@@ -219,7 +219,7 @@ bool CGMEngine::Update()
 		double dDeltaTime = timeCurrFrame - m_dTimeLastFrame; //单位:秒
 		m_dTimeLastFrame = timeCurrFrame;
 
-		static double s_fConstantStep = 0.05;		//!< 等间隔更新的时间,单位s
+		static double s_fConstantStep = 0.1;		//!< 等间隔更新的时间,单位s
 		static double s_fDeltaStep = 0.0;			//!< 单位s
 		if (s_fDeltaStep > s_fConstantStep)
 		{
@@ -588,7 +588,6 @@ void CGMEngine::_InnerUpdate(const float updateStep)
 		}
 		m_bAudioOver = true;
 	}
-
 }
 
 bool CGMEngine::_UpdateLater(const double dDeltaTime)

@@ -504,7 +504,12 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 			TCHAR szClassName[256]; // 缓冲区
 			int len = GetClassName(fgWindow, szClassName, _countof(szClassName));
 			// 排除WorkerW窗口
-			if (len != 0 && _tcsstr(szClassName, _T("WorkerW")) == nullptr)
+			bool bNotWorkerW = (len > 0 && _tcsstr(szClassName, _T("WorkerW")) == nullptr);
+			// 排除progman窗口
+			bool bNotProgman = (len > 0 && _tcsstr(szClassName, _T("Progman")) == nullptr);
+			// 排除XamlExplorerHostIslandWindow
+			bool bNotXamlExplorer = (len > 0 && _tcsstr(szClassName, _T("XamlExplorerHostIslandWindow")) == nullptr);
+			if (bNotWorkerW && bNotProgman)
 			{
 				//查找m_vFullWnds中是否已经存在该窗口
 				bool bExist = false;
@@ -540,8 +545,10 @@ bool CGMMainWindow::_IsFullscreen(HWND hWindow) const
 	RECT fgRect;
 	GetWindowRect(hWindow, &fgRect);
 
-	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	RECT workArea;
+	SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+	int screenWidth = workArea.right - workArea.left;
+	int screenHeight = workArea.bottom - workArea.top;
 
 	return (fgRect.right - fgRect.left >= screenWidth && fgRect.bottom - fgRect.top >= screenHeight);
 }
@@ -890,10 +897,12 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	GetWindowRect(hEmbedWnd, &rchTestOld);
 
 	QList<QScreen*> mScreen = qApp->screens();
-	int iLeft = mScreen[0]->geometry().topLeft().x();
-	int iTop = mScreen[0]->geometry().topLeft().y();
-	int iWidth	= mScreen[0]->geometry().width();
-	int iHeight	= mScreen[0]->geometry().height();
+	// DPI 计算
+	qreal dpr = mScreen[0]->devicePixelRatio();;
+	int iLeft = mScreen[0]->geometry().topLeft().x() * dpr;
+	int iTop = mScreen[0]->geometry().topLeft().y() * dpr;
+	int iWidth	= mScreen[0]->geometry().width() * dpr;
+	int iHeight	= mScreen[0]->geometry().height() * dpr;
 	RECT rcFullScreen{ (LONG)iLeft, (LONG)iTop, (LONG)iWidth, (LONG)iHeight };
 
 	AdjustWindowRect(&rcFullScreen, style_tw, FALSE);

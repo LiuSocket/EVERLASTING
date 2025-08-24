@@ -506,7 +506,7 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 		// 如果变化不剧烈，则不会增加愤怒，超过一定的速度后才会增加
 		float fAddAngry = fmax(0.0f, m_fDeltaVelocity - 20.0f);
 		// 如果短时间内加速度模的累计值过大，说明目标在剧烈运动，可以认为在耍自己，愤怒值飙升
-		m_fAngry = fmin(m_fAngry + fAddAngry * fAddAngry * 1e-6f, 1.0f);
+		m_fAngry = fmin(m_fAngry + fAddAngry * fAddAngry * 2e-7f, 1.0f);
 
 		// 对短时加速度过大的物体会有危机感，增加害怕值
 		m_fScared = fmin(m_fScared + fmax(0.0f, m_fDeltaVelocity - 10.0f) * 5e-4f, 1.0f);
@@ -515,7 +515,7 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 	osg::Vec3d vDir = osg::Vec3d(0, -1, 0);
 	// 愤怒值超过一个阈值后，角色会放弃注视目标并看向前方一段时间，这时会减少愤怒值
 	// 愤怒值小于一个阈值后才会继续随意看四周，此时愤怒值会继续减小一直到0，然后才能继续注视
-	if (m_fAngry > 0.9)
+	if (m_fAngry > 0.99)
 	{
 		if (!m_bDisdain)
 		{

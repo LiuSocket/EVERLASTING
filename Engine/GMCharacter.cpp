@@ -515,7 +515,7 @@ void CGMCharacter::_ChangeLookAtTarget(const double dDeltaTime)
 	osg::Vec3d vDir = osg::Vec3d(0, -1, 0);
 	// 愤怒值超过一个阈值后，角色会放弃注视目标并看向前方一段时间，这时会减少愤怒值
 	// 愤怒值小于一个阈值后才会继续随意看四周，此时愤怒值会继续减小一直到0，然后才能继续注视
-	if (m_fAngry > 0.99)
+	if (m_fAngry > 0.9)
 	{
 		if (!m_bDisdain)
 		{

@@ -493,7 +493,7 @@ void CGMMainWindow::_slotWallpaperPlayOrPause()
 bool CGMMainWindow::_IsOtherAppFullscreen()
 {
 	HWND fgWindow = GetForegroundWindow();
-	if (fgWindow == (HWND)winId()) return false;
+	if (fgWindow == (HWND)winId())return false;
 
 	bool bHasFull = false;
 	if (fgWindow != NULL)
@@ -526,6 +526,20 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 			}
 		}
 	}
+	// 遍历m_vFullWnds，删除已经关闭的窗口
+	auto itr = m_vFullWnds.begin();
+	while (itr != m_vFullWnds.end())
+	{
+		if (!IsWindow(*itr))
+		{
+			itr = m_vFullWnds.erase(itr);
+		}
+		else
+		{
+			++itr;
+		}
+	}
+	
 	// 遍历m_vFullWnds，检查是否还有全屏窗口
 	for (auto& itr : m_vFullWnds)
 	{

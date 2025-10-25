@@ -61,14 +61,14 @@
     <IntDir>$(SolutionDir)Out\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)_d</TargetName>
     <IncludePath>$(SolutionDir)3RD\include;$(SolutionDir)OSG\include;$(SolutionDir)EXT;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)3RD\lib;$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)3RD\lib;$(SolutionDir)Lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutDir>$(SolutionDir)Bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)Out\$(ProjectName)\$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)3RD\include;$(SolutionDir)OSG\include;$(SolutionDir)EXT;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)3RD\lib;$(SolutionDir)Lib\$(Configuration)\OSG\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)3RD\lib;$(SolutionDir)Lib\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <QtMoc>

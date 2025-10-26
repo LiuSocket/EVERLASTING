@@ -243,6 +243,13 @@ bool CGMMaterial::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 	m_pSandTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
 	m_pSandTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
 	m_pSandTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
+	// 皮肤细节法线贴图
+	m_pSkinDetailNormTex = new osg::Texture2D;
+	m_pSkinDetailNormTex->setImage(osgDB::readImageFile(strTexPath + "skin_detail_n.dds", m_pDDSOptions));
+	m_pSkinDetailNormTex->setFilter(osg::Texture2D::MIN_FILTER, osg::Texture2D::LINEAR_MIPMAP_LINEAR);
+	m_pSkinDetailNormTex->setFilter(osg::Texture2D::MAG_FILTER, osg::Texture2D::LINEAR);
+	m_pSkinDetailNormTex->setWrap(osg::Texture2D::WRAP_S, osg::Texture2D::REPEAT);
+	m_pSkinDetailNormTex->setWrap(osg::Texture2D::WRAP_T, osg::Texture2D::REPEAT);
 	// 环境探针贴图
 	m_pEnvProbeTex = new osg::Texture2D;
 	m_pEnvProbeTex->setImage(osgDB::readImageFile(strTexPath + "env_probe.dds"));
@@ -345,6 +352,9 @@ void CGMMaterial::SetSSSMaterial(osg::Node* pNode)
 	// 法线贴图（RGB通道存放法线，A通道待定）
 	osg::ref_ptr<osg::Uniform> pTexNormalUniform = new osg::Uniform("texNormal", iChannel++);
 	pStateSet->addUniform(pTexNormalUniform.get());
+	_PlusUnitUsed(iChannel);
+	// 细节法线贴图（RGB通道存放法线，A通道待定）
+	CGMKit::AddTexture(pStateSet.get(), m_pSkinDetailNormTex.get(), "texDetailNormal", iChannel++);
 	_PlusUnitUsed(iChannel);
 	// 环境探针贴图
 	CGMKit::AddTexture(pStateSet.get(), m_pEnvProbeTex.get(), "texEnvProbe", iChannel++);

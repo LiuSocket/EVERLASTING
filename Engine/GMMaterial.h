@@ -122,6 +122,7 @@ namespace GM
 		osg::ref_ptr<osg::Texture2D>			m_pNoiseTex;					//!< ÔëÉùÌùÍ¼
 		osg::ref_ptr<osg::Texture2D>			m_pSnowTex;						//!< »ýÑ©ÌùÍ¼
 		osg::ref_ptr<osg::Texture2D>			m_pSandTex;						//!< É³µØÌùÍ¼
+		osg::ref_ptr<osg::Texture2D>			m_pSkinDetailNormTex;			//!< Æ¤·ôÏ¸½Ú·¨ÏßÌùÍ¼
 		osg::ref_ptr<osg::Texture2D>			m_pEnvProbeTex;					//!< »·¾³Ì½ÕëÌùÍ¼
 
 		std::vector<osg::ref_ptr<osg::TextureCubeMap>> m_pCubeMapVector;		//!< cubemapÊý×é£¬6¸ö·½Ïò6²ãlevel

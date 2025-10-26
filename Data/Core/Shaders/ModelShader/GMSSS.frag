@@ -17,6 +17,7 @@ uniform sampler2D		texBaseColor;
 uniform sampler2D		texMRAT;
 uniform sampler2D		texSSSC;
 uniform sampler2D		texNormal;
+uniform sampler2D		texDetailNormal;
 uniform sampler2D		texEnvProbe;
 uniform sampler2D		texSSSBlur;
 
@@ -77,15 +78,22 @@ void main()
 	vec4 texel_MRAT = texture(texMRAT, gl_TexCoord[0].st); // R = Metallic, G = Roughness, B = AO, A = Thickness
 	vec4 texel_SSSC = texture(texSSSC, gl_TexCoord[0].st); // RGB = SSS color, A = Curvature
 	vec4 texel_n = texture(texNormal, gl_TexCoord[0].st);
+	vec3 texel_detail_n = texture(texDetailNormal, gl_TexCoord[0].st*3).rgb;
 
-	vec3 normalTangent = normalize(texel_n.xyz-vec3(0.5));
-	vec3 viewTexNorm = normalize(tang2View*normalTangent);
+	vec3 tangentNormal = normalize(texel_n.xyz-vec3(0.5));
+	vec3 tangentTangent = normalize(cross(vec3(0,1,0), tangentNormal));
+	vec3 tangentBinorm = normalize(cross(tangentNormal, tangentTangent));
+	mat3 tang2NormTangent = mat3(tangentTangent, tangentBinorm, tangentNormal);
+	// detail normal
+	vec3 normalDetailTangent = normalize(texel_detail_n-vec3(0.5));
+	// normal + detail normal
+	vec3 normalFinal = normalize(tang2NormTangent*normalDetailTangent);
+	// final normal in view space
+	vec3 viewTexNorm = normalize(tang2View*normalFinal);
 
 	vec3 viewHalf = normalize(viewLight-viewVertDir);
 	const float minFact = 1e-8;
-	float dotNL = dot(viewTexNorm, viewLight);
-
-	vec2 coordCenter = gl_FragCoord.st;//-vec2(0.5);
+	const float dotNL = dot(viewTexNorm, viewLight);
 
 	vec4 blur00 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(-2,-2))/screenSize.xy, 0);
 	vec4 blur01 = textureGather(texSSSBlur, (gl_FragCoord.st + vec2(-2,0))/screenSize.xy, 0);
@@ -112,12 +120,11 @@ void main()
 	blur22 = mix(blur22, blurCenter, step(cullValue, blur22-blurCenter));
 
 	vec4 sum4 = blur00 + blur01 + blur02 + blur10 + blur11 + blur12 + blur20 + blur21 + blur22;
-	float dotNLBlur = (sum4.x+sum4.y+sum4.z+sum4.w) / 18.0 - 1.0;
-	dotNL = dotNLBlur;
-	float dotNL_1 = max(dotNL,minFact);
-	float dotNH = max(dot(viewTexNorm, viewHalf),minFact);
-	float dotVN = max(dot(-viewVertDir, viewTexNorm),minFact);
-	float dotVH = max(dot(-viewVertDir, viewHalf),minFact);
+	const float dotNLBlur = (sum4.x+sum4.y+sum4.z+sum4.w) / 18.0 - 1.0;
+	const float dotNL_1 = max(dotNL,minFact);
+	const float dotNH = max(dot(viewTexNorm, viewHalf), minFact);
+	const float dotVN = max(dot(-viewVertDir, viewTexNorm), minFact);
+	const float dotVH = max(dot(-viewVertDir, viewHalf), minFact);
 
 	float metallic = texel_MRAT.r;
 	float roughness = texel_MRAT.g;
@@ -127,7 +134,7 @@ void main()
 	float curvature = texel_SSSC.a;
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
-	vec3 sss = SSS(sssDeep, dotNL, curvature, thickness);
+	vec3 sss = SSS(sssDeep, dotNLBlur, curvature, thickness);
 
 	/* shadow */
 	float shadow = 1.0;
@@ -149,7 +156,7 @@ void main()
 
 	/* Microfacet Specular BRDF */
 	vec4 specularBRDF = vec4(mainlightColor,1)*smoothstep(-0.01,0.1, dotNL)
-		*specD(roughness,dotNH)
+		*specD(roughness, dotNH)
 		*specG(roughness, dotNL_1, dotVN)
 		*specF(colorMin, dotVH)
 		/(4.0*dotNL_1*dotVN);
@@ -160,7 +167,7 @@ void main()
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-	gl_FragColor = outColor;//vec4(dotNL,0,0,1);//
+	gl_FragColor = outColor;//vec4(sssDeep,1);//
 
 #endif // SSS_BLUR
 }

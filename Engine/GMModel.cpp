@@ -162,7 +162,7 @@ bool CGMModel::Add(const SGMModelData& sData)
 	{
 		// CIP文件需要解密
 		auto cipher = HydroCipher::create(AlgorithmType::XOR);
-		std::vector<uint8_t> key(32, 0xAA);
+		std::vector<uint8_t> key(32, 0xA8);
 
 		std::string strCipherFilePath = strRealFilePath;
 		strRealFilePath = m_pConfigData->strCorePath + m_strDefModelPath + sData.strName + ".GMM";

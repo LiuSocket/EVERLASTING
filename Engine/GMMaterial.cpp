@@ -269,7 +269,16 @@ bool CGMMaterial::UpdatePost(double dDeltaTime)
 	if (m_pSSSBlurCamera.valid())
 	{
 		m_pSSSBlurCamera->setViewMatrix(GM_View->getCamera()->getViewMatrix());
-		m_pSSSBlurCamera->setProjectionMatrix(GM_View->getCamera()->getProjectionMatrix());
+
+		double left, right, bottom, top, zNear, zFar;
+		GM_View->getCamera()->getProjectionMatrixAsFrustum(left, right, bottom, top, zNear, zFar);
+		// 模糊相机半分辨率，近平面和远平面与主相机一致，但上下左右截面有半个像素的偏移
+		// 这里假设像素是正方形，所以只需要计算水平方向的偏移
+		double fOffset = (right - left) / (GM_View->getCamera()->getViewport()->width()) / 2.0;
+		m_pSSSBlurCamera->setProjectionMatrixAsFrustum(
+			left + fOffset, right + fOffset,
+			bottom + fOffset, top + fOffset,
+			zNear, zFar);
 	}
 
 	return false;
@@ -277,7 +286,7 @@ bool CGMMaterial::UpdatePost(double dDeltaTime)
 
 void CGMMaterial::ResizeScreen(const int width, const int height)
 {
-	m_pSSSBlurCamera->resize(width, height);
+	m_pSSSBlurCamera->resize(width/2, height/2);
 }
 
 void CGMMaterial::SetPBRMaterial(osg::Node* pNode)
@@ -475,18 +484,17 @@ bool CGMMaterial::_PlusUnitUsed(int& iUnit)
 void CGMMaterial::_InitSSSBlur()
 {
 	// 次表面模糊贴图大小
-	int iW = m_pConfigData->iScreenWidth;
-	int iH = m_pConfigData->iScreenHeight;
+	int iW = m_pConfigData->iScreenWidth/2;
+	int iH = m_pConfigData->iScreenHeight/2;
 	m_pSSSBlurTexture = new osg::Texture2D;
 	m_pSSSBlurTexture->setTextureSize(iW, iH);
-	m_pSSSBlurTexture->setInternalFormat(GL_R8);
-	m_pSSSBlurTexture->setSourceFormat(GL_RED);
+	m_pSSSBlurTexture->setInternalFormat(GL_RGB8);
+	m_pSSSBlurTexture->setSourceFormat(GL_RGB);
 	m_pSSSBlurTexture->setSourceType(GL_UNSIGNED_BYTE);
 	m_pSSSBlurTexture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
 	m_pSSSBlurTexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
-	m_pSSSBlurTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_BORDER);
-	m_pSSSBlurTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_BORDER);
-	m_pSSSBlurTexture->setBorderColor(osg::Vec4d(0, 0, 0, 0));
+	m_pSSSBlurTexture->setWrap(osg::Texture::WRAP_S, osg::Texture::CLAMP_TO_EDGE);
+	m_pSSSBlurTexture->setWrap(osg::Texture::WRAP_T, osg::Texture::CLAMP_TO_EDGE);
 	m_pSSSBlurTexture->setDataVariance(osg::Object::DYNAMIC);
 	m_pSSSBlurTexture->setResizeNonPowerOfTwoHint(false);
 
@@ -495,7 +503,7 @@ void CGMMaterial::_InitSSSBlur()
 	m_pSSSBlurCamera->setCullMask(GM_SSS_MASK);
 	m_pSSSBlurCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
 	m_pSSSBlurCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	m_pSSSBlurCamera->setClearColor(osg::Vec4(0.5f, 0.0f, 0.0f, 0.0f));
+	m_pSSSBlurCamera->setClearColor(osg::Vec4(0.5f, 0.5f, 0.5f, 0.0f));
 	m_pSSSBlurCamera->setViewport(0, 0, iW, iH);
 	m_pSSSBlurCamera->setRenderOrder(osg::Camera::PRE_RENDER, 0);
 	m_pSSSBlurCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);

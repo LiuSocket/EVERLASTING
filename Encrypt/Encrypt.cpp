@@ -4,7 +4,7 @@
 int main()
 {
 	auto cipher = HydroCipher::create(AlgorithmType::XOR);
-	std::vector<uint8_t> key(32, 0xA8);
+	std::vector<uint8_t> key(32, 0xD5C9);
 	std::string strSrcFilePath = "../../Data/Core/Models/MIGI.FBX";
 	std::string strDstFilePath = "../../Data/Core/Models/MIGI.CIP";
 	if (cipher->encrypt(strSrcFilePath, strDstFilePath, key))

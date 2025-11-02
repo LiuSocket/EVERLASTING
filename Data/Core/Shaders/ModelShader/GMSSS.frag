@@ -68,7 +68,8 @@ vec3 SSS(vec3 subdermalColor, vec4 subdermalBlur, float dotNL, float curvature, 
 	float dotNLN = min(0.0, dotNL);
 	vec3 dotSSS = vec3(sqrtCurv / (1.0 + 3.0*dotNLN*dotNLN));
 	vec3 sss = max(vec3(0), mix(vec3(dotNL), dotSSS, subdermalBlur.rgb*(subdermalBlur.a*(1.0-thickness)*sqrtCurv)));
-	return mix(vec3(1), subdermalBlur.rgb*sss, smoothstep(0.0, 0.01, (subdermalColor.r+subdermalColor.g+subdermalColor.b)));
+	float sssMix = smoothstep(0.0, 0.1, subdermalColor.r+subdermalColor.g+subdermalColor.b);
+	return mix(vec3(1), subdermalBlur.rgb*sss, sssMix);
 }
 
 void main()
@@ -80,7 +81,9 @@ void main()
 	mainlightColor = colorAndRange[0].rgb;
 #endif // GM_MAX_LIGHTNUM
 
-	vec4 texel_SSSC = texture(texSSSC, gl_TexCoord[0].st); // RGB = SSS color, A = Curvature
+	vec2 pixSize = 1.0/screenSize.xy;
+	// RGB = SSS color, A = Curvature
+	vec4 texel_SSSC = texture(texSSSC, gl_TexCoord[0].st);
 	vec4 baseColor = texture(texBaseColor, gl_TexCoord[0].st);
 	vec4 outColor = baseColor;
 	vec3 subdermalColor = texel_SSSC.rgb;
@@ -92,17 +95,22 @@ void main()
 	vec3 viewNorm = normalize(vertOut.viewNormal);
 	mat3 tang2View = mat3(viewTangent, viewBinorm, viewNorm);
 
+	/* shadow */
+	float shadow = 1.0;
+#ifdef SHADOW_RECEIVE
+	float fragmentNoise = mix(-NOISE_GRANULARITY, NOISE_GRANULARITY, Noise(gl_FragCoord.xy * pixSize));
+	shadow = clamp(Shadow(vertOut.shadowPos) + fragmentNoise, 0, 1);
+#endif // SHADOW_RECEIVE
+
 #ifdef SSS_BLUR
-
 	float dotNL = dot(viewNorm, viewLight);
-	gl_FragColor = vec4((dotNL*0.5+0.5)*subdermalColor,1);
-
+	gl_FragColor = vec4((dotNL*0.5+0.5)*shadow*subdermalColor*gl_FrontMaterial.diffuse.rgb,1);
 #else // not SSS_BLUR
 
 	vec4 texel_MRAT = texture(texMRAT, gl_TexCoord[0].st); // R = Metallic, G = Roughness, B = AO, A = Thickness
 	vec4 texel_n = texture(texNormal, gl_TexCoord[0].st);
 	vec3 texel_detail_n = texture(texDetailNormal, gl_TexCoord[0].st*2).rgb;
-	vec4 subdermalBlur = Blur5x5(texSSSBlur, gl_FragCoord.st - 0.5, 1.0/screenSize.xy);
+	vec4 subdermalBlur = Blur5x5(texSSSBlur, gl_FragCoord.st - 0.5, pixSize);
 
 	vec3 tangentNormal = normalize(texel_n.xyz-vec3(0.5));
 	vec3 tangentTangent = normalize(cross(vec3(0,1,0), tangentNormal));
@@ -129,25 +137,19 @@ void main()
 	float thickness = 0.5*texel_MRAT.a;
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
-	vec3 subdermal = SSS(subdermalColor, subdermalBlur, dotNL, curvature, thickness);
 
-	/* shadow */
-	float shadow = 1.0;
-#ifdef SHADOW_RECEIVE
-	float fragmentNoise = mix(-NOISE_GRANULARITY, NOISE_GRANULARITY, Noise(gl_FragCoord.xy / screenSize.xy));
-	shadow = clamp(Shadow(vertOut.shadowPos) + fragmentNoise, 0, 1);
-#endif // SHADOW_RECEIVE
-
-	/* Reflect Environment BRDF */
+	/* reflect Environment BRDF */
 	vec4 reflectEnv = ReflectEnvironment(localReflect, roughness);
 	reflectEnv.rgb *= mainlightColor*ambientOcc;
 	
 	/* ambient BRDF */
-	vec4 ambient = vec4(mix(vec3(0.2, 0.24, 0.26), vec3(0.04), max(0.5*(1.0-localReflect.z),0))*ambientOcc, 1.0);
-
-	/* Diffuse BRDF */
-	vec3 diffuseL = (vec3(1) - exp2(-shadow*20.0*max(vec3(0.1), subdermalBlur.rgb)))*subdermal*mainlightColor;
-	vec3 diffuseFact = (1-metallic)*diffuseL*gl_FrontMaterial.diffuse.rgb;
+	vec3 ambient = mix(vec3(0.1, 0.12, 0.13), vec3(0.02), max(0.5*(1.0-localReflect.z),0))*outColor.rgb*ambientOcc;
+	/* subdermal BSSDF */
+	vec3 subdermal = SSS(subdermalColor, subdermalBlur, dotNL, curvature, thickness);
+	/* epidermis BRDF */
+	vec3 epidermis = ((1-metallic)*dotNL_1*shadow)*baseColor.rgb*gl_FrontMaterial.diffuse.rgb;
+	/* diffuse BRDF */
+	vec3 diffuse = mix(subdermal, epidermis, thickness*0.5)*mainlightColor;
 
 	/* Microfacet Specular BRDF */
 	vec4 specularBRDF = vec4(mainlightColor,1)*smoothstep(-0.01,0.1, dotNL)
@@ -157,12 +159,12 @@ void main()
 		/(4.0*dotNL_1*dotVN);
 
 	vec3 fresnel = EnvDFGLazarov(colorMin.rgb, 1.0-roughness, dotVN);
-	outColor.rgb = mix(ToneMapping(diffuseFact+ambient.rgb)*outColor.rgb, reflectEnv.rgb, fresnel) + specularBRDF.rgb;
+	outColor.rgb = mix(ToneMapping(ambient+diffuse), reflectEnv.rgb, fresnel) + specularBRDF.rgb;
 
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
-	gl_FragColor = outColor;//vec4(subdermal,1);//
+	gl_FragColor = outColor;
 
 #endif // SSS_BLUR
 }

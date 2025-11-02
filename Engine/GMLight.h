@@ -117,8 +117,12 @@ namespace GM
 			const float fAngle, const float spotExponent, const float fRange, const int iID)
 		{
 			if (iID >= GM_MAX_LIGHTNUM) return;
+
+			osg::Vec3f normViewDir = viewDir;
+			normViewDir.normalize();
+
 			viewPosAndCut[iID] = osg::Vec4f(viewPos, std::cos(osg::DegreesToRadians(fAngle)));
-			viewDirAndSpotExponent[iID] = osg::Vec4f(viewDir, spotExponent);
+			viewDirAndSpotExponent[iID] = osg::Vec4f(normViewDir, spotExponent);
 			colorAndRange[iID] = osg::Vec4f(color, fRange);
 		}
 

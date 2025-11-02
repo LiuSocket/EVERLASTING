@@ -516,6 +516,10 @@ void CGMMaterial::_InitSSSBlur()
 	m_pSSSBlurCamera->setComputeNearFarMode(osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR);
 
 	osg::ref_ptr<osg::StateSet> pSSSBlurStateSet = m_pSSSBlurCamera->getOrCreateStateSet();
-	// Ìí¼Óshader
-	pSSSBlurStateSet->setDefine("SSS_BLUR", osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+	unsigned int iValue = osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE;
+	pSSSBlurStateSet->setDefine("SSS_BLUR", iValue);
+	//ÉèÖÃÒõÓ°
+	pSSSBlurStateSet->setTextureAttributeAndModes(SHADOW_TEX_UNIT, GM_LIGHT.GetShadowMap(), iValue);
+	pSSSBlurStateSet->addUniform(new osg::Uniform("texShadow", SHADOW_TEX_UNIT), iValue);
+	pSSSBlurStateSet->addUniform(GM_LIGHT.GetView2ShadowMatrixUniform());
 }

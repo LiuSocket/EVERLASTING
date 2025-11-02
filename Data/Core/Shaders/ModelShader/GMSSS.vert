@@ -11,8 +11,8 @@ void main()
 
 uniform mat4 view2ShadowMatrix;
 
-attribute vec3		tangent;
-attribute vec3		binormal;
+layout(location = 6) in vec3		tangent;
+layout(location = 7) in vec3		binormal;
 
 out vData
 {

@@ -62,14 +62,13 @@ vec4 Blur5x5(sampler2D texIn, vec2 uv, vec2 pix)
 	return (WS + WN + ES + EN + WS1 + WN1 + ES1 + EN1 + W1S + W1N + E1S + E1N) / 12.0;
 }
 
-vec3 SSS(vec3 subdermalColor, vec4 subdermalBlur, float dotNL, float curvature, float thickness)
+vec3 SSS(vec4 subdermalColor, float dotNL, float curvature)
 {
 	float sqrtCurv = sqrt(curvature);
 	float dotNLN = min(0.0, dotNL);
 	vec3 dotSSS = vec3(sqrtCurv / (1.0 + 3.0*dotNLN*dotNLN));
-	vec3 sss = max(vec3(0), mix(vec3(dotNL), dotSSS, subdermalBlur.rgb*(subdermalBlur.a*(1.0-thickness)*sqrtCurv)));
-	float sssMix = smoothstep(0.0, 0.1, subdermalColor.r+subdermalColor.g+subdermalColor.b);
-	return mix(vec3(1), subdermalBlur.rgb*sss, sssMix);
+	vec3 sss = max(vec3(0), mix(vec3(dotNL), dotSSS, subdermalColor.rgb*(subdermalColor.a*sqrtCurv)));
+	return subdermalColor.rgb*sss;
 }
 
 void main()
@@ -87,6 +86,7 @@ void main()
 	vec4 baseColor = texture(texBaseColor, gl_TexCoord[0].st);
 	vec4 outColor = baseColor;
 	vec3 subdermalColor = texel_SSSC.rgb;
+	float curvature = texel_SSSC.a;
 
 	float lengthV = length(vertOut.viewPos);
 	vec3 viewVertDir = normalize(vertOut.viewPos);
@@ -103,14 +103,16 @@ void main()
 #endif // SHADOW_RECEIVE
 
 #ifdef SSS_BLUR
+
 	float dotNL = dot(viewNorm, viewLight);
-	gl_FragColor = vec4((dotNL*0.5+0.5)*shadow*subdermalColor*gl_FrontMaterial.diffuse.rgb,1);
+	vec3 subdermal = SSS(vec4(subdermalColor, 1), dotNL, curvature);
+	gl_FragColor = vec4(subdermal*shadow, 1);
+
 #else // not SSS_BLUR
 
 	vec4 texel_MRAT = texture(texMRAT, gl_TexCoord[0].st); // R = Metallic, G = Roughness, B = AO, A = Thickness
 	vec4 texel_n = texture(texNormal, gl_TexCoord[0].st);
 	vec3 texel_detail_n = texture(texDetailNormal, gl_TexCoord[0].st*2).rgb;
-	vec4 subdermalBlur = Blur5x5(texSSSBlur, gl_FragCoord.st - 0.5, pixSize);
 
 	vec3 tangentNormal = normalize(texel_n.xyz-vec3(0.5));
 	vec3 tangentTangent = normalize(cross(vec3(0,1,0), tangentNormal));
@@ -130,11 +132,9 @@ void main()
 	const float dotVN = max(dot(-viewVertDir, viewTexNorm), minFact);
 	const float dotVH = max(dot(-viewVertDir, viewHalf), minFact);
 
-	float curvature = texel_SSSC.a;
 	float metallic = texel_MRAT.r;
 	float roughness = texel_MRAT.g;
 	float ambientOcc = texel_MRAT.b;
-	float thickness = 0.5*texel_MRAT.a;
 	vec3 localReflect = normalize((osg_ViewMatrixInverse*vec4(reflect(viewVertDir, viewTexNorm),0.0)).xyz);
 	vec4 colorMin = vec4(mix(vec3(0.04), outColor.rgb, metallic), 1.0);
 
@@ -145,11 +145,14 @@ void main()
 	/* ambient BRDF */
 	vec3 ambient = mix(vec3(0.1, 0.12, 0.13), vec3(0.02), max(0.5*(1.0-localReflect.z),0))*outColor.rgb*ambientOcc;
 	/* subdermal BSSDF */
-	vec3 subdermal = SSS(subdermalColor, subdermalBlur, dotNL, curvature, thickness);
+	vec4 subdermal = Blur5x5(texSSSBlur, gl_FragCoord.st - 0.5, pixSize);
 	/* epidermis BRDF */
-	vec3 epidermis = ((1-metallic)*dotNL_1*shadow)*baseColor.rgb*gl_FrontMaterial.diffuse.rgb;
+	vec3 epidermis = SSS(vec4(baseColor.rgb, 1), dotNL, curvature);
+	epidermis *= shadow;
+	/* SSS */
+	vec3 sssColor = mix(epidermis, subdermal.rgb*subdermal.a, dotVN);
 	/* diffuse BRDF */
-	vec3 diffuse = mix(subdermal, epidermis, thickness*0.5)*mainlightColor;
+	vec3 diffuse = ((1-metallic)*dotNL_1*shadow)*baseColor.rgb*gl_FrontMaterial.diffuse.rgb;
 
 	/* Microfacet Specular BRDF */
 	vec4 specularBRDF = vec4(mainlightColor,1)*smoothstep(-0.01,0.1, dotNL)
@@ -158,8 +161,9 @@ void main()
 		*specF(colorMin, dotVH)
 		/(4.0*dotNL_1*dotVN);
 
+	float sssMix = 0.8*smoothstep(0.0, 0.1, subdermalColor.r+subdermalColor.g+subdermalColor.b);
 	vec3 fresnel = EnvDFGLazarov(colorMin.rgb, 1.0-roughness, dotVN);
-	outColor.rgb = mix(ToneMapping(ambient+diffuse), reflectEnv.rgb, fresnel) + specularBRDF.rgb;
+	outColor.rgb = mix(ToneMapping(ambient+mix(diffuse,sssColor,sssMix)*mainlightColor), reflectEnv.rgb, fresnel) + specularBRDF.rgb;
 
 	float alpha = outColor.a*gl_FrontMaterial.diffuse.a;
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);

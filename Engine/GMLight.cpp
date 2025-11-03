@@ -241,7 +241,7 @@ void CGMLight::_InitShadow()
 	float fFar = 500.0;
 
 	//!< Ä¬ÈÏÒõÓ°Î»ÖÃ
-	osg::Vec3d vShadowPos = osg::Vec3d(1, -2, 1.5);
+	osg::Vec3d vShadowPos = osg::Vec3d(1.0, -2.0, 1.5);
 	vShadowPos.normalize();
 	vShadowPos *= 200.0;
 

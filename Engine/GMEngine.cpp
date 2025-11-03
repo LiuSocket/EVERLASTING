@@ -148,7 +148,7 @@ bool CGMEngine::Init()
 	SLightData sMainLight;
 	sMainLight.strName = "mainLight";
 	sMainLight.eType = EGMLIGHT_SOURCE_DIRECTIONAL;
-	sMainLight.vDir = osg::Vec4d(-1.0, 1.5, -1.0, 0.0);
+	sMainLight.vDir = osg::Vec4d(-1.0, 2.0, -1.5, 0.0);
 	sMainLight.fLuminous = 2e3f;
 	sMainLight.bShadow = true;
 	GM_LIGHT.Add(sMainLight);

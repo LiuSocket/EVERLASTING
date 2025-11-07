@@ -412,7 +412,7 @@ void CGMCharacter::_ChangeDance(const double dDeltaTime)
 void CGMCharacter::_ChangeArm(const double dDeltaTime)
 {
 	static float s_fWaveSumTime = 0.0f;	// 目标挥舞的时间，单位：秒
-	static float s_fArmUpAcceThreshold = 0.1f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
+	static float s_fArmUpAcceThreshold = 0.05f;	// 让手部抬起的目标挥舞加速度阈值，单位：cm/s
 
 	// 目标加速度大于某个阈值时，才会抬手，
 	if(m_fDeltaVelocity > s_fArmUpAcceThreshold)
@@ -426,7 +426,7 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 
 
 	// 加速度越大，抬手越快
-	float fArmDuration = 6.0f / osg::clampTo((m_fDeltaVelocity - s_fArmUpAcceThreshold) * 0.1, 1.0, 2.0);
+	float fArmDuration = 6.0f / osg::clampTo((m_fDeltaVelocity - s_fArmUpAcceThreshold) * 0.2, 1.0, 2.0);
 	// 抬手不能过于频繁，所以等一段时间后，下一个手臂动画才会开始
 	if (bArmUp && (m_fArmTimeL > m_fArmDurationL) && (m_fInterest > 0.5)
 		&& (m_animHeadL.fWeightNow > 0.1) && (m_animHeadL.fWeightTarget > 0.2))

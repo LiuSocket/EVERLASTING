@@ -503,7 +503,7 @@ void CGMMaterial::_InitSSSBlur()
 	m_pSSSBlurCamera->setCullMask(GM_SSS_MASK);
 	m_pSSSBlurCamera->setReferenceFrame(osg::Transform::ABSOLUTE_RF_INHERIT_VIEWPOINT);
 	m_pSSSBlurCamera->setClearMask(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	m_pSSSBlurCamera->setClearColor(osg::Vec4(0.5f, 0.5f, 0.5f, 0.0f));
+	m_pSSSBlurCamera->setClearColor(osg::Vec4(0.0f, 0.0f, 0.0f, 0.0f));
 	m_pSSSBlurCamera->setViewport(0, 0, iW, iH);
 	m_pSSSBlurCamera->setRenderOrder(osg::Camera::PRE_RENDER, 0);
 	m_pSSSBlurCamera->setRenderTargetImplementation(osg::Camera::FRAME_BUFFER_OBJECT);

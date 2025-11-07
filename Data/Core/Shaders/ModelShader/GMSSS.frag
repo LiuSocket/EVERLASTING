@@ -150,7 +150,7 @@ void main()
 	vec3 epidermis = SSS(vec4(baseColor.rgb, 1), dotNL, curvature);
 	epidermis *= shadow;
 	/* SSS */
-	vec3 sssColor = mix(epidermis, subdermal.rgb*subdermal.a, dotVN);
+	vec3 sssColor = mix(epidermis, subdermal.rgb*subdermal.a, dotVN*baseColor.rgb);
 	/* diffuse BRDF */
 	vec3 diffuse = ((1-metallic)*dotNL_1*shadow)*baseColor.rgb*gl_FrontMaterial.diffuse.rgb;
 
@@ -161,7 +161,7 @@ void main()
 		*specF(colorMin, dotVH)
 		/(4.0*dotNL_1*dotVN);
 
-	float sssMix = 0.8*smoothstep(0.0, 0.1, subdermalColor.r+subdermalColor.g+subdermalColor.b);
+	float sssMix = 0.6*smoothstep(0.0, 0.1, subdermalColor.r+subdermalColor.g+subdermalColor.b);
 	vec3 fresnel = EnvDFGLazarov(colorMin.rgb, 1.0-roughness, dotVN);
 	outColor.rgb = mix(ToneMapping(ambient+mix(diffuse,sssColor,sssMix)*mainlightColor), reflectEnv.rgb, fresnel) + specularBRDF.rgb;
 
@@ -169,6 +169,8 @@ void main()
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
 	gl_FragColor = outColor;
+	//gl_FragColor = vec4(dotVN*baseColor.rgb*subdermal.rgb*subdermal.a,1);
+	//gl_FragColor = vec4((1-dotVN*baseColor.rgb)*epidermis,1);
 
 #endif // SSS_BLUR
 }

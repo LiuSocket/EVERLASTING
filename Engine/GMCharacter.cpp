@@ -429,13 +429,13 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 	float fArmDuration = 6.0f / osg::clampTo((m_fDeltaVelocity - s_fArmUpAcceThreshold) * 0.2, 1.0, 2.0);
 	// 抬手不能过于频繁，所以等一段时间后，下一个手臂动画才会开始
 	if (bArmUp && (m_fArmTimeL > m_fArmDurationL) && (m_fInterest > 0.5)
-		&& (m_animHeadL.fWeightNow > 0.1) && (m_animHeadL.fWeightTarget > 0.2))
+		&& (m_animHeadL.fWeightNow > 0.05) && (m_animHeadL.fWeightTarget > 0.1))
 	{
 		// 重置手部动画的时间
 		m_fArmTimeL = 0.0;
 		m_animArmL.bAnimOn = true;
 		m_animArmL.fWeightSource = 0;
-		m_animArmL.fWeightTarget = max(m_animHeadL.fWeightNow, m_animHeadU.fWeightNow);
+		m_animArmL.fWeightTarget = min(1.0f, m_animHeadL.fWeightNow + m_animHeadU.fWeightNow);
 		m_fArmDurationL = fArmDuration;
 		
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fArmDurationL, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
@@ -451,13 +451,13 @@ void CGMCharacter::_ChangeArm(const double dDeltaTime)
 	}
 
 	if (bArmUp && (m_fArmTimeR > m_fArmDurationR) && (m_fInterest > 0.5)
-		&& (m_animHeadR.fWeightNow > 0.1) && (m_animHeadR.fWeightTarget > 0.2))
+		&& (m_animHeadR.fWeightNow > 0.05) && (m_animHeadR.fWeightTarget > 0.1))
 	{
 		// 重置手部动画的时间
 		m_fArmTimeR = 0.0;
 		m_animArmR.bAnimOn = true;
 		m_animArmR.fWeightSource = 0;
-		m_animArmR.fWeightTarget = max(m_animHeadR.fWeightNow, m_animHeadU.fWeightNow);
+		m_animArmR.fWeightTarget = min(1.0f, m_animHeadR.fWeightNow + m_animHeadU.fWeightNow);
 		m_fArmDurationR = fArmDuration;
 
 		GM_ANIMATION.SetAnimationDuration(m_strName, m_fArmDurationR, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));

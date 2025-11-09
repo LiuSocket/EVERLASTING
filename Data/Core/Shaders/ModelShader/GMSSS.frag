@@ -169,8 +169,6 @@ void main()
 	outColor.a = alpha + step(CUT_ALPHA,alpha)*((fresnel.r+fresnel.g+fresnel.b)*0.3333+specularBRDF.a);
 
 	gl_FragColor = outColor;
-	//gl_FragColor = vec4(dotVN*baseColor.rgb*subdermal.rgb*subdermal.a,1);
-	//gl_FragColor = vec4((1-dotVN*baseColor.rgb)*epidermis,1);
 
 #endif // SSS_BLUR
 }

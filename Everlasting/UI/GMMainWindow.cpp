@@ -509,71 +509,109 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 	if (fgWindow == (HWND)winId())
 		return false;
 
-	// 必须是顶层、可见且无 owner（排除工具窗口、子窗口）
-	if (!IsWindowVisible(fgWindow) || GetWindow(fgWindow, GW_OWNER) != NULL)
-		return false;
-
-	bool bHasFull = false;
-	if (fgWindow != NULL)
-	{
-		bool bFull = _IsFullscreen(fgWindow);
-		if (bFull)
-		{
-			TCHAR szClassName[256]; // 缓冲区
-			int len = GetClassName(fgWindow, szClassName, _countof(szClassName));
-			// 排除WorkerW窗口
-			bool bNotWorkerW = (_tcsstr(szClassName, _T("WorkerW")) == nullptr);
-			// 排除progman窗口
-			bool bNotProgman = (_tcsstr(szClassName, _T("Progman")) == nullptr);
-			// 排除XamlExplorerHostIslandWindow
-			bool bNotXamlExplorer = (_tcsstr(szClassName, _T("XamlExplorerHostIslandWindow")) == nullptr);
-			if (len > 0 && bNotWorkerW && bNotProgman && bNotXamlExplorer)
-			{
-				//查找m_vFullWnds中是否已经存在该窗口
-				bool bExist = false;
-				for (auto& itr : m_vFullWnds)
-				{
-					if (itr == fgWindow)
-					{
-						bExist = true;
-						break;
-					}
-				}
-				bHasFull = true;
-				if (!bExist) m_vFullWnds.push_back(fgWindow);
-			}
-		}
-	}
-	// 遍历m_vFullWnds，删除已经关闭的窗口
+	// 先清理历史记录：移除已不存在、不可见或已不再全屏的窗口
 	auto itr = m_vFullWnds.begin();
 	while (itr != m_vFullWnds.end())
 	{
-		if (IsWindow(*itr))
+		HWND h = *itr;
+		bool keep = true;
+		if (!IsWindow(h))
 		{
-			++itr;		
+			keep = false;
+		}
+		else if (!IsWindowVisible(h))
+		{
+			keep = false;
+		}
+		else if (!_IsFullscreen(h))
+		{
+			keep = false;
 		}
 		else
 		{
+			// 检查进程是否还活着（避免已退出但句柄短暂被保留或重用）
+			DWORD pid = 0;
+			GetWindowThreadProcessId(h, &pid);
+			if (pid != 0)
+			{
+				HANDLE hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+				if (hProc)
+				{
+					DWORD exitCode = 0;
+					if (GetExitCodeProcess(hProc, &exitCode) && exitCode != STILL_ACTIVE)
+					{
+						keep = false;
+					}
+					CloseHandle(hProc);
+				}
+			}
+		}
+
+		if (keep)
+			++itr;
+		else
 			itr = m_vFullWnds.erase(itr);
+	}
+
+	bool bHasFull = false;
+
+	// 检查当前前台窗口是否为全屏并且满足排除条件
+	if (fgWindow != NULL)
+	{
+		if (IsWindowVisible(fgWindow) && GetWindow(fgWindow, GW_OWNER) == NULL)
+		{
+			if (_IsFullscreen(fgWindow))
+			{
+				TCHAR szClassName[256] = { 0 };
+				int len = GetClassName(fgWindow, szClassName, _countof(szClassName));
+				bool bNotWorkerW = (_tcsstr(szClassName, _T("WorkerW")) == nullptr);
+				bool bNotProgman = (_tcsstr(szClassName, _T("Progman")) == nullptr);
+				bool bNotXamlExplorer = (_tcsstr(szClassName, _T("XamlExplorerHostIslandWindow")) == nullptr);
+
+				if (len > 0 && bNotWorkerW && bNotProgman && bNotXamlExplorer)
+				{
+					// 确认前台窗口的进程仍然活着（避免已退出但句柄短暂存在）
+					DWORD pid = 0;
+					GetWindowThreadProcessId(fgWindow, &pid);
+					bool procAlive = true;
+					if (pid != 0)
+					{
+						HANDLE hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+						if (hProc)
+						{
+							DWORD exitCode = 0;
+							if (GetExitCodeProcess(hProc, &exitCode) && exitCode != STILL_ACTIVE)
+								procAlive = false;
+							CloseHandle(hProc);
+						}
+					}
+
+					if (procAlive)
+					{
+						bool bExist = false;
+						for (auto& w : m_vFullWnds)
+						{
+							if (w == fgWindow) { bExist = true; break; }
+						}
+						if (!bExist) m_vFullWnds.push_back(fgWindow);
+						bHasFull = true;
+					}
+				}
+			}
 		}
 	}
 
-	// 遍历m_vFullWnds，检查是否还有全屏窗口
-	for (auto& itr : m_vFullWnds)
+	// 最后再遍历 m_vFullWnds，确认是否还存在有效的全屏窗口
+	for (auto& h : m_vFullWnds)
 	{
-		if (itr != fgWindow && _IsFullscreen(itr))
+		if (h == fgWindow) { bHasFull = true; break; }
+		if (IsWindow(h) && IsWindowVisible(h) && _IsFullscreen(h))
 		{
 			bHasFull = true;
 			break;
 		}
 	}
 
-	//static bool s_bLastHasFull = false;
-	//if (bHasFull != s_bLastHasFull)
-	//{
-	//	s_bLastHasFull = bHasFull;
-	//	std::cout << "[Info] Fullscreen status changed: " << (bHasFull ? "Entered fullscreen" : "Exited fullscreen") << std::endl;
-	//}
 	return bHasFull;
 }
 

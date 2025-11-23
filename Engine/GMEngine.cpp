@@ -429,9 +429,11 @@ CGMViewWidget* CGMEngine::CreateViewWidget(QWidget* parent)
 /** @brief 加载配置 */
 bool CGMEngine::_LoadConfig()
 {
-	CGMXml hXML;
-	hXML.Load(g_strGMConfigFile, "Config");
 	m_pConfigData = new SGMConfigData;
+
+	CGMXml hXML;
+	if(!hXML.Load(g_strGMConfigFile, "Config"))
+		return false;
 
 	// 解析系统配置
 	CGMXmlNode sNode = hXML.GetChild("System");

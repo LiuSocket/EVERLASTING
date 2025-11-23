@@ -1,7 +1,7 @@
+#include "../Engine/GMEngine.h"
 #include "GMMainWindow.h"
 #include "GMVolumeWidget.h"
 #include "GMPlayKitWidget.h"
-#include "../Engine/GMEngine.h"
 
 #include <QKeyEvent>
 #include <QScreen>
@@ -14,6 +14,7 @@
 #include <functional>
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 using namespace GM;
 
@@ -42,12 +43,14 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 
 	if (GM_ENGINE.IsWallpaper())
 	{
-		//// 播放器工具控件
-		//m_pPlayKitWidget = new CGMPlayKitWidget();
-		//QList<QScreen*> mScreen = qApp->screens();
-		//m_pPlayKitWidget->move(mScreen[0]->geometry().width()-300, mScreen[0]->geometry().height()-200);
+		// 播放器工具控件
+		m_pPlayKitWidget = new CGMPlayKitWidget();
+		QList<QScreen*> mScreen = qApp->screens();
+		m_pPlayKitWidget->move(mScreen[0]->geometry().width()-300, mScreen[0]->geometry().height()-200);
 		//m_pPlayKitWidget->raise();
-		//m_pPlayKitWidget->hide();
+		m_pPlayKitWidget->hide();
+
+		connect(m_pPlayKitWidget, SIGNAL(signalWakeUpWallpaper()), this, SLOT(_slotWakeUpWallpaper()));
 
 		// 系统托盘图标
 		m_pTrayIcon = new QSystemTrayIcon(this);
@@ -490,10 +493,23 @@ void CGMMainWindow::_slotWallpaperPlayOrPause()
 	}
 }
 
+void CGMMainWindow::_slotWakeUpWallpaper()
+{
+	// 清空历史记录
+	m_vFullWnds.clear();
+	// 立即更新渲染
+	GM_ENGINE.SetRendering(true);
+}
+
 bool CGMMainWindow::_IsOtherAppFullscreen()
 {
 	HWND fgWindow = GetForegroundWindow();
-	if (fgWindow == (HWND)winId())return false;
+	if (fgWindow == (HWND)winId())
+		return false;
+
+	// 必须是顶层、可见且无 owner（排除工具窗口、子窗口）
+	if (!IsWindowVisible(fgWindow) || GetWindow(fgWindow, GW_OWNER) != NULL)
+		return false;
 
 	bool bHasFull = false;
 	if (fgWindow != NULL)
@@ -504,12 +520,12 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 			TCHAR szClassName[256]; // 缓冲区
 			int len = GetClassName(fgWindow, szClassName, _countof(szClassName));
 			// 排除WorkerW窗口
-			bool bNotWorkerW = (len > 0 && _tcsstr(szClassName, _T("WorkerW")) == nullptr);
+			bool bNotWorkerW = (_tcsstr(szClassName, _T("WorkerW")) == nullptr);
 			// 排除progman窗口
-			bool bNotProgman = (len > 0 && _tcsstr(szClassName, _T("Progman")) == nullptr);
+			bool bNotProgman = (_tcsstr(szClassName, _T("Progman")) == nullptr);
 			// 排除XamlExplorerHostIslandWindow
-			bool bNotXamlExplorer = (len > 0 && _tcsstr(szClassName, _T("XamlExplorerHostIslandWindow")) == nullptr);
-			if (bNotWorkerW && bNotProgman)
+			bool bNotXamlExplorer = (_tcsstr(szClassName, _T("XamlExplorerHostIslandWindow")) == nullptr);
+			if (len > 0 && bNotWorkerW && bNotProgman && bNotXamlExplorer)
 			{
 				//查找m_vFullWnds中是否已经存在该窗口
 				bool bExist = false;
@@ -530,16 +546,16 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 	auto itr = m_vFullWnds.begin();
 	while (itr != m_vFullWnds.end())
 	{
-		if (!IsWindow(*itr))
+		if (IsWindow(*itr))
 		{
-			itr = m_vFullWnds.erase(itr);
+			++itr;		
 		}
 		else
 		{
-			++itr;
+			itr = m_vFullWnds.erase(itr);
 		}
 	}
-	
+
 	// 遍历m_vFullWnds，检查是否还有全屏窗口
 	for (auto& itr : m_vFullWnds)
 	{
@@ -549,22 +565,50 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 			break;
 		}
 	}
+
+	//static bool s_bLastHasFull = false;
+	//if (bHasFull != s_bLastHasFull)
+	//{
+	//	s_bLastHasFull = bHasFull;
+	//	std::cout << "[Info] Fullscreen status changed: " << (bHasFull ? "Entered fullscreen" : "Exited fullscreen") << std::endl;
+	//}
 	return bHasFull;
 }
 
 bool CGMMainWindow::_IsFullscreen(HWND hWindow) const
 {
-	if (hWindow == NULL) return false;
+	if (hWindow == NULL || !IsWindow(hWindow)) return false;
 
-	RECT fgRect;
-	GetWindowRect(hWindow, &fgRect);
+	RECT wndRect;
+	if (!GetWindowRect(hWindow, &wndRect)) return false;
 
-	RECT workArea;
-	SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
-	int screenWidth = workArea.right - workArea.left;
-	int screenHeight = workArea.bottom - workArea.top;
+	// 尝试获取窗口所在监视器的矩形（优先）
+	RECT monRect = { 0,0,0,0 };
+	HMONITOR hMon = MonitorFromWindow(hWindow, MONITOR_DEFAULTTONULL);
+	if (hMon)
+	{
+		MONITORINFO mi;
+		mi.cbSize = sizeof(mi);
+		if (GetMonitorInfoW(hMon, &mi))
+		{
+			monRect = mi.rcMonitor;
+		}
+	}
 
-	return (fgRect.right - fgRect.left >= screenWidth && fgRect.bottom - fgRect.top >= screenHeight);
+	// 如果没法拿到监视器信息，退回到工作区作为兜底
+	if (monRect.right == 0 && monRect.bottom == 0)
+	{
+		SystemParametersInfoW(SPI_GETWORKAREA, 0, &monRect, 0);
+	}
+
+	int wndW = wndRect.right - wndRect.left;
+	int wndH = wndRect.bottom - wndRect.top;
+	int monW = monRect.right - monRect.left;
+	int monH = monRect.bottom - monRect.top;
+
+	// 允许少量像素容差（窗口边框、DPI 缓存差异等）
+	const int tolerance = -4;
+	return ((wndW - monW) >= tolerance && (wndH - monH) >= tolerance);
 }
 
 //void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason)

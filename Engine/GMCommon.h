@@ -48,13 +48,13 @@ namespace GM
 	{
 		SGMConfigData(){}
 
-		std::string						strCorePath = "../../Data/Core/";		//!< 核心资源路径
-		std::wstring					strMediaPath = L"../../Data/Media/";	//!< 外部资源路径
-		EGMRENDER_QUALITY				eRenderQuality = EGMRENDER_LOW;			//!< 高画质模式
-		float							fFovy = 15.0f;							//!< 相机的垂直FOV，单位：°
+		std::string						strCorePath = "../Data/Core/";			//!< 核心资源路径
+		std::wstring					strMediaPath = L"../Data/Media/";		//!< 外部资源路径
+		EGMRENDER_QUALITY				eRenderQuality = EGMRENDER_NORMAL;		//!< 画质模式
+		float							fFovy = 20.0f;							//!< 相机的垂直FOV，单位：°
 		float							fVolume = 0.5f;							//!< 音量
 		int								iScreenWidth = 1920;					//!< 屏幕宽度，单位：像素
 		int								iScreenHeight = 1080;					//!< 屏幕高度，单位：像素
-		bool							bWallpaper = false;						//!< 是否变成“桌面壁纸”
+		bool							bWallpaper = true;						//!< 是否变成“桌面壁纸”
 	};
 }	// GM

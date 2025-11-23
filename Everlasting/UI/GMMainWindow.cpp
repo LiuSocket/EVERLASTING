@@ -490,6 +490,8 @@ void CGMMainWindow::_slotWallpaperPlayOrPause()
 		m_pWallpaperPlayAct->setText(QString::fromLocal8Bit("暂停音乐"));
 		m_bPlayingMusic = true;
 		GM_ENGINE.Play();
+		// 如果万一出现不能唤醒的情况，就强制唤醒一次
+		_slotWakeUpWallpaper();
 	}
 }
 

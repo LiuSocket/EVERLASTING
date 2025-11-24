@@ -622,33 +622,47 @@ bool CGMMainWindow::_IsFullscreen(HWND hWindow) const
 	RECT wndRect;
 	if (!GetWindowRect(hWindow, &wndRect)) return false;
 
-	// 尝试获取窗口所在监视器的矩形（优先）
+	// 只使用第一个屏幕（主屏/第一个 QScreen）来判断是否全屏，
+	// 其它屏幕上的全屏窗口将不会影响返回值。
 	RECT monRect = { 0,0,0,0 };
-	HMONITOR hMon = MonitorFromWindow(hWindow, MONITOR_DEFAULTTONULL);
-	if (hMon)
+	QList<QScreen*> screens = qApp->screens();
+	if (!screens.isEmpty())
 	{
-		MONITORINFO mi;
-		mi.cbSize = sizeof(mi);
-		if (GetMonitorInfoW(hMon, &mi))
+		QScreen* s = screens[0];
+		QRect geom = s->geometry();
+		qreal dpr = s->devicePixelRatio(); // 将 Qt 的逻辑坐标转换为物理像素（与 GetWindowRect 一致）
+		LONG left = static_cast<LONG>(geom.left() * dpr);
+		LONG top = static_cast<LONG>(geom.top() * dpr);
+		LONG right = static_cast<LONG>((geom.left() + geom.width()) * dpr);
+		LONG bottom = static_cast<LONG>((geom.top() + geom.height()) * dpr);
+		monRect = { left, top, right, bottom };
+	}
+	else
+	{
+		HMONITOR hMon = MonitorFromWindow(hWindow, MONITOR_DEFAULTTONULL);
+		if (hMon)
 		{
-			monRect = mi.rcMonitor;
+			MONITORINFO mi;
+			mi.cbSize = sizeof(mi);
+			if (GetMonitorInfoW(hMon, &mi))
+			{
+				monRect = mi.rcMonitor;
+			}
+		}
+
+		// 如果没法拿到监视器信息，退回到工作区作为兜底
+		if (monRect.right == 0 && monRect.bottom == 0)
+		{
+			SystemParametersInfoW(SPI_GETWORKAREA, 0, &monRect, 0);
 		}
 	}
 
-	// 如果没法拿到监视器信息，退回到工作区作为兜底
-	if (monRect.right == 0 && monRect.bottom == 0)
-	{
-		SystemParametersInfoW(SPI_GETWORKAREA, 0, &monRect, 0);
-	}
-
-	int wndW = wndRect.right - wndRect.left;
-	int wndH = wndRect.bottom - wndRect.top;
-	int monW = monRect.right - monRect.left;
-	int monH = monRect.bottom - monRect.top;
-
 	// 允许少量像素容差（窗口边框、DPI 缓存差异等）
-	const int tolerance = -4;
-	return ((wndW - monW) >= tolerance && (wndH - monH) >= tolerance);
+	const int tolerance = 4;
+	return (monRect.right - wndRect.right) < tolerance
+		&& (monRect.bottom - wndRect.bottom) < tolerance
+		&& (wndRect.left - monRect.left) < tolerance
+		&& (wndRect.top - monRect.top) < tolerance;
 }
 
 //void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason)

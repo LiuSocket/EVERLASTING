@@ -153,6 +153,17 @@ void CGMMainWindow::Update()
 		QPoint localPos = mapFromGlobal(globalPos);
 		GM_ENGINE.SetLookTargetPos(SGMVector2f(localPos.x(), GetSystemMetrics(SM_CYSCREEN) - localPos.y()));
 
+		if (!m_hFullWndsVector.empty() && !GM_ENGINE.GetRendering())
+		{
+			// 检测左键是否按下
+			SHORT state = GetAsyncKeyState(VK_LBUTTON);
+			if (state & 0x8000)  // 最高位为1表示当前按下
+			{
+				// 清空历史记录，以规避某些情况下没有被唤醒的bug
+				m_hFullWndsVector.clear();
+			}
+		}
+
 		// 更新mini播放控件
 		//m_pPlayKitWidget->Update();
 
@@ -498,7 +509,7 @@ void CGMMainWindow::_slotWallpaperPlayOrPause()
 void CGMMainWindow::_slotWakeUpWallpaper()
 {
 	// 清空历史记录
-	m_vFullWnds.clear();
+	m_hFullWndsVector.clear();
 	// 立即更新渲染
 	GM_ENGINE.SetRendering(true);
 }
@@ -510,8 +521,8 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 		return false;
 
 	// 先清理历史记录：移除已不存在、不可见或已不再全屏的窗口
-	auto itr = m_vFullWnds.begin();
-	while (itr != m_vFullWnds.end())
+	auto itr = m_hFullWndsVector.begin();
+	while (itr != m_hFullWndsVector.end())
 	{
 		HWND h = *itr;
 		bool keep = true;
@@ -550,7 +561,7 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 		if (keep)
 			++itr;
 		else
-			itr = m_vFullWnds.erase(itr);
+			itr = m_hFullWndsVector.erase(itr);
 	}
 
 	bool bHasFull = false;
@@ -589,11 +600,11 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 					if (procAlive)
 					{
 						bool bExist = false;
-						for (auto& w : m_vFullWnds)
+						for (auto& w : m_hFullWndsVector)
 						{
 							if (w == fgWindow) { bExist = true; break; }
 						}
-						if (!bExist) m_vFullWnds.push_back(fgWindow);
+						if (!bExist) m_hFullWndsVector.push_back(fgWindow);
 						bHasFull = true;
 					}
 				}
@@ -601,8 +612,8 @@ bool CGMMainWindow::_IsOtherAppFullscreen()
 		}
 	}
 
-	// 最后再遍历 m_vFullWnds，确认是否还存在有效的全屏窗口
-	for (auto& h : m_vFullWnds)
+	// 最后再遍历 m_hFullWndsVector，确认是否还存在有效的全屏窗口
+	for (auto& h : m_hFullWndsVector)
 	{
 		if (h == fgWindow) { bHasFull = true; break; }
 		if (IsWindow(h) && IsWindowVisible(h) && _IsFullscreen(h))

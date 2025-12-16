@@ -142,7 +142,7 @@ private:
 	CGMPlayKitWidget*					m_pPlayKitWidget = nullptr;		//!< 播放器工具控件
 	QSystemTrayIcon*					m_pTrayIcon = nullptr;			//!< 系统托盘图标
 	QAction*							m_pWallpaperPlayAct = nullptr;	//!< 桌面壁纸版本的 播放/关闭音乐
-	std::vector<HWND>					m_vFullWnds;					//!< 用于存储所有可以全屏的窗口句柄
+	std::vector<HWND>					m_hFullWndsVector;				//!< 用于存储所有可以全屏的窗口句柄
 	HWND								m_hShellDefView = nullptr;
 	bool								m_b24H2OrGreater = false;
 	bool								m_bInit = false;

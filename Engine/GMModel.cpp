@@ -111,7 +111,6 @@ bool CGMModel::Load()
 	{
 		_SetMaterial(itr.second.get(), m_pModelDataMap.at(itr.first));
 	}
-
 	return true;
 }
 

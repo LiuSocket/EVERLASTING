@@ -322,6 +322,11 @@ void CGMEngine::SetLookTargetPos(const SGMVector2f& vTargetScreenPos)
 	m_pCharacter->SetLookTargetPos(vTargetWorldPos);
 }
 
+double CGMEngine::GetElapsedTimeSeconds() const
+{
+	return osg::Timer::instance()->time_s();
+}
+
 bool CGMEngine::Play()
 {
 	m_bAudioOver = false;

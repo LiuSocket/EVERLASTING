@@ -11,6 +11,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GMSystemManager.h"
+#include "GMStatsAndAchievements.h"
 #include "UI/GMUIManager.h"
 
 #include <thread>
@@ -35,6 +36,7 @@ CGMSystemManager Methods
 
 CGMSystemManager::CGMSystemManager()
 {
+	m_pStatsAndAchievements = GM_NEW(CGMStatsAndAchievements);
 }
 
 CGMSystemManager::~CGMSystemManager()
@@ -110,6 +112,8 @@ void CGMSystemManager::timerEvent(QTimerEvent *event)
 		{
 			GM_UI_MANAGER.UpdateWallpaper();
 		}
+
+		m_pStatsAndAchievements->RunFrame();
 
 		m_iFrameCount = 0;
 	}

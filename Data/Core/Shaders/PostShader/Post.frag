@@ -13,7 +13,7 @@ uniform sampler2D volumeTex;
 
 void main()
 {
-	vec2 sideUV = gl_TexCoord[0].xy + vec2(-0.5,-0.5)/screenSize.xy;
+	vec2 sideUV = gl_TexCoord[0].xy - 0.5/screenSize.xy;
 
 	vec4 backgroundColor = texture(backgroundTex, gl_TexCoord[0].xy);
 	vec4 backSide = texture(backgroundTex, sideUV);

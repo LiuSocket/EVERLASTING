@@ -11,17 +11,46 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GMSystemManager.h"
+#include "steam/steam_api.h"
 #include <QTextCodec>
 #include <QFileInfo>
 #include <QtWidgets/QApplication>
 #include <QFont>
 #include <QIcon>
 #include <QTranslator>
+#include <iostream>
 
 using namespace GM;
 
 int main(int argc, char **argv)
 {
+	if (SteamAPI_RestartAppIfNecessary(4241180))
+	{
+		// if Steam is not running or the game wasn't started through Steam, SteamAPI_RestartAppIfNecessary starts the 
+		// local Steam client and also launches this game again.
+
+		// Once you get a public Steam AppID assigned for this game, you need to replace k_uAppIdInvalid with it and
+		// removed steam_appid.txt from the game depot.
+
+		return EXIT_FAILURE;
+	}
+
+	SteamErrMsg errMsg = { 0 };
+	if (k_ESteamAPIInitResult_OK != SteamAPI_InitEx(&errMsg))
+	{
+		std::cout << "SteamAPI_InitEx failed: " << errMsg << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	// Ensure that the user has logged into Steam. This will always return true if the game is launched
+	// from Steam, but if Steam is at the login prompt when you run your game from the debugger, it
+	// will return false.
+	if (!SteamUser()->BLoggedOn())
+	{
+		std::cout << "Steam user is not logged in" << std::endl;
+		return EXIT_FAILURE;
+	}
+
 	//自动适应高分辨率
 	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 	QTextCodec *xcodec = QTextCodec::codecForLocale();

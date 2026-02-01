@@ -2,6 +2,7 @@
 #include "GMMainWindow.h"
 #include "GMVolumeWidget.h"
 #include "GMPlayKitWidget.h"
+#include "steam/steam_api.h"
 
 #include <QKeyEvent>
 #include <QScreen>
@@ -441,6 +442,10 @@ void CGMMainWindow::_slotClose()
 		m_pTrayIcon->hide();
 		delete m_pTrayIcon;
 	}
+
+	// Shutdown the SteamAPI
+	SteamAPI_Shutdown();
+
 	exit(0);
 }
 

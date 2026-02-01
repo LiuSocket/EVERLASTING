@@ -35,6 +35,9 @@ Struct
 /*************************************************************************
 Class
 *************************************************************************/
+
+class CGMStatsAndAchievements;
+
 /*!
 *  @class CGMSystemManager
 *  @brief 系统管理器
@@ -73,4 +76,6 @@ private:
 
 	int								m_iFrameCount = 0;				//!< 帧数计数器，15帧一循环
 	uint							m_nKeyMask = 0;
+
+	CGMStatsAndAchievements*		m_pStatsAndAchievements = nullptr; //!< 统计和成就管理器
 };

@@ -105,6 +105,12 @@ namespace GM
 		/* @brief 是否变成桌面背景 */
 		inline bool IsWallpaper() const { return m_pConfigData->bWallpaper; }
 
+		/*
+		* @brief 获取程序运行时间
+		* @return double：	程序本次启动以来的运行时间，单位：秒
+		*/
+		double GetElapsedTimeSeconds() const;
+
 		/** @brief 播放 */
 		bool Play();
 		/** @brief 暂停 */

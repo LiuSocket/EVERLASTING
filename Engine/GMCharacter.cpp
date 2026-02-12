@@ -172,10 +172,10 @@ bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_AA));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_AA));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_OO));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_OO));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_OO));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
 	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
@@ -320,20 +320,33 @@ void CGMCharacter::_InnerUpdateBlink(const double dDeltaTime)
 
 void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 {
-	static double s_fAATime = 0.0;
-	static double s_fDeltaAATime = 2.0;
+	// 等待时的默认口型
+	static double s_fMorphIdleTime = 0.0;
+	static double s_fDeltaMorphIdleTime = 2.0;
 	// “惊讶”和“半闭眼”时不会做其他口型
-	if (s_fAATime > s_fDeltaAATime && m_fAngry < 0.9)
+	if (s_fMorphIdleTime > s_fDeltaMorphIdleTime && m_fAngry < 0.9)
 	{
-		float fMorphDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 2;
+		double fMorphDuration = m_iPseudoNoise(m_iRandom) * 0.05 + 2;
+		if (m_bMusicOn) fMorphDuration *= 0.25;
 		GM_ANIMATION.SetAnimationDuration(m_strName, fMorphDuration, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 		GM_ANIMATION.SetAnimationWeight(m_strName, 1.0, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
 
-		s_fAATime = 0.0;
-		s_fDeltaAATime = m_iPseudoNoise(m_iRandom) * 0.1 + fMorphDuration;
+		// 放音乐时会添加的口型
+		if (m_bMusicOn)
+		{
+			double fAAMix = m_iPseudoNoise(m_iRandom) * 0.01;
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+			GM_ANIMATION.SetAnimationWeight(m_strName, fAAMix, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+			GM_ANIMATION.SetAnimationDuration(m_strName, fMorphDuration*(0.4+0.4*fAAMix), m_strMorphAnimNameVec.at(EA_MORPH_AA));
+		}
+
+		s_fMorphIdleTime = 0.0;
+		double fMouthCloseDuration = m_iPseudoNoise(m_iRandom) * 0.1;
+		if (m_bMusicOn) fMouthCloseDuration *= 0.1;
+		s_fDeltaMorphIdleTime = fMouthCloseDuration + fMorphDuration;
 	}
-	s_fAATime += dDeltaTime;
+	s_fMorphIdleTime += dDeltaTime;
 }
 
 void CGMCharacter::_ChangeIdle(const double dDeltaTime)

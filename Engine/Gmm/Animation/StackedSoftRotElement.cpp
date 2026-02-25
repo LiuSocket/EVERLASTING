@@ -18,8 +18,6 @@ using namespace GM;
 Global Constants
 *************************************************************************/
 
-#define  MIN_ANGLE_ACCELERATION				(0.01)		// 引起抖动的最小的角加速度
-
 StackedSoftRotElement::StackedSoftRotElement(){}
 
 StackedSoftRotElement::StackedSoftRotElement(const StackedSoftRotElement& rhs, const osg::CopyOp& co)

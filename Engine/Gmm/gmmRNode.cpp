@@ -335,18 +335,26 @@ void readUpdateMatrixTransform(osgAnimation::UpdateMatrixTransform* pUpdate, Fbx
 	{
 		vSoftRange = osg::Vec3(0.4f, 0.01f, 0.01f);
 		vSoftCenter = osg::Vec3(-0.5f, 0.0f, 0.0f);
-		fElastic = 100.0;
+		fElastic = 90.0;
 	}
 	else if (std::string::npos != name.find("Neck"))
 	{
 		vSoftRange = osg::Vec3(0.8f, 0.1f, 0.1f);
 		vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
-		fElastic = 40.0;
+		fElastic = 35.0;
 	}
-	else if (std::string::npos != name.find("arm"))
+	else if (std::string::npos != name.find("Forearm1")
+		|| std::string::npos != name.find("Upperarm3"))
 	{
 		vSoftRange = osg::Vec3(0.01f, 0.01f, 0.01f);
+		vSoftCenter = osg::Vec3(-0.2f, 0.0f, 0.0f);
+		fElastic = 10.0;
+	}
+	else if (std::string::npos != name.find("Palm"))
+	{
+		vSoftRange = osg::Vec3(0.05f, 0.05f, 0.05f);
 		vSoftCenter = osg::Vec3(0.0f, 0.0f, 0.0f);
+		fElastic = 10.0;
 	}
 	else {}
 

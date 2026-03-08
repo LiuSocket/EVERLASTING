@@ -45,6 +45,8 @@ namespace GM
 		EA_BONE_ARM_L_UP,
 		/** 右手抬起 */
 		EA_BONE_ARM_R_UP,
+		/** 向屏幕左边跑 */
+		EA_BONE_RUN_L,
 	};
 	// 变形动画的枚举值
 	enum EGMANIMATION_MORPH
@@ -137,6 +139,7 @@ namespace GM
 	/*************************************************************************
 	 Class
 	*************************************************************************/
+	class CGMModel;
 
 	/*!
 	 *  @class CGMCharacter，系统单位：厘米
@@ -152,21 +155,18 @@ namespace GM
 		~CGMCharacter();
 
 		/** @brief 初始化 */
-		bool Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData);
+		bool Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMModel* pModel);
 		/** @brief 更新 */
 		bool Update(double dDeltaTime);
 		/** @brief 更新(在主相机更新姿态之后) */
 		bool UpdatePost(double dDeltaTime);
 
 		/**
-		* @brief 激活角色的动画功能（骨骼动画、变形动画）
+		* @brief 创建角色的
 		* @param strName: 角色在场景中的名称
-		* @param pNode: 角色的节点指针
-		* @return bool 成功OK，失败Fail，角色不存在返回NotExist
+		* @return bool 成功OK，失败Fail，角色不存在则返回NotExist
 		*/
-		bool InitAnimation(const std::string& strName, osg::Node* pNode);
-		/** @brief 传入眼睛的变幻节点的vector */
-		void InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v);
+		bool CreateCharacter(const std::string& strName);
 
 		/**
 		* @brief 开启“欢迎效果”
@@ -200,6 +200,13 @@ namespace GM
 		void SetMusicCurrentTime(int iTime);
 
 	private:
+		/**
+		* @brief 激活角色的动画功能（骨骼动画、变形动画）
+		* @param strName: 角色在场景中的名称
+		* @return bool 成功OK，失败Fail，角色不存在返回NotExist
+		*/
+		bool _InitAnimation(const std::string& strName);
+		/** @brief 定时更新 */
 		void _InnerUpdate(const double dDeltaTime);
 		/** @brief 定时更新眨眼状态 */
 		void _InnerUpdateBlink(const double dDeltaTime);
@@ -281,6 +288,7 @@ namespace GM
 	private:
 		SGMKernelData* m_pKernelData = nullptr;					//!< 内核数据
 		SGMConfigData* m_pConfigData = nullptr;					//!< 配置数据
+		CGMModel* m_pModel = nullptr;							//!< 模型模块
 
 		std::default_random_engine m_iRandom;					//!< 随机值
 		std::uniform_int_distribution<> m_iPseudoNoise;			//!< 伪随机数分布

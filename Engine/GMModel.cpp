@@ -180,6 +180,7 @@ bool CGMModel::Add(const SGMModelData& sData)
 		else
 			pNode->setNodeMask(GM_MAIN_MASK);
 
+
 		if(!m_pRootNode->containsNode(pNode.get()))
 			m_pRootNode->addChild(pNode.get());
 

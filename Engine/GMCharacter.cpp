@@ -11,6 +11,7 @@
 //////////////////////////////////////////////////////////////////////////
 #include "GMCharacter.h"
 #include "GMCommonUniform.h"
+#include "GMModel.h"
 #include "GMKit.h"
 #include "Animation/GMAnimation.h"
 #include <osg/MatrixTransform>
@@ -53,6 +54,7 @@ CGMCharacter::CGMCharacter()
 	m_strBoneAnimNameVec.push_back("bone_head_D");
 	m_strBoneAnimNameVec.push_back("bone_arm_L_up");
 	m_strBoneAnimNameVec.push_back("bone_arm_R_up");
+	m_strBoneAnimNameVec.push_back("bone_run_L");
 
 	m_strMorphAnimNameVec.push_back("eye_blink");
 	m_strMorphAnimNameVec.push_back("eye_half");
@@ -71,10 +73,11 @@ CGMCharacter::~CGMCharacter()
 }
 
 /** @brief 初始化 */
-bool CGMCharacter::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
+bool CGMCharacter::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData, CGMModel* pModel)
 {
 	m_pKernelData = pKernelData;
 	m_pConfigData = pConfigData;
+	m_pModel = pModel;
 
 	m_danceSequenceVec.push_back(SGMDanceSequence(14, 16, EA_BONE_DANCE_1));
 	m_danceSequenceVec.push_back(SGMDanceSequence(39, 42, EA_BONE_DANCE_1));
@@ -89,7 +92,7 @@ bool CGMCharacter::Update(double dDeltaTime)
 	// 程序开始的时候，角色必须忽视目标一段时间
 	m_fSyncTime += dDeltaTime;
 	// 刚鄙视完，气还没消，直接无视目标
-	m_bLookAtTarget = (m_fSyncTime > 5) && (!m_bDisdain || (m_fAngry < 0.5)) && (m_fInterest > 0.2);
+	m_bLookAtTarget = (m_fSyncTime > 3) && (!m_bDisdain || (m_fAngry < 0.5)) && (m_fInterest > 0.2);
 
 	static double s_fConstantStep = 0.05;
 	static double s_fDeltaStep = 0.0;
@@ -131,68 +134,28 @@ bool CGMCharacter::UpdatePost(double dDeltaTime)
 	return true;
 }
 
-bool CGMCharacter::InitAnimation(const std::string& strName, osg::Node* pNode)
+bool CGMCharacter::CreateCharacter(const std::string& strName)
 {
-	if (!pNode) return false;
 	m_strName = strName;
 
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_LOW, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
+	SGMModelData sData1 = SGMModelData();
+	sData1.strName = strName;
+	sData1.strFilePath = strName + ".CIP";
+	sData1.eMaterial = EGM_MATERIAL_Human;
+	m_pModel->Add(sData1);
 
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
+	if (!m_pModel->GetNode(strName)) return false;
 
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_AA));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_AA));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_OO));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_OO));
-
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
-
-	GM_ANIMATION.SetAnimationPlay(strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
-	GM_ANIMATION.SetAnimationWeight(strName, 1.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
-
-	return true;
-}
-
-void CGMCharacter::InitEyeTransform(std::vector<osg::ref_ptr<osg::Transform>>& v)
-{
-	m_pEyeTransVector = v;
+	m_pModel->SetAnimationEnable(strName, true);
+	m_pModel->GetEyeTransform(m_pEyeTransVector);
 	for (auto& itr : m_pEyeTransVector)
 	{
 		m_mEyeTransVector.push_back(itr->asMatrixTransform()->getMatrix());
 	}
+
+	_InitAnimation(strName);
+
+	return true;
 }
 
 void CGMCharacter::Welcome()
@@ -255,6 +218,61 @@ void CGMCharacter::SetMusicCurrentTime(int iTime)
 	m_vTargetWorldPos = osg::Vec3d(20 * (m_fMusicTime - 0.3f*m_fMusicDuration) / m_fMusicDuration, -20, -20);
 	// 重置上一帧的注视目标位置
 	m_vTargetLastWorldPos = m_vTargetWorldPos;
+}
+
+bool CGMCharacter::_InitAnimation(const std::string& strName)
+{
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_LOW, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_RUN_L));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_RUN_L));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_U));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_D));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_L_UP));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGHEST, m_strBoneAnimNameVec.at(EA_BONE_ARM_R_UP));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_BLINK));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_HALF));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_IDLE));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_AA));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_OO));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_NORMAL, m_strMorphAnimNameVec.at(EA_MORPH_OO));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+	GM_ANIMATION.SetAnimationPriority(strName, MORPH_PRIORITY_HIGH, m_strMorphAnimNameVec.at(EA_MORPH_SURPRISE));
+
+	GM_ANIMATION.SetAnimationPlay(strName, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
+	GM_ANIMATION.SetAnimationWeight(strName, 1.0, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
+
+	return true;
 }
 
 void CGMCharacter::_InnerUpdate(const double dDeltaTime)

@@ -129,7 +129,7 @@ bool CGMEngine::Init()
 	GM_UNIFORM.Init(m_pKernelData, m_pConfigData);
 	m_pTerrain->Init(m_pKernelData, m_pConfigData);
 	m_pModel->Init(m_pKernelData, m_pConfigData);
-	m_pCharacter->Init(m_pKernelData, m_pConfigData);
+	m_pCharacter->Init(m_pKernelData, m_pConfigData, m_pModel);
 	m_pAudio->Init(m_pConfigData);
 	m_pPost->Init(m_pKernelData, m_pConfigData);
 
@@ -162,19 +162,8 @@ bool CGMEngine::Init()
 	sData.bCastShadow = false;
 	m_pModel->Add(sData);
 
-	// 加载角色模型
-	SGMModelData sData1 = SGMModelData();
-	sData1.strName = "MIGI";
-	sData1.strFilePath = "MIGI.CIP";
-	sData1.eMaterial = EGM_MATERIAL_Human;
-	m_pModel->Add(sData1);
-
-	m_pModel->SetAnimationEnable("MIGI", true);
-	m_pCharacter->InitAnimation("MIGI", m_pModel->GetNode("MIGI"));
-
-	std::vector<osg::ref_ptr<osg::Transform>> pEyeVector;
-	m_pModel->GetEyeTransform(pEyeVector);
-	m_pCharacter->InitEyeTransform(pEyeVector);
+	// 创建角色模型
+	m_pCharacter->CreateCharacter("MIGI");
 
 	return true;
 }

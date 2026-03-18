@@ -95,6 +95,12 @@ namespace GM
 		*/
 		void SetLookTargetPos(const SGMVector2f& vTargetScreenPos);
 		/**
+		* @brief 设置角色的目的地位置
+		* @param vDestinationPos 角色目的地坐标（最终移动到并站立于此），单位：cm
+		*/
+		void SetDestination(const SGMVector3& vDestinationPos);
+
+		/**
 		* @brief 开启/暂停渲染，最小化或者其他软件置顶时可以关闭渲染
 		*  关闭是为了最小化时不浪费显卡资源
 		* @param bEnable: 是否开启渲染

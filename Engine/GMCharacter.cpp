@@ -22,10 +22,11 @@ using namespace GM;
 Global Constants
 *************************************************************************/
 
-#define  BONE_PRIORITY_HIGHEST				(13)		// 骨骼动画“最高”优先级
-#define  BONE_PRIORITY_HIGH					(12)		// 骨骼动画“高”优先级
-#define  BONE_PRIORITY_NORMAL				(11)		// 骨骼动画“普通”优先级
-#define  BONE_PRIORITY_LOW					(10)		// 骨骼动画“低”优先级
+#define  BONE_PRIORITY_HIGHEST				(14)		// 骨骼动画“最高”优先级
+#define  BONE_PRIORITY_HIGH					(13)		// 骨骼动画“高”优先级
+#define  BONE_PRIORITY_NORMAL				(12)		// 骨骼动画“普通”优先级
+#define  BONE_PRIORITY_LOW					(11)		// 骨骼动画“低”优先级
+#define  BONE_PRIORITY_LOWEST				(10)		// 骨骼动画“低”优先级
 
 #define  MORPH_PRIORITY_HIGHEST				(3)			// 变形动画“最高”优先级
 #define  MORPH_PRIORITY_HIGH				(2)			// 变形动画“高”优先级
@@ -33,6 +34,7 @@ Global Constants
 
 #define  IDLE_ADD_FADE_TIME					(0.5f)		// idle附加动画的淡入淡出时间，单位：秒
 #define  ARM_FADE_TIME						(0.8f)		// 手部动画的淡入淡出时间，单位：秒
+#define  RUN_FADE_TIME						(0.333f)	// 跑步动画的淡入淡出时间，单位：秒
 
 /*************************************************************************
 CGMCharacter Methods
@@ -103,8 +105,8 @@ bool CGMCharacter::Update(double dDeltaTime)
 	}
 	s_fDeltaStep += dDeltaTime;
 
-	// 更新idle动画权重
-	_UpdateIdle(dDeltaTime);
+	// 更新等待/走路/跑步动画权重
+	_UpdatePose(dDeltaTime);
 	// 更新舞蹈动画权重
 	_UpdateDance(dDeltaTime);
 	// 过渡状态时需要每帧更新转头动画的权重
@@ -138,13 +140,11 @@ bool CGMCharacter::CreateCharacter(const std::string& strName)
 {
 	m_strName = strName;
 
-	SGMModelData sData1 = SGMModelData();
-	sData1.strName = strName;
-	sData1.strFilePath = strName + ".CIP";
-	sData1.eMaterial = EGM_MATERIAL_Human;
-	m_pModel->Add(sData1);
-
-	if (!m_pModel->GetNode(strName)) return false;
+	SGMModelData sData = SGMModelData();
+	sData.strName = strName;
+	sData.strFilePath = strName + ".CIP";
+	sData.eMaterial = EGM_MATERIAL_Human;
+	if (!(m_pModel->Add(sData))) return false;
 
 	m_pModel->SetAnimationEnable(strName, true);
 	m_pModel->GetEyeTransform(m_pEyeTransVector);
@@ -223,19 +223,20 @@ void CGMCharacter::SetMusicCurrentTime(int iTime)
 bool CGMCharacter::_InitAnimation(const std::string& strName)
 {
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_LOW, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_LOWEST, m_strBoneAnimNameVec.at(EA_BONE_IDLE));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_LOW, m_strBoneAnimNameVec.at(EA_BONE_IDLE_ADD_0));
+
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_LOW, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
+	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
+	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_LOW, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
 
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_ONCE, m_strBoneAnimNameVec.at(EA_BONE_RUN_L));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_RUN_L));
 
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_0));
-	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
-	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_NORMAL, m_strBoneAnimNameVec.at(EA_BONE_DANCE_1));
-
+	// 头部动画的优先级必须高于等待/走路/跑步动画，这样才能在等待/走路/跑步动画的基础上叠加转头动画
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
 	GM_ANIMATION.SetAnimationPriority(strName, BONE_PRIORITY_HIGH, m_strBoneAnimNameVec.at(EA_BONE_HEAD_L));
 	GM_ANIMATION.SetAnimationMode(strName, EGM_PLAY_LOOP, m_strBoneAnimNameVec.at(EA_BONE_HEAD_R));
@@ -292,7 +293,7 @@ void CGMCharacter::_InnerUpdate(const double dDeltaTime)
 	}
 	else
 	{
-		_ChangeIdle(dDeltaTime);
+		_ChangePose(dDeltaTime);
 	}
 
 	// 改变手部动画
@@ -367,7 +368,7 @@ void CGMCharacter::_InnerUpdateLip(const double dDeltaTime)
 	s_fMorphIdleTime += dDeltaTime;
 }
 
-void CGMCharacter::_ChangeIdle(const double dDeltaTime)
+void CGMCharacter::_ChangePose(const double dDeltaTime)
 {
 	if( (m_fIdleTime >= (m_fIdleDuration + m_fIdleAddDuration)) && (0.0 == m_fIdleAddTime) )
 	{
@@ -694,7 +695,7 @@ void CGMCharacter::_ChangeTargetAnimation(const float fTargetHeading, const floa
 		GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(m_eNextPitchAnim));
 }
 
-void CGMCharacter::_UpdateIdle(const double dDeltaTime)
+void CGMCharacter::_UpdatePose(const double dDeltaTime)
 {
 	if (0 < m_fIdleAddTime)
 	{
@@ -721,6 +722,31 @@ void CGMCharacter::_UpdateIdle(const double dDeltaTime)
 	// 重置“Idle附加”动画时间
 	if (m_fIdleAddDuration < m_fIdleAddTime)
 		m_fIdleAddTime = 0.0;
+
+	// 更新主角的位置
+	double fTime = osg::Timer::instance()->time_s();
+	if (fTime < (m_fStartMoveTime + m_fMoveDuration))
+	{
+		if (!GM_ANIMATION.IsAnimationPlaying(m_strName, m_strBoneAnimNameVec.at(EA_BONE_RUN_L)))
+			GM_ANIMATION.SetAnimationPlay(m_strName, m_strBoneAnimNameVec.at(EA_BONE_RUN_L));
+
+		// 设置“跑向左边的动画”权重
+		float fTimeSinceMoveStart = fTime - m_fStartMoveTime;
+		float fRunLeftWeight = _Smoothstep(0.0f, RUN_FADE_TIME, fTimeSinceMoveStart)
+			* (1 - _Smoothstep(m_fMoveDuration - RUN_FADE_TIME, m_fMoveDuration, fTimeSinceMoveStart));
+		GM_ANIMATION.SetAnimationWeight(m_strName, fRunLeftWeight, m_strBoneAnimNameVec.at(EA_BONE_RUN_L));
+
+		if (1.0f == fRunLeftWeight)
+		{
+			SGMModelData sModelData = m_pModel->GetModelData(m_strName);
+			double fTimeMix = osg::clampTo(
+				(fTimeSinceMoveStart - RUN_FADE_TIME) / (m_fMoveDuration - RUN_FADE_TIME * 2),
+				0.0f, 1.0f);
+			osg::Vec3d vPosNow = CGMKit::Mix(m_vLastDestiPos, m_vDestinationPos, fTimeMix);
+			sModelData.vPos = SGMVector3(vPosNow.x(), vPosNow.y(), vPosNow.z());
+			m_pModel->Edit(m_strName, sModelData);
+		}
+	}
 }
 
 void CGMCharacter::_UpdateDance(const double dDeltaTime)

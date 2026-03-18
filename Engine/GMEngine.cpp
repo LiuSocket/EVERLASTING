@@ -311,6 +311,11 @@ void CGMEngine::SetLookTargetPos(const SGMVector2f& vTargetScreenPos)
 	m_pCharacter->SetLookTargetPos(vTargetWorldPos);
 }
 
+void CGMEngine::SetDestination(const SGMVector3& vDestinationPos)
+{
+	m_pCharacter->SetDestination(osg::Vec3d(vDestinationPos.x, vDestinationPos.y, vDestinationPos.z));
+}
+
 double CGMEngine::GetElapsedTimeSeconds() const
 {
 	return osg::Timer::instance()->time_s();

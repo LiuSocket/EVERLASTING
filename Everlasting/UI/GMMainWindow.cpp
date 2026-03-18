@@ -22,7 +22,7 @@ using namespace GM;
 /*************************************************************************
  CGMMainWindow Methods
 *************************************************************************/
-CGMMainWindow::CGMMainWindow(QWidget *parent)
+CGMMainWindow::CGMMainWindow(QWidget* parent)
 	: QMainWindow(parent)
 {
 	ui.setupUi(this);
@@ -47,7 +47,7 @@ CGMMainWindow::CGMMainWindow(QWidget *parent)
 		// 播放器工具控件
 		m_pPlayKitWidget = new CGMPlayKitWidget();
 		QList<QScreen*> mScreen = qApp->screens();
-		m_pPlayKitWidget->move(mScreen[0]->geometry().width()-300, mScreen[0]->geometry().height()-200);
+		m_pPlayKitWidget->move(mScreen[0]->geometry().width() - 300, mScreen[0]->geometry().height() - 200);
 		//m_pPlayKitWidget->raise();
 		m_pPlayKitWidget->hide();
 
@@ -146,22 +146,18 @@ void CGMMainWindow::Update()
 
 	if (GM_ENGINE.IsWallpaper())
 	{
-		// 壁纸模式下，需要在这里更新鼠标位置
-		POINT pt;
-		GetCursorPos(&pt);
-		// pt.x, pt.y 就是当前鼠标的屏幕坐标
-		QPoint globalPos(pt.x, pt.y);
-		QPoint localPos = mapFromGlobal(globalPos);
-		GM_ENGINE.SetLookTargetPos(SGMVector2f(localPos.x(), GetSystemMetrics(SM_CYSCREEN) - localPos.y()));
+		if (GM_ENGINE.GetRendering())
+		{
+			_UpdateWallPaper();
+		}
 
+		// 如果有窗口全屏了，就不更新了，等用户点击一下才清空历史记录并继续更新，规避某些情况下没有被唤醒的bug
 		if (!m_hFullWndsVector.empty() && !GM_ENGINE.GetRendering())
 		{
-			// 检测左键是否按下
-			SHORT state = GetAsyncKeyState(VK_LBUTTON);
-			if (state & 0x8000)  // 最高位为1表示当前按下
+			SHORT keyState = GetAsyncKeyState(VK_LBUTTON);// 检测左键是否按下
+			if (keyState & 0x8000)  // 最高位为1表示当前按下
 			{
-				// 清空历史记录，以规避某些情况下没有被唤醒的bug
-				m_hFullWndsVector.clear();
+				m_hFullWndsVector.clear();// 清空历史记录，以规避某些情况下没有被唤醒的bug
 			}
 		}
 
@@ -276,7 +272,7 @@ void CGMMainWindow::UpdateAudioInfo()
 	float fTimeRatio = 400 * float(iCurrentTime) / float(m_iAudioDuration);
 	// 避免循环修改时间
 	int iTimeLast = ui.timeSlider->value();
-	if(abs(fTimeRatio - iTimeLast) > 0.5f)
+	if (abs(fTimeRatio - iTimeLast) > 0.5f)
 		ui.timeSlider->setValue(fTimeRatio);
 
 	// 计算并显示已播放时间
@@ -452,7 +448,7 @@ void CGMMainWindow::_slotClose()
 void CGMMainWindow::_slotSetAudioTime(int iTimeRatio) const
 {
 	// 当前音频播放的时刻
-	int iAudioCurrentTime = float(iTimeRatio)*0.0025*m_iAudioDuration;
+	int iAudioCurrentTime = float(iTimeRatio) * 0.0025 * m_iAudioDuration;
 	int iAudioCurrentPreciseTime = GM_ENGINE.GetAudioCurrentTime();
 	if (std::abs(iAudioCurrentPreciseTime - iAudioCurrentTime) > 1000)
 	{
@@ -468,7 +464,7 @@ void CGMMainWindow::_slotSetMute()
 	}
 	else
 	{
-		GM_ENGINE.SetVolume(m_pVolumeWidget->GetVolume()*0.01f);
+		GM_ENGINE.SetVolume(m_pVolumeWidget->GetVolume() * 0.01f);
 	}
 }
 
@@ -476,7 +472,7 @@ void CGMMainWindow::_slotSetVolume(int iVolume)
 {
 	if (0 == iVolume)
 	{
-		if(!ui.volumeBtn->isChecked())
+		if (!ui.volumeBtn->isChecked())
 			ui.volumeBtn->setChecked(true);
 	}
 	else
@@ -485,7 +481,7 @@ void CGMMainWindow::_slotSetVolume(int iVolume)
 			ui.volumeBtn->setChecked(false);
 	}
 
-	GM_ENGINE.SetVolume(iVolume*0.01f);
+	GM_ENGINE.SetVolume(iVolume * 0.01f);
 }
 
 void CGMMainWindow::_slotFullScreen()
@@ -681,6 +677,57 @@ bool CGMMainWindow::_IsFullscreen(HWND hWindow) const
 		&& (wndRect.top - monRect.top) < tolerance;
 }
 
+void CGMMainWindow::_UpdateWallPaper()
+{
+	// 壁纸模式下，需要在这里更新鼠标位置
+	POINT pt;
+	GetCursorPos(&pt);
+	// pt.x, pt.y 就是当前鼠标的屏幕坐标
+	QPoint globalPos(pt.x, pt.y);
+	QPoint localPos = mapFromGlobal(globalPos);
+	GM_ENGINE.SetLookTargetPos(SGMVector2f(localPos.x(), GetSystemMetrics(SM_CYSCREEN) - localPos.y()));
+
+	// 使用 64 位时间并检测按键边沿（只在“从未按 -> 按下”时视为一次点击）
+	static ULONGLONG s_lastLeftClickTime = 0;
+	static SHORT s_prevLeftState = 0; // 保存上一帧的 GetAsyncKeyState 返回值
+
+	SHORT keyState = GetAsyncKeyState(VK_LBUTTON);
+	bool isDown = (keyState & 0x8000) != 0;
+	bool wasDown = (s_prevLeftState & 0x8000) != 0;
+
+	// 仅在刚刚按下（边沿）时处理为一次点击
+	if (isDown && !wasDown)
+	{
+		ULONGLONG currentTime = GetTickCount64();
+		UINT doubleClickTime = GetDoubleClickTime();
+
+		if (s_lastLeftClickTime != 0 && (currentTime - s_lastLeftClickTime) <= doubleClickTime)
+		{
+			// 检测到双击事件，就判断双击位置，让角色跑到对应的那边
+			int screenW = GetSystemMetrics(SM_CXSCREEN);
+			if (localPos.x() < 0.3 * screenW)
+			{
+				// 双击在左侧，角色向左边跑
+				GM_ENGINE.SetDestination(SGMVector3(-18, 0, 0));
+			}
+			else if (localPos.x() > 0.7 * screenW)
+			{
+				// 双击在右侧，角色向右边跑
+				GM_ENGINE.SetDestination(SGMVector3(0, 0, 0));
+			}
+			s_lastLeftClickTime = 0; // 重置，避免三击被误认为第二次双击
+		}
+		else
+		{
+			// 记录本次点击时间，等待下一次判断是否构成双击
+			s_lastLeftClickTime = currentTime;
+		}
+	}
+
+	// 更新上一帧状态
+	s_prevLeftState = keyState;
+}
+
 //void CGMMainWindow::_OnTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 //{
 //	if (reason == QSystemTrayIcon::Trigger) // 单击
@@ -708,7 +755,7 @@ void CGMMainWindow::changeEvent(QEvent* event)
 		GM_ENGINE.SetRendering(true);
 		setAttribute(Qt::WA_Mapped);
 	}
-	else{}
+	else {}
 
 	QWidget::changeEvent(event);
 }
@@ -718,7 +765,7 @@ void CGMMainWindow::resizeEvent(QResizeEvent* event)
 	m_pVolumeWidget->hide();
 }
 
-void CGMMainWindow::mouseDoubleClickEvent(QMouseEvent *event)
+void CGMMainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 {
 	if (event->pos().y() < ui.titleWidget->height())
 	{
@@ -738,14 +785,14 @@ void CGMMainWindow::mouseDoubleClickEvent(QMouseEvent *event)
 	QWidget::mouseDoubleClickEvent(event);
 }
 
-void CGMMainWindow::mousePressEvent(QMouseEvent * event)
+void CGMMainWindow::mousePressEvent(QMouseEvent* event)
 {
 	m_bPressed = true;
 	m_vPos = event->globalPos();
 	QWidget::mousePressEvent(event);
 }
 
-void CGMMainWindow::mouseReleaseEvent(QMouseEvent * event)
+void CGMMainWindow::mouseReleaseEvent(QMouseEvent* event)
 {
 	m_bPressed = false;
 	QWidget::mouseReleaseEvent(event);
@@ -848,7 +895,7 @@ bool CGMMainWindow::eventFilter(QObject* obj, QEvent* event)
 	return QMainWindow::eventFilter(obj, event);
 }
 
-void CGMMainWindow::_Million2MinutesSeconds(const int ms, int & minutes, int & seconds)
+void CGMMainWindow::_Million2MinutesSeconds(const int ms, int& minutes, int& seconds)
 {
 	int iAllSeconds = ms / 1000;
 	minutes = max(0, min(59, iAllSeconds / 60));
@@ -1029,8 +1076,8 @@ void CGMMainWindow::_SetWallPaper(HWND hEmbedWnd)
 	qreal dpr = mScreen[0]->devicePixelRatio();;
 	int iLeft = mScreen[0]->geometry().topLeft().x() * dpr;
 	int iTop = mScreen[0]->geometry().topLeft().y() * dpr;
-	int iWidth	= mScreen[0]->geometry().width() * dpr;
-	int iHeight	= mScreen[0]->geometry().height() * dpr;
+	int iWidth = mScreen[0]->geometry().width() * dpr;
+	int iHeight = mScreen[0]->geometry().height() * dpr;
 	RECT rcFullScreen{ (LONG)iLeft, (LONG)iTop, (LONG)iWidth, (LONG)iHeight };
 
 	AdjustWindowRect(&rcFullScreen, style_tw, FALSE);

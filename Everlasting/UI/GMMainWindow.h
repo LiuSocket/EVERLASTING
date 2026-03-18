@@ -100,6 +100,9 @@ private:
 	/** @brief 检测是否全屏 */
 	bool _IsFullscreen(HWND hWindow) const;
 
+	/** @brief 更新桌面模式下的相关功能 */
+	void _UpdateWallPaper();
+
 	/**
 	* @brief 系统托盘图标被激活
 	*/

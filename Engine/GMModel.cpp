@@ -20,7 +20,7 @@
 
 #include <osg/StateSet>
 #include <osg/Texture3D>
-#include <osg/MatrixTransform>
+#include <osg/PositionAttitudeTransform>
 #include <osg/ComputeBoundsVisitor>
 #include <osg/PolygonOffset>
 #include <osg/AlphaFunc>
@@ -107,9 +107,9 @@ bool CGMModel::Init(SGMKernelData* pKernelData, SGMConfigData* pConfigData)
 /** @brief 加载 */
 bool CGMModel::Load()
 {
-	for (auto& itr : m_pNodeMap)
+	for (auto& itr : m_pTransMap)
 	{
-		_SetMaterial(itr.second.get(), m_pModelDataMap.at(itr.first));
+		_SetMaterial(itr.second->getChild(0), m_pModelDataMap.at(itr.first));
 	}
 	return true;
 }
@@ -174,20 +174,30 @@ bool CGMModel::Add(const SGMModelData& sData)
 	osg::ref_ptr<osg::Node> pNode = osgDB::readNodeFile(strRealFilePath, m_pDDSOptions);// 保证dds纹理的正确加载
 	if (pNode.valid())
 	{
+		osg::ref_ptr<osg::PositionAttitudeTransform> pTransform = new osg::PositionAttitudeTransform;
+		// 设置模型的初始位置、旋转和缩放
+		pTransform->setAttitude(osg::Quat(
+			osg::DegreesToRadians(sData.vOri.x), osg::Vec3f(1, 0, 0),
+			osg::DegreesToRadians(sData.vOri.y), osg::Vec3f(0, 1, 0),
+			osg::DegreesToRadians(sData.vOri.z), osg::Vec3f(0, 0, 1)));
+		pTransform->setPosition(osg::Vec3f(sData.vPos.x, sData.vPos.y, sData.vPos.z));
+		pTransform->setScale(osg::Vec3f(sData.vScale.x, sData.vScale.y, sData.vScale.z));
+
+		pTransform->addChild(pNode.get());
 		// 设置阴影
 		if (sData.bCastShadow)
-			pNode->setNodeMask(GM_MAIN_MASK | GM_SHADOW_CAST_MASK);
+			pTransform->setNodeMask(GM_MAIN_MASK | GM_SHADOW_CAST_MASK);
 		else
-			pNode->setNodeMask(GM_MAIN_MASK);
+			pTransform->setNodeMask(GM_MAIN_MASK);
 
-
-		if(!m_pRootNode->containsNode(pNode.get()))
-			m_pRootNode->addChild(pNode.get());
+		if(!m_pRootNode->containsNode(pTransform.get()))
+			m_pRootNode->addChild(pTransform.get());
 
 		m_pModelDataMap[sData.strName] = sData;
-		m_pNodeMap[sData.strName] = pNode;
+		m_pTransMap[sData.strName] = pTransform;
+
 		// 设置材质
-		_SetMaterial(pNode.get(), sData);
+		_SetMaterial(pTransform.get(), sData);
 
 		// 如果是加密文件且加载成功，则删除解密后的模型文件，防止泄露
 		if (sData.strFilePath.find(".CIP") != std::string::npos)
@@ -200,6 +210,54 @@ bool CGMModel::Add(const SGMModelData& sData)
 		return true;
 	}
 	return false;
+}
+
+bool CGMModel::Edit(const std::string& strOldName, SGMModelData& sNewData)
+{
+	// 如果不存在则无法修改
+	if (m_pModelDataMap.end() == m_pModelDataMap.find(strOldName))
+		return false;
+
+	// 如果修改了名称且新名称已经存在则无法修改
+	if (strOldName != sNewData.strName && m_pModelDataMap.end() != m_pModelDataMap.find(sNewData.strName))
+		return false;
+
+	osg::Node* pNode = _GetNode(strOldName);
+	if (!pNode) return false;
+	
+	if (m_pModelDataMap[strOldName].vPos != sNewData.vPos ||
+		m_pModelDataMap[strOldName].vOri != sNewData.vOri ||
+		m_pModelDataMap[strOldName].vScale != sNewData.vScale)
+	{
+		// 修改位置、旋转和缩放
+		osg::ref_ptr<osg::PositionAttitudeTransform> pTransform = m_pTransMap[strOldName].get();
+		pTransform->setAttitude(osg::Quat(
+			osg::DegreesToRadians(sNewData.vOri.x), osg::Vec3f(1, 0, 0),
+			osg::DegreesToRadians(sNewData.vOri.y), osg::Vec3f(0, 1, 0),
+			osg::DegreesToRadians(sNewData.vOri.z), osg::Vec3f(0, 0, 1)));
+		pTransform->setPosition(osg::Vec3f(sNewData.vPos.x, sNewData.vPos.y, sNewData.vPos.z));
+		pTransform->setScale(osg::Vec3f(sNewData.vScale.x, sNewData.vScale.y, sNewData.vScale.z));
+	}
+	if (m_pModelDataMap[strOldName].eMaterial != sNewData.eMaterial)
+	{
+		// 修改材质
+		_SetMaterial(m_pTransMap[strOldName].get(), sNewData);
+	}
+
+	// 如果修改了名称则更新map
+	if (strOldName != sNewData.strName)
+	{
+		m_pModelDataMap.erase(strOldName);
+		m_pModelDataMap[sNewData.strName] = sNewData;
+
+		m_pTransMap[sNewData.strName] = m_pTransMap[strOldName].get();
+		m_pTransMap.erase(strOldName);
+	}
+	else
+	{
+		m_pModelDataMap[strOldName] = sNewData;
+	}
+	return true;
 }
 
 void CGMModel::ResizeScreen(const int width, const int height)
@@ -303,16 +361,29 @@ bool CGMModel::GetAnimationEnable(const std::string& strName)
 	return GM_ANIMATION.GetAnimationEnable(strName);
 }
 
-osg::Node* CGMModel::GetNode(const std::string& strModelName)
+SGMModelData CGMModel::GetModelData(const std::string& strName) const
 {
-	return _GetNode(strModelName);
+	if (m_pModelDataMap.end() != m_pModelDataMap.find(strName))
+	{
+		return m_pModelDataMap.at(strName);
+	}
+	return SGMModelData();
 }
 
-osg::Node* CGMModel::_GetNode(const std::string& strModelName)
+osg::PositionAttitudeTransform* CGMModel::GetPositionAttitudeTransform(const std::string& strName) const
 {
-	if (m_pNodeMap.end() != m_pNodeMap.find(strModelName))
+	if (m_pTransMap.end() != m_pTransMap.find(strName))
 	{
-		return m_pNodeMap.at(strModelName).get();
+		return m_pTransMap.at(strName).get();
+	}
+	return nullptr;
+}
+
+osg::Node* CGMModel::_GetNode(const std::string& strName) const
+{
+	if (m_pTransMap.end() != m_pTransMap.find(strName))
+	{
+		return m_pTransMap.at(strName)->getChild(0);
 	}
 	return nullptr;
 }

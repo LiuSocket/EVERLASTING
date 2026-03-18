@@ -60,6 +60,13 @@ namespace GM
 		/** @brief 添加模型 */
 		bool Add(const SGMModelData& sData);
 		/**
+		* @brief 修改模型
+		* @param strName: 模型在场景中的旧名称（如果想修改名称的话）
+		* @param sNewData: 模型的新数据
+		* @return bool  成功true，失败false
+		*/
+		bool Edit(const std::string& strOldName, SGMModelData& sNewData);
+		/**
 		* @brief 修改屏幕尺寸时调用此函数
 		* @param width: 屏幕宽度
 		* @param height: 屏幕高度
@@ -70,7 +77,7 @@ namespace GM
 		* @brief 激活或者禁用模型的动画功能（骨骼动画、变形动画）
 		* @param strName: 模型在场景中的名称
 		* @param bEnable: 是否启用动画功能
-		* @return bool 成功OK，失败Fail，模型不存在返回NotExist
+		* @return bool 成功true，失败false
 		*/
 		bool SetAnimationEnable(const std::string& strName, const bool bEnable);
 		/**
@@ -80,11 +87,16 @@ namespace GM
 		*/
 		bool GetAnimationEnable(const std::string& strName);
 		/**
-		* @brief 根据名称获取模型
-		* @param strModelName 模型名称
-		* @return osg::Node* 模型节点指针
+		* @param strName 模型名称
+		* @return SGMModelData 模型数据
 		*/
-		osg::Node* GetNode(const std::string& strModelName);
+		SGMModelData GetModelData(const std::string& strName) const;
+		/**
+		* @brief 根据名称获取模型
+		* @param strName 模型名称
+		* @return osg::PositionAttitudeTransform* 模型姿态节点指针
+		*/
+		osg::PositionAttitudeTransform* GetPositionAttitudeTransform(const std::string& strName) const;
 		/**
 		* @brief 获取眼睛的变幻节点的vector
 		* @param v: 有则返回节点指针的vector
@@ -104,10 +116,10 @@ namespace GM
 	
 		/**
 		* @brief 根据名称获取模型
-		* @param strModelName 模型名称
+		* @param strName 模型名称
 		* @return osg::Node* 模型节点指针
 		*/
-		osg::Node* _GetNode(const std::string& strModelName);
+		osg::Node* _GetNode(const std::string& strName) const;
 
 		void _InnerUpdate(const double dDeltaTime);
 
@@ -118,7 +130,7 @@ namespace GM
 
 		osg::ref_ptr<osg::Group>			m_pRootNode = nullptr;
 		std::map<std::string, SGMModelData>	m_pModelDataMap;	//!< 模型数据map
-		std::map<std::string, osg::ref_ptr<osg::Node>> m_pNodeMap;	//!< 模型节点map
+		std::map<std::string, osg::ref_ptr<osg::PositionAttitudeTransform>> m_pTransMap;	//!< 位置变化节点map
 
 		// 添加贴图的默认路径
 		std::string							m_strDefTexPath = "Textures/";

@@ -183,6 +183,20 @@ namespace GM
 			m_vTargetWorldPos = vTargetWorldPos;
 		}
 		/**
+		* @brief 设置角色的目的地位置
+		* @param vDestinationPos 角色目的地坐标（最终移动到并站立于此），单位：cm
+		*/
+		inline void SetDestination(const osg::Vec3d& vDestinationPos)
+		{
+			if (m_vDestinationPos != vDestinationPos)
+			{
+				m_vLastDestiPos = m_vDestinationPos;
+				m_vDestinationPos = vDestinationPos;
+				m_fStartMoveTime = osg::Timer::instance()->time_s();
+			}
+		}
+
+		/**
 		* @brief 开启/关闭音频
 		* @param bEnable：开启/关闭
 		*/
@@ -203,7 +217,7 @@ namespace GM
 		/**
 		* @brief 激活角色的动画功能（骨骼动画、变形动画）
 		* @param strName: 角色在场景中的名称
-		* @return bool 成功OK，失败Fail，角色不存在返回NotExist
+		* @return bool 成功true，失败false
 		*/
 		bool _InitAnimation(const std::string& strName);
 		/** @brief 定时更新 */
@@ -212,8 +226,8 @@ namespace GM
 		void _InnerUpdateBlink(const double dDeltaTime);
 		/** @brief 定时更新嘴唇状态 */
 		void _InnerUpdateLip(const double dDeltaTime);
-		/** @brief 改变idle状态 */
-		void _ChangeIdle(const double dDeltaTime);
+		/** @brief 改变等待/走路/跑步状态 */
+		void _ChangePose(const double dDeltaTime);
 		/** @brief 改变舞蹈动作 */
 		void _ChangeDance(const double dDeltaTime);
 		/** @brief 改变手部状态 */
@@ -227,8 +241,8 @@ namespace GM
 		/** @brief 改变目标动画 */
 		void _ChangeTargetAnimation(const float fTargetHeading, const float fTargetPitch);
 
-		/** @brief 每帧更新idle动画 */
-		void _UpdateIdle(const double dDeltaTime);
+		/** @brief 每帧更新等待/走路/跑步动画 */
+		void _UpdatePose(const double dDeltaTime);
 		/** @brief 每帧更新舞蹈动作 */
 		void _UpdateDance(const double dDeltaTime);
 		/** @brief 每帧更新转头动画 */
@@ -371,5 +385,10 @@ namespace GM
 		osg::Vec3d m_vTargetWorldPos = osg::Vec3d(0,-30,0);		//!< 目标点的世界空间坐标，单位：cm
 		osg::Vec3d m_vTargetLastWorldPos = osg::Vec3d(0, -30, 0);//!< 目标点上一次指定的世界空间坐标，单位：cm
 		osg::Vec3d m_vTargetLastVelocity = osg::Vec3d(0, 0, 0);	//!< 目标点上一次的速度，单位：cm/s
+
+		float m_fStartMoveTime = 0.0f;							//!< 开始移动的时间，单位：秒
+		float m_fMoveDuration = 2.0f;							//!< 移动的持续时间，单位：秒
+		osg::Vec3d m_vDestinationPos = osg::Vec3d(0, 0, 0);		//!< 终点坐标，单位：cm
+		osg::Vec3d m_vLastDestiPos = osg::Vec3d(0, 0, 0);		//!< 上一个终点坐标，单位：cm
 	};
 }	// GM
